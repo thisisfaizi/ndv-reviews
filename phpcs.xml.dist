@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<ruleset name="NDV Reviews">
+	<description>Coding standards for the NDV Reviews plugin.</description>
+
+	<file>.</file>
+
+	<!-- Exclude build/vendor/node output. -->
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/assets/build/*</exclude-pattern>
+	<exclude-pattern>*/docs/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<!-- WordPress standards. -->
+	<rule ref="WordPress"/>
+	<rule ref="WordPress-Extra"/>
+
+	<config name="minimum_wp_version" value="6.0"/>
+	<config name="testVersion" value="7.4-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!-- Enforce text domain + prefixes. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="ndv-reviews"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="ndv_reviews"/>
+				<element value="ndvr"/>
+				<element value="NDVR"/>
+				<element value="NdvReviews"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>

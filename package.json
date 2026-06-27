@@ -1,0 +1,19 @@
+{
+	"name": "ndv-reviews",
+	"version": "0.1.0",
+	"description": "Reliable, self-hosted reviews for WooCommerce.",
+	"author": "Nowdigiverse",
+	"license": "GPL-2.0-or-later",
+	"private": true,
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"lint:js": "wp-scripts lint-js",
+		"lint:css": "wp-scripts lint-style",
+		"format": "wp-scripts format",
+		"makepot": "wp i18n make-pot . languages/ndv-reviews.pot --slug=ndv-reviews"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^30.0.0"
+	}
+}

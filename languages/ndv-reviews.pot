@@ -1,0 +1,23 @@
+# Copyright (C) 2026 Nowdigiverse
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: NDV Reviews 0.1.0\n"
+"Report-Msgid-Bugs-To: https://nowdigiverse.com/ndv-reviews\n"
+"Last-Translator: Nowdigiverse\n"
+"Language-Team: Nowdigiverse\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-06-28T00:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: NDV Reviews build pipeline\n"
+"X-Domain: ndv-reviews\n"
+
+#. Description of the plugin
+msgid "Reliable, self-hosted reviews for WooCommerce — multi-criteria ratings, photo reviews, working reminders, and rich schema. No account or external service required."
+msgstr ""
+
+#: includes/Plugin.php
+msgid "NDV Reviews requires WooCommerce to be installed and active."
+msgstr ""

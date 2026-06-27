@@ -1,0 +1,21 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build output
+/assets/build/
+
+# Composer / npm lock noise (keep package-lock if you prefer reproducible builds)
+composer.lock
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.code-workspace
+
+# Local WP / env
+.env
+*.local

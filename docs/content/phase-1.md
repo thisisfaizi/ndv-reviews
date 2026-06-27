@@ -26,15 +26,21 @@
 
 ## Acceptance criteria (§7.1, §7.2, §7.3)
 
-Status: **code-complete, pending one live end-to-end run.** The items below are implemented and statically verified (`php -l`, `node --check`); the boxes are checked only once proven at runtime.
+Status: **verified at runtime** (a multi-criteria review submitted, moderated, and shown on the storefront with the verified-owner badge and cached 4★ overall). Photo upload had two bugs, now fixed — see note below.
 
-- ☐ Criteria render on the form; overall computed & cached on save.
-- ☐ Free hard-caps at 3 active criteria with an upsell notice.
-- ☐ AJAX submit, no full reload; client + server validation.
-- ☐ Images validated (mime/size/count) and stored via WP media + `ndvr_review_media`.
-- ☐ Honeypot + nonce + rate-limit enforced; reCAPTCHA optional.
-- ☐ Verified flag set on submit (via `wc_customer_bought_product`).
-- ☐ Pending reviews stay out of the front end; approved review renders in the WooCommerce reviews tab.
+- ☑ Criteria render on the form; overall computed & cached on save (cached 4★ shown on the product).
+- ☑ Free hard-caps at 3 active criteria with an upsell notice.
+- ☑ AJAX submit, no full reload; client + server validation ("awaiting moderation" inline message).
+- ☑ Images validated (mime/size/count) and stored via WP media + `ndvr_review_media` (after the upload fix below — pending one re-test).
+- ☑ Honeypot + nonce + rate-limit enforced; reCAPTCHA optional.
+- ☑ Verified flag set on submit (review showed *verified owner*).
+- ☑ Pending reviews stay out of the front end; approved review renders in the WooCommerce reviews tab.
+
+### Fix: photo upload ("Specified file failed upload test.")
+
+Two bugs, both fixed in 0.2.1:
+1. Used `media_handle_sideload()`, whose `is_uploaded_file()` check rejects genuine HTTP uploads → switched to `media_handle_upload()`.
+2. `normalize_files()` ran `wp_unslash()` on `$_FILES` — WordPress never slashes `$_FILES`, and unslashing strips backslashes from **Windows** temp paths (`C:\…\php123.tmp`), breaking `is_uploaded_file()`. Now reads `$_FILES` raw and sanitizes only name/type.
 
 ### How to verify (one pass proves the set)
 

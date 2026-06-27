@@ -37,6 +37,7 @@ class Settings {
 			'require_verified'    => false,
 			'photo_uploads'       => true,
 			'max_photos'          => 5,
+			'schema_mode'         => 'auto',   // auto | plugin | off.
 			'recaptcha_enabled'   => false,
 			'recaptcha_site_key'  => '',
 			'recaptcha_secret'    => '',

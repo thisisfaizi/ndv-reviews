@@ -159,6 +159,65 @@ final class Plugin {
 				return new \NdvReviews\Admin\CriteriaPage( $c->get( 'criteria' ) );
 			}
 		);
+
+		// --- Phase 2: display, voting, schema, moderation ---
+
+		$c->set(
+			'review_query',
+			static function () {
+				return new \NdvReviews\Reviews\ReviewQuery();
+			}
+		);
+
+		$c->set(
+			'summary',
+			static function () {
+				return new \NdvReviews\Display\Summary();
+			}
+		);
+
+		$c->set(
+			'renderer',
+			static function ( $c ) {
+				return new \NdvReviews\Display\Renderer(
+					$c->get( 'settings' ),
+					$c->get( 'summary' ),
+					$c->get( 'review_query' )
+				);
+			}
+		);
+
+		$c->set(
+			'votes',
+			static function () {
+				return new \NdvReviews\Reviews\Votes();
+			}
+		);
+
+		$c->set(
+			'json_ld',
+			static function ( $c ) {
+				return new \NdvReviews\Schema\JsonLd( $c->get( 'settings' ), $c->get( 'review_query' ) );
+			}
+		);
+
+		$c->set(
+			'moderation_actions',
+			static function ( $c ) {
+				return new \NdvReviews\Moderation\Actions( $c->get( 'rating_cache' ) );
+			}
+		);
+
+		$c->set(
+			'moderation_page',
+			static function ( $c ) {
+				return new \NdvReviews\Moderation\Page(
+					$c->get( 'criteria' ),
+					$c->get( 'review_query' ),
+					$c->get( 'rating_cache' )
+				);
+			}
+		);
 	}
 
 	/**
@@ -183,6 +242,11 @@ final class Plugin {
 		$services = array(
 			$this->container->get( 'review_form' ),
 			$this->container->get( 'admin_criteria_page' ),
+			$this->container->get( 'renderer' ),
+			$this->container->get( 'votes' ),
+			$this->container->get( 'json_ld' ),
+			$this->container->get( 'moderation_actions' ),
+			$this->container->get( 'moderation_page' ),
 		);
 
 		/**

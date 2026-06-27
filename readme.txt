@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.2.1
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,13 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
 == Changelog ==
+
+= 0.3.0 =
+* Display: review summary box, star-distribution and per-criterion bars, photo thumbnails, verified badge.
+* Filtering (star / verified / with-photos), sorting, and AJAX pagination — no page reload.
+* Helpful voting on reviews.
+* Moderation: dedicated Reviews admin screen with status filters, bulk actions, and full review editing (body, criteria, photos); Rating column on the Comments screen.
+* SEO: Product/AggregateRating/Review JSON-LD with duplicate-avoidance (defers to WooCommerce/SEO plugins).
 
 = 0.2.1 =
 * Fix: review photo uploads failing with "Specified file failed upload test" (correct media handling; Windows temp-path fix).

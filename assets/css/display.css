@@ -1,0 +1,126 @@
+/* NDV Reviews — front-end display. Prefixed, theme-safe. */
+
+.ndvr-reviews-wrap { --ndvr-star: #f5a623; --ndvr-muted: #e2e2e2; }
+
+/* Star display */
+.ndvr-stars-display { display: inline-flex; gap: 1px; vertical-align: middle; }
+.ndvr-stars-display .ndvr-star { width: 16px; height: 16px; display: inline-block; background-size: contain; }
+.ndvr-star-full::before,
+.ndvr-star-half::before,
+.ndvr-star-empty::before { content: "\2605"; font-size: 16px; line-height: 1; }
+.ndvr-star-full { color: var(--ndvr-star); }
+.ndvr-star-empty { color: var(--ndvr-muted); }
+.ndvr-star-half { position: relative; color: var(--ndvr-muted); }
+.ndvr-star-half::after { content: "\2605"; position: absolute; left: 0; top: 0; width: 50%; overflow: hidden; color: var(--ndvr-star); }
+
+/* Summary */
+.ndvr-summary {
+	display: grid;
+	grid-template-columns: minmax(150px, 200px) 1fr;
+	gap: 24px 32px;
+	padding: 20px;
+	border: 1px solid #eee;
+	border-radius: 10px;
+	margin-bottom: 22px;
+}
+.ndvr-summary-average { font-size: 42px; font-weight: 700; line-height: 1; }
+.ndvr-summary-count { color: #666; margin-top: 6px; }
+.ndvr-summary-recommend { color: #1a7f57; font-weight: 600; margin-top: 4px; font-size: 0.9em; }
+.ndvr-summary-bars, .ndvr-summary-criteria { min-width: 0; }
+.ndvr-bar-row, .ndvr-criterion-row {
+	display: grid;
+	grid-template-columns: 70px 1fr 40px;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 6px;
+	font-size: 0.85em;
+}
+.ndvr-bar-track { background: #f0f0f0; border-radius: 999px; height: 8px; overflow: hidden; }
+.ndvr-bar-fill { display: block; height: 100%; background: var(--ndvr-star); border-radius: 999px; }
+.ndvr-bar-count, .ndvr-criterion-score { color: #666; text-align: right; }
+.ndvr-summary-criteria { grid-column: 1 / -1; }
+.ndvr-summary-criteria h4 { margin: 4px 0 10px; }
+.ndvr-criterion-row { grid-template-columns: 120px 1fr 40px; }
+
+/* Filter bar */
+.ndvr-filter-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 16px;
+	margin-bottom: 18px;
+	padding-bottom: 14px;
+	border-bottom: 1px solid #eee;
+}
+.ndvr-filter-stars { display: inline-flex; gap: 4px; }
+.ndvr-filter {
+	border: 1px solid #ddd;
+	background: #fff;
+	border-radius: 999px;
+	padding: 4px 12px;
+	cursor: pointer;
+	font-size: 0.85em;
+}
+.ndvr-filter.is-current { background: #111; color: #fff; border-color: #111; }
+.ndvr-filter-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9em; }
+.ndvr-sort { margin-left: auto; }
+
+/* Review list */
+.ndvr-review-list-wrap.is-loading { opacity: 0.5; transition: opacity 0.15s; }
+.ndvr-review-list { list-style: none; margin: 0; padding: 0; }
+.ndvr-review { padding: 18px 0; border-bottom: 1px solid #eee; }
+.ndvr-review-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.ndvr-review-author { display: flex; align-items: center; gap: 8px; }
+.ndvr-review-author img { border-radius: 50%; }
+.ndvr-review-name { font-weight: 600; }
+.ndvr-verified-badge {
+	background: rgba(26,127,87,.12);
+	color: #1a7f57;
+	font-size: 0.72em;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-weight: 600;
+}
+.ndvr-review-meta { display: flex; align-items: center; gap: 10px; }
+.ndvr-review-date { color: #999; font-size: 0.85em; }
+.ndvr-review-title { margin: 6px 0; font-size: 1.05em; }
+.ndvr-review-body { margin: 6px 0; }
+
+.ndvr-review-criteria { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0; padding: 0; }
+.ndvr-review-criterion { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; color: #555; }
+
+.ndvr-review-media { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.ndvr-review-photo img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+
+.ndvr-review-foot { display: flex; align-items: center; gap: 16px; margin-top: 8px; }
+.ndvr-recommend { font-size: 0.82em; font-weight: 600; }
+.ndvr-recommend-yes { color: #1a7f57; }
+.ndvr-recommend-no { color: #b32d2e; }
+.ndvr-helpful {
+	background: none;
+	border: 1px solid #ddd;
+	border-radius: 999px;
+	padding: 4px 12px;
+	cursor: pointer;
+	font-size: 0.82em;
+}
+.ndvr-helpful.is-voted { border-color: #1a7f57; color: #1a7f57; cursor: default; }
+
+/* Pagination */
+.ndvr-pagination { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.ndvr-page {
+	min-width: 34px;
+	border: 1px solid #ddd;
+	background: #fff;
+	border-radius: 6px;
+	padding: 5px 10px;
+	cursor: pointer;
+}
+.ndvr-page.is-current { background: #111; color: #fff; border-color: #111; }
+
+.ndvr-review-form-wrap { margin-top: 26px; }
+
+@media (max-width: 600px) {
+	.ndvr-summary { grid-template-columns: 1fr; }
+	.ndvr-criterion-row { grid-template-columns: 90px 1fr 36px; }
+}

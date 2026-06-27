@@ -1,0 +1,19 @@
+# Normalize line endings: LF in the repo for all text.
+* text=auto eol=lf
+
+# Binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
+
+# Files excluded from the distributed plugin zip / .org export.
+/docs               export-ignore
+/build-plan.md      export-ignore
+/.github            export-ignore
+/phpcs.xml.dist     export-ignore
+/.editorconfig      export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore

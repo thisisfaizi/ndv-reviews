@@ -106,8 +106,8 @@ class ReviewForm implements Registerable {
 			return;
 		}
 
-		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/build/reviews.css', array(), NDVR_VERSION );
-		wp_enqueue_script( 'ndvr-reviews', NDVR_URL . 'assets/build/reviews.js', array(), NDVR_VERSION, true );
+		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array(), NDVR_VERSION );
+		wp_enqueue_script( 'ndvr-reviews', NDVR_URL . 'assets/js/reviews.js', array(), NDVR_VERSION, true );
 
 		wp_localize_script(
 			'ndvr-reviews',

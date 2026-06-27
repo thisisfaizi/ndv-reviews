@@ -1,0 +1,116 @@
+/* NDV Reviews — front-end review form. Scoped under .ndvr- prefixes. */
+
+.ndvr-fields { margin: 0; }
+
+.ndvr-criteria-group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px 28px;
+	margin: 0 0 18px;
+}
+
+.ndvr-criterion {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	min-width: 0;
+}
+
+.ndvr-criterion-label {
+	display: block;
+	font-weight: 600;
+	font-size: 0.95em;
+	margin: 0 0 4px;
+	padding: 0;
+}
+
+/* Star control: radios laid out reverse so :checked ~ siblings highlight. */
+.ndvr-stars {
+	display: inline-flex;
+	flex-direction: row-reverse;
+	justify-content: flex-end;
+}
+
+.ndvr-stars .ndvr-star-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+}
+
+.ndvr-stars .ndvr-star-label {
+	cursor: pointer;
+	font-size: 26px;
+	line-height: 1;
+	color: #d6d6d6;
+	padding: 0 1px;
+	transition: color 0.12s ease;
+}
+
+.ndvr-stars .ndvr-star-label::before { content: "\2605"; } /* ★ */
+
+.ndvr-stars .ndvr-star-input:checked ~ .ndvr-star-label,
+.ndvr-stars .ndvr-star-label:hover,
+.ndvr-stars .ndvr-star-label:hover ~ .ndvr-star-label {
+	color: #f5a623;
+}
+
+.ndvr-stars .ndvr-star-input:focus-visible + .ndvr-star-label {
+	outline: 2px solid #6c8cff;
+	outline-offset: 2px;
+	border-radius: 3px;
+}
+
+.ndvr-field { margin: 0 0 14px; }
+.ndvr-field label { display: block; margin-bottom: 4px; }
+.ndvr-field input[type="text"],
+.ndvr-field textarea {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+.ndvr-field-recommend {
+	border: 0;
+	padding: 0;
+	margin: 0 0 14px;
+}
+.ndvr-field-recommend legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+.ndvr-field-recommend label {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-right: 16px;
+}
+
+.ndvr-field-consent label {
+	display: inline-flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.ndvr-form-message {
+	margin: 12px 0 0;
+	padding: 0;
+}
+.ndvr-form-message.is-error {
+	color: #b32d2e;
+	padding: 10px 12px;
+	background: #fcf0f1;
+	border-radius: 6px;
+}
+.ndvr-form-message.is-success {
+	color: #1a7f57;
+	padding: 10px 12px;
+	background: #effaf3;
+	border-radius: 6px;
+}
+
+.ndvr-review-form.is-submitting button[type="submit"] {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ndvr-stars .ndvr-star-label { transition: none; }
+}

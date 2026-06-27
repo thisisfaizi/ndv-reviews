@@ -143,6 +143,10 @@ class ReviewRepository {
 		$source = isset( $data['source'] ) ? sanitize_key( $data['source'] ) : 'onsite';
 		update_comment_meta( $comment_id, '_ndvr_source', $source );
 
+		// Seed the helpful counter to 0 so "Most helpful" sorting (which JOINs on
+		// this meta) still includes reviews that have not been voted on yet.
+		update_comment_meta( $comment_id, '_ndvr_helpful_up', 0 );
+
 		if ( ! empty( $data['order_id'] ) ) {
 			update_comment_meta( $comment_id, '_ndvr_order_id', absint( $data['order_id'] ) );
 		}

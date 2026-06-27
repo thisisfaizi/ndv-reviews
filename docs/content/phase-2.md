@@ -26,15 +26,18 @@
 
 ## Acceptance criteria (§7.4, §7.5, §7.6)
 
-Status: **code-complete, lint-clean; pending a runtime pass.**
+Status: **storefront runtime-verified** (product page renders summary + distribution + criteria bars + filterable list + form with **0 console errors, no fatal**, photo on a review). Admin + AJAX-interaction items pending a user pass.
 
-- ☐ All single + bulk moderation actions work and update caches/schema.
-- ☐ Edit saves criteria + media changes; aggregates recalculate.
+- ☑ Summary numbers match the database; criteria bars render (Quality 4.0 / Value 3.0 / Service 5.0 confirmed live).
+- ☑ Front-end review list renders with verified badge, per-criteria stars, photo, recommend.
+- ☐ All single + bulk moderation actions work and update caches/schema. *(admin)*
+- ☐ Edit saves criteria + media changes; aggregates recalculate. *(admin)*
 - ☐ Pending reviews never leak to the front end.
-- ☐ Summary numbers match the database; criteria bars render.
-- ☐ Filters/sort/paginate via AJAX without layout shift.
-- ☐ Helpful voting increments once per user/IP.
+- ☐ Filters/sort/paginate via AJAX without layout shift. *(click-test)*
+- ☐ Helpful voting increments once per user/IP. *(click-test)*
 - ☐ Single product emits exactly one valid AggregateRating; loop grids emit none; validates in Google Rich Results.
+
+> Fixed during verification: the "Most helpful" sort excluded unvoted reviews (meta JOIN) — now seeds `_ndvr_helpful_up = 0` on create; and filter/helpful button text contrast on themes that force white button text.
 
 ### How to verify
 

@@ -56,10 +56,12 @@
 .ndvr-filter {
 	border: 1px solid #ddd;
 	background: #fff;
+	color: #222;
 	border-radius: 999px;
 	padding: 4px 12px;
 	cursor: pointer;
 	font-size: 0.85em;
+	line-height: 1.4;
 }
 .ndvr-filter.is-current { background: #111; color: #fff; border-color: #111; }
 .ndvr-filter-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9em; }
@@ -97,14 +99,17 @@
 .ndvr-recommend-yes { color: #1a7f57; }
 .ndvr-recommend-no { color: #b32d2e; }
 .ndvr-helpful {
-	background: none;
+	background: #fff;
 	border: 1px solid #ddd;
+	color: #222;
 	border-radius: 999px;
 	padding: 4px 12px;
 	cursor: pointer;
 	font-size: 0.82em;
+	line-height: 1.4;
 }
 .ndvr-helpful.is-voted { border-color: #1a7f57; color: #1a7f57; cursor: default; }
+.ndvr-page { color: #222; }
 
 /* Pagination */
 .ndvr-pagination { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }

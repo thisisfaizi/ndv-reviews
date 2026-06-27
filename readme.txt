@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,10 +45,16 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 
 == Changelog ==
 
+= 0.2.0 =
+* Core reviews: multi-criteria rating form (up to 3 criteria) with photo uploads, recommend, and consent.
+* AJAX submission with honeypot, per-IP rate limiting, and optional reCAPTCHA v3.
+* Verified-buyer detection, overall-rating caching synced with WooCommerce aggregates.
+* Admin "Rating Criteria" screen with the free 3-criteria cap.
+
 = 0.1.0 =
 * Initial scaffolding: bootstrap, database schema, activation/deactivation, settings, WooCommerce HPOS and block-checkout compatibility declarations.
 
 == Upgrade Notice ==
 
-= 0.1.0 =
-First development release.
+= 0.2.0 =
+Adds the core multi-criteria review form, photo uploads, and anti-spam.

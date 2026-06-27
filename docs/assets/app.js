@@ -12,6 +12,7 @@
 		{ id: 'architecture', title: 'Architecture', group: 'Getting Started', file: 'content/architecture.md' },
 		{ id: 'free-vs-pro', title: 'Free vs Pro', group: 'Getting Started', file: 'content/free-vs-pro.md' },
 		{ id: 'phase-0', title: 'Phase 0 — Scaffolding', group: 'Build Phases', file: 'content/phase-0.md' },
+		{ id: 'phase-1', title: 'Phase 1 — Core Reviews', group: 'Build Phases', file: 'content/phase-1.md' },
 		{ id: 'data-model', title: 'Data Model', group: 'Reference', file: 'content/data-model.md' },
 		{ id: 'hooks', title: 'Hooks & Filters', group: 'Reference', file: 'content/hooks.md' }
 	];

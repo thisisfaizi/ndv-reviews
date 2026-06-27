@@ -85,10 +85,78 @@ final class Plugin {
 	 * @return void
 	 */
 	private function register_core_services() {
-		$this->container->set(
+		$c = $this->container;
+
+		$c->set(
 			'settings',
 			static function () {
 				return new Settings();
+			}
+		);
+
+		$c->set(
+			'criteria',
+			static function () {
+				return new \NdvReviews\Reviews\CriteriaRepository();
+			}
+		);
+
+		$c->set(
+			'rating_cache',
+			static function () {
+				return new \NdvReviews\Reviews\RatingCache();
+			}
+		);
+
+		$c->set(
+			'verified_buyer',
+			static function () {
+				return new \NdvReviews\Reviews\VerifiedBuyer();
+			}
+		);
+
+		$c->set(
+			'reviews',
+			static function ( $c ) {
+				return new \NdvReviews\Reviews\ReviewRepository(
+					$c->get( 'rating_cache' ),
+					$c->get( 'verified_buyer' ),
+					$c->get( 'criteria' )
+				);
+			}
+		);
+
+		$c->set(
+			'antispam',
+			static function ( $c ) {
+				return new \NdvReviews\Forms\AntiSpam( $c->get( 'settings' ) );
+			}
+		);
+
+		$c->set(
+			'upload',
+			static function ( $c ) {
+				return new \NdvReviews\Forms\Upload( $c->get( 'settings' ) );
+			}
+		);
+
+		$c->set(
+			'review_form',
+			static function ( $c ) {
+				return new \NdvReviews\Forms\ReviewForm(
+					$c->get( 'settings' ),
+					$c->get( 'criteria' ),
+					$c->get( 'reviews' ),
+					$c->get( 'antispam' ),
+					$c->get( 'upload' )
+				);
+			}
+		);
+
+		$c->set(
+			'admin_criteria_page',
+			static function ( $c ) {
+				return new \NdvReviews\Admin\CriteriaPage( $c->get( 'criteria' ) );
 			}
 		);
 	}
@@ -108,12 +176,14 @@ final class Plugin {
 		add_action( 'admin_init', array( Installer::class, 'maybe_upgrade' ) );
 
 		/**
-		 * Register the phase-by-phase service modules here as they are built.
-		 * Each must implement Registerable. Phase 0 ships none yet.
+		 * Phase-by-phase service modules that wire their own hooks.
 		 *
 		 * @var array<int,Registerable> $services
 		 */
-		$services = array();
+		$services = array(
+			$this->container->get( 'review_form' ),
+			$this->container->get( 'admin_criteria_page' ),
+		);
 
 		/**
 		 * Filter the list of core services before they register their hooks.

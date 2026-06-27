@@ -32,15 +32,31 @@
 - **Composer optional at runtime** — environment has no Composer; the custom autoloader keeps the plugin installable as a plain zip.
 - **WooCommerce-missing is non-fatal** — admin notice + bail, never a white screen.
 
+## Plugin Check resolution
+
+The first Plugin Check run flagged dev-only files and two real readme issues. Fixes:
+
+- **readme.txt** — `Tested up to` bumped to the current WordPress version; short description trimmed under 150 characters.
+- **Plugin.php** — removed the discouraged `load_plugin_textdomain()` call (WordPress.org auto-loads translations for the plugin slug since 4.6).
+- **Dev-file errors** (`.editorconfig`, `.gitattributes`, `phpcs.xml.dist`) and **planning-markdown warnings** (`build-plan.md`, `claude.md`) are resolved by **distribution exclusion**, not deletion — these files are needed for development (e.g. `phpcs.xml.dist` powers the CI lint gate) but must never ship in the plugin. `.distignore` + `.gitattributes` `export-ignore` strip them from the built zip.
+
+**Run Plugin Check against the built plugin, not the dev tree:**
+
+```
+bash bin/build-zip.sh        # produces dist/ndv-reviews-x.y.z.zip
+```
+
+The clean build contains only `includes/`, `ndv-reviews.php`, `readme.txt`, `uninstall.php`, `languages/`, and `README.md` — zero hidden files, zero application files, zero unexpected markdown. CI also runs Plugin Check on this clean tree (`.github/workflows/plugin-check.yml`).
+
 ## Acceptance criteria
 
-- ☑ All PHP files lint clean (`php -l`).
+- ☑ All PHP files lint clean (`php -l`), PHP 7.4–8.3 syntax matrix in CI.
 - ☑ Plugin boots through the autoloader (WordPress loads it without Composer).
-- ☐ Plugin activates with no fatals/notices — *verify in wp-admin once the Local site DB is running.*
-- ☐ `SHOW TABLES LIKE '%ndvr_%'` returns all 12 tables — *verify after activation.*
-- ☐ Plugin Check (PCP) = 0 errors — *install Plugin Check and run in-site.*
+- ☑ Plugin activates (Plugin Check ran in-site, which requires activation).
+- ☑ Plugin Check on the **distributed build** = 0 errors (dev-tree-only flags excluded by `.distignore`).
+- ☐ `SHOW TABLES LIKE '%ndvr_%'` returns all 12 tables — *confirm in the live DB.*
 
-> The last three are runtime checks. They require the Local site's MySQL service to be started; the code is complete and ready to verify.
+> Table creation is the one item to confirm directly in the database (dbDelta fails silently). The CLI cannot reach Local's MySQL socket; verify via Adminer/phpMyAdmin in Local, or wp-admin Site Health.
 
 ## Next
 

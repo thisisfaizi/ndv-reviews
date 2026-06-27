@@ -4,6 +4,8 @@
 
 # Build output
 /assets/build/
+/dist/
+/build/
 
 # Composer / npm lock noise (keep package-lock if you prefer reproducible builds)
 composer.lock

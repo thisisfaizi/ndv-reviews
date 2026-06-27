@@ -1,4 +1,4 @@
-# Phase 1 — Core Reviews {badge:done:COMPLETE}
+# Phase 1 — Core Reviews {badge:wip:CODE-COMPLETE}
 
 > **Goal (build-plan §15):** Review form (photo, consent, anti-spam), multi-criteria (≤3), verified badge, store as comment + custom tables, overall rating cache.
 > **Done when:** a guest/customer can submit a multi-criteria photo review; it appears after moderation.
@@ -26,14 +26,23 @@
 
 ## Acceptance criteria (§7.1, §7.2, §7.3)
 
-- ☑ Criteria render on the form; overall computed & cached on save.
-- ☑ Free hard-caps at 3 active criteria with an upsell notice.
-- ☑ AJAX submit, no full reload; client + server validation.
-- ☑ Images validated (mime/size/count) and stored via WP media + `ndvr_review_media`.
-- ☑ Honeypot + nonce + rate-limit enforced; reCAPTCHA optional.
-- ☑ Verified flag set on submit (via `wc_customer_bought_product`).
-- ☑ Pending reviews stay out of the front end until approved (native moderation).
-- ☐ End-to-end submit verified on a live product page — *manual test once the storefront is reachable.*
+Status: **code-complete, pending one live end-to-end run.** The items below are implemented and statically verified (`php -l`, `node --check`); the boxes are checked only once proven at runtime.
+
+- ☐ Criteria render on the form; overall computed & cached on save.
+- ☐ Free hard-caps at 3 active criteria with an upsell notice.
+- ☐ AJAX submit, no full reload; client + server validation.
+- ☐ Images validated (mime/size/count) and stored via WP media + `ndvr_review_media`.
+- ☐ Honeypot + nonce + rate-limit enforced; reCAPTCHA optional.
+- ☐ Verified flag set on submit (via `wc_customer_bought_product`).
+- ☐ Pending reviews stay out of the front end; approved review renders in the WooCommerce reviews tab.
+
+### How to verify (one pass proves the set)
+
+1. **Re-activate** the plugin (Plugins screen → deactivate/activate) so default criteria (Quality/Value/Service) seed. Confirm under **NDV Reviews → Rating Criteria**.
+2. Open any product, scroll to **Reviews**, rate the criteria, write a review, attach a photo, accept consent, submit. Expect an inline "awaiting moderation" message (no reload).
+3. **Comments → Pending**: the review is there, unapproved. Approve it.
+4. Reload the product: the approved review shows in the reviews tab; the star aggregate updates.
+5. Re-run **Plugin Check** on the freshly built zip (`bash bin/build-zip.sh`) and confirm 0 errors on the Phase-1 code.
 
 ## Notes & decisions
 

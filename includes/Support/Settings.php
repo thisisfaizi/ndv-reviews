@@ -43,6 +43,12 @@ class Settings {
 			'recaptcha_secret'    => '',
 			'reminder_enabled'    => false,
 			'reminder_status'     => 'completed',
+			'reminder_delay_days' => 7,
+			'reminder_subject'    => '',
+			'reminder_body'       => '',
+			'from_name'           => '',
+			'from_email'          => '',
+			'token_expiry_days'   => 60,
 			'remove_data_on_uninstall' => false,
 		);
 	}

@@ -1,0 +1,72 @@
+/* NDV Reviews — tokenized collection landing page (standalone). */
+
+.ndvr-collect-body {
+	margin: 0;
+	background: #f6f7f9;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	color: #1f2430;
+	line-height: 1.6;
+}
+
+.ndvr-collect-main { max-width: 640px; margin: 0 auto; padding: 32px 16px 64px; }
+
+.ndvr-collect-header { text-align: center; margin-bottom: 24px; }
+.ndvr-collect-header h1 { margin: 0 0 6px; font-size: 26px; }
+.ndvr-collect-header p { margin: 0; color: #6b7280; }
+
+.ndvr-collect-card {
+	background: #fff;
+	border: 1px solid #e6e8ec;
+	border-radius: 14px;
+	padding: 22px;
+	margin-bottom: 18px;
+	box-shadow: 0 1px 2px rgba(0,0,0,.03);
+}
+.ndvr-collect-card.is-done { opacity: 0.85; }
+
+.ndvr-collect-invalid h1 { color: #b32d2e; }
+
+.ndvr-collect-product {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 16px;
+	padding-bottom: 14px;
+	border-bottom: 1px solid #eee;
+}
+.ndvr-collect-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; }
+.ndvr-collect-name { font-weight: 600; font-size: 1.05em; }
+
+.ndvr-collect .ndvr-field { margin: 0 0 14px; }
+.ndvr-collect .ndvr-field label { display: block; font-weight: 500; }
+.ndvr-collect .ndvr-field input[type="text"],
+.ndvr-collect .ndvr-field textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 9px 12px;
+	border: 1px solid #d6d9de;
+	border-radius: 8px;
+	margin-top: 4px;
+	font: inherit;
+}
+.ndvr-collect .ndvr-field-recommend { border: 0; padding: 0; }
+.ndvr-collect .ndvr-field-recommend legend { font-weight: 500; margin-bottom: 6px; }
+.ndvr-collect .ndvr-field-recommend label { display: inline-flex; gap: 4px; margin-right: 14px; font-weight: 400; }
+.ndvr-collect .ndvr-field-consent label { display: inline-flex; gap: 8px; font-weight: 400; }
+
+.ndvr-collect-actions { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
+.ndvr-collect-submit {
+	background: #111;
+	color: #fff;
+	border: 0;
+	border-radius: 8px;
+	padding: 11px 22px;
+	font-size: 15px;
+	cursor: pointer;
+}
+.ndvr-collect-submit:disabled { opacity: 0.6; cursor: default; }
+
+.ndvr-form-message.is-success { color: #1a7f57; font-weight: 600; }
+.ndvr-form-message.is-error { color: #b32d2e; }
+
+.ndvr-collect-home { color: #2563eb; }

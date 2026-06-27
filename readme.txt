@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,11 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
 == Changelog ==
+
+= 0.4.0 =
+* Review reminders on Action Scheduler: configurable trigger status and delay, customizable email, test-send, request log with retry, and a reliability health check.
+* One-click unsubscribe.
+* Tokenized, no-login multi-product review-collection link sent with the reminder; opens a prefilled review page and marks items as reviewed.
 
 = 0.3.0 =
 * Display: review summary box, star-distribution and per-criterion bars, photo thumbnails, verified badge.

@@ -218,6 +218,91 @@ final class Plugin {
 				);
 			}
 		);
+
+		// --- Phase 3: requests + tokenized collection link ---
+
+		$c->set(
+			'token_repository',
+			static function () {
+				return new \NdvReviews\Collection\TokenRepository();
+			}
+		);
+
+		$c->set(
+			'reviewable',
+			static function () {
+				return new \NdvReviews\Collection\Reviewable();
+			}
+		);
+
+		$c->set(
+			'request_repository',
+			static function () {
+				return new \NdvReviews\Requests\RequestRepository();
+			}
+		);
+
+		$c->set(
+			'mailer',
+			static function ( $c ) {
+				return new \NdvReviews\Requests\Mailer(
+					$c->get( 'settings' ),
+					$c->get( 'token_repository' ),
+					$c->get( 'reviewable' )
+				);
+			}
+		);
+
+		$c->set(
+			'scheduler',
+			static function ( $c ) {
+				return new \NdvReviews\Requests\Scheduler(
+					$c->get( 'settings' ),
+					$c->get( 'request_repository' ),
+					$c->get( 'mailer' )
+				);
+			}
+		);
+
+		$c->set(
+			'landing',
+			static function ( $c ) {
+				return new \NdvReviews\Collection\Landing(
+					$c->get( 'settings' ),
+					$c->get( 'token_repository' ),
+					$c->get( 'criteria' ),
+					$c->get( 'reviews' ),
+					$c->get( 'antispam' ),
+					$c->get( 'upload' )
+				);
+			}
+		);
+
+		$c->set(
+			'unsubscribe',
+			static function ( $c ) {
+				return new \NdvReviews\Requests\Unsubscribe( $c->get( 'mailer' ) );
+			}
+		);
+
+		$c->set(
+			'health_check',
+			static function ( $c ) {
+				return new \NdvReviews\Requests\HealthCheck( $c->get( 'settings' ) );
+			}
+		);
+
+		$c->set(
+			'admin_requests_page',
+			static function ( $c ) {
+				return new \NdvReviews\Admin\RequestsPage(
+					$c->get( 'settings' ),
+					$c->get( 'request_repository' ),
+					$c->get( 'mailer' ),
+					$c->get( 'scheduler' )
+				);
+			}
+		);
 	}
 
 	/**
@@ -247,6 +332,11 @@ final class Plugin {
 			$this->container->get( 'json_ld' ),
 			$this->container->get( 'moderation_actions' ),
 			$this->container->get( 'moderation_page' ),
+			$this->container->get( 'scheduler' ),
+			$this->container->get( 'landing' ),
+			$this->container->get( 'unsubscribe' ),
+			$this->container->get( 'health_check' ),
+			$this->container->get( 'admin_requests_page' ),
 		);
 
 		/**

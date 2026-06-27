@@ -86,15 +86,21 @@ class Upload {
 				return new \WP_Error( 'ndvr_upload_size', __( 'One of your images is too large.', 'ndv-reviews' ) );
 			}
 
-			// Import the uploaded temp file into the media library. sideload copies
-			// the temp file (test_form=false), which works for our $_FILES entries.
-			$attachment_id = media_handle_sideload(
-				array(
-					'name'     => $file['name'],
-					'tmp_name' => $file['tmp_name'],
-				),
-				$post_id
+			// Import the genuine HTTP upload via media_handle_upload(), which uses
+			// move_uploaded_file() and passes the is_uploaded_file() test. We expose
+			// the single file under a temporary $_FILES key it can read. test_form is
+			// disabled because this is our AJAX request, not a standard form post.
+			$_FILES['ndvr_photo_tmp'] = array(
+				'name'     => $file['name'],
+				'type'     => $file['type'],
+				'tmp_name' => $file['tmp_name'],
+				'error'    => (int) $file['error'],
+				'size'     => (int) $file['size'],
 			);
+
+			$attachment_id = media_handle_upload( 'ndvr_photo_tmp', $post_id, array(), array( 'test_form' => false ) );
+
+			unset( $_FILES['ndvr_photo_tmp'] );
 
 			if ( is_wp_error( $attachment_id ) ) {
 				return $attachment_id;
@@ -113,9 +119,15 @@ class Upload {
 	 * @return array<int,array<string,mixed>>
 	 */
 	private function normalize_files( $field ) {
-		// phpcs:disable WordPress.Security.NonceVerification.Missing
-		$raw = isset( $_FILES[ $field ] ) ? wp_unslash( $_FILES[ $field ] ) : array();
-		// phpcs:enable WordPress.Security.NonceVerification.Missing
+		// IMPORTANT: do NOT wp_unslash() $_FILES. WordPress does not slash $_FILES,
+		// and unslashing corrupts Windows temp paths (C:\...\php123.tmp), which makes
+		// is_uploaded_file() fail. Only the file name is sanitized.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$raw = isset( $_FILES[ $field ] ) ? $_FILES[ $field ] : array();
+
+		if ( empty( $raw ) || ! isset( $raw['name'] ) ) {
+			return array();
+		}
 
 		$out = array();
 
@@ -123,18 +135,18 @@ class Upload {
 			foreach ( $raw['name'] as $i => $name ) {
 				$out[] = array(
 					'name'     => sanitize_file_name( $name ),
-					'type'     => isset( $raw['type'][ $i ] ) ? $raw['type'][ $i ] : '',
+					'type'     => isset( $raw['type'][ $i ] ) ? sanitize_text_field( $raw['type'][ $i ] ) : '',
 					'tmp_name' => isset( $raw['tmp_name'][ $i ] ) ? $raw['tmp_name'][ $i ] : '',
-					'error'    => isset( $raw['error'][ $i ] ) ? $raw['error'][ $i ] : UPLOAD_ERR_NO_FILE,
+					'error'    => isset( $raw['error'][ $i ] ) ? (int) $raw['error'][ $i ] : UPLOAD_ERR_NO_FILE,
 					'size'     => isset( $raw['size'][ $i ] ) ? (int) $raw['size'][ $i ] : 0,
 				);
 			}
 		} else {
 			$out[] = array(
 				'name'     => sanitize_file_name( $raw['name'] ),
-				'type'     => isset( $raw['type'] ) ? $raw['type'] : '',
+				'type'     => isset( $raw['type'] ) ? sanitize_text_field( $raw['type'] ) : '',
 				'tmp_name' => isset( $raw['tmp_name'] ) ? $raw['tmp_name'] : '',
-				'error'    => isset( $raw['error'] ) ? $raw['error'] : UPLOAD_ERR_NO_FILE,
+				'error'    => isset( $raw['error'] ) ? (int) $raw['error'] : UPLOAD_ERR_NO_FILE,
 				'size'     => isset( $raw['size'] ) ? (int) $raw['size'] : 0,
 			);
 		}

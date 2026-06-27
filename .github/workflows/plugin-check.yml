@@ -1,0 +1,34 @@
+name: Plugin Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  plugin-check:
+    name: WordPress Plugin Check (clean build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Produce the distributable copy (export-ignore strips dev files), so
+      # Plugin Check runs against exactly what ships — not the repo's dev tree.
+      - name: Build clean plugin tree
+        run: |
+          mkdir -p build
+          git archive --format=tar --prefix=ndv-reviews/ HEAD | tar -x -C build
+          ls -la build/ndv-reviews
+
+      - name: Run Plugin Check
+        uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: ./build/ndv-reviews
+          # Errors fail the job; warnings are reported but non-blocking.
+          categories: |
+            general
+            plugin_repo
+            security
+            accessibility

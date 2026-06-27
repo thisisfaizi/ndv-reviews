@@ -1,0 +1,43 @@
+# Files and folders excluded from the distributed plugin zip (WordPress.org build).
+# The repo keeps these for development; the shipped plugin must not contain them
+# (Plugin Check flags hidden/application/planning files in a distributed plugin).
+
+# Version control / editor / CI config
+.git
+.github
+.gitignore
+.gitattributes
+.editorconfig
+.distignore
+phpcs.xml.dist
+phpcs.xml
+phpstan.neon
+phpstan.neon.dist
+phpunit.xml
+phpunit.xml.dist
+
+# Dependency manifests / lockfiles (sources, not shipped)
+composer.json
+composer.lock
+package.json
+package-lock.json
+node_modules
+vendor/bin
+vendor/composer
+.husky
+
+# Build sources (only assets/build/ ships)
+assets/src
+
+# Project planning & internal docs (not part of the product)
+build-plan.md
+claude.md
+docs
+
+# Tests
+tests
+bin/build-zip.sh
+
+# OS noise
+.DS_Store
+Thumbs.db

@@ -9,11 +9,19 @@
 *.woff binary
 *.woff2 binary
 
-# Files excluded from the distributed plugin zip / .org export.
+# Files excluded from the distributed plugin zip (git archive / .org export).
+# Keep this list in sync with .distignore.
 /docs               export-ignore
 /build-plan.md      export-ignore
+/claude.md          export-ignore
 /.github            export-ignore
+/bin                export-ignore
+/tests              export-ignore
+/assets/src         export-ignore
 /phpcs.xml.dist     export-ignore
+/composer.json      export-ignore
+/package.json       export-ignore
+/.distignore        export-ignore
 /.editorconfig      export-ignore
 /.gitattributes     export-ignore
 /.gitignore         export-ignore

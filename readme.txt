@@ -2,13 +2,13 @@
 Contributors: nowdigiverse
 Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
-Tested up to: 6.8
+Tested up to: 7.0
 Requires PHP: 7.4
 Stable tag: 0.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Reliable, self-hosted product reviews for WooCommerce: multi-criteria ratings, photo reviews, working review reminders, and rich schema. No account required.
+Reliable, self-hosted product reviews for WooCommerce: multi-criteria ratings, photo reviews, working reminders, and rich schema.
 
 == Description ==
 

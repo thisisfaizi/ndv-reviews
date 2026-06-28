@@ -52,8 +52,13 @@ class Autoloader {
 
 			if ( is_readable( $file ) ) {
 				require $file;
+				return;
 			}
-			return;
+
+			// The name matched this prefix but the file is not here — keep trying
+			// other (e.g. more specific) prefixes such as the Pro add-on's
+			// "NdvReviews\Pro\" before giving up. A bare prefix like "NdvReviews\"
+			// would otherwise swallow "NdvReviews\Pro\..." classes.
 		}
 	}
 }

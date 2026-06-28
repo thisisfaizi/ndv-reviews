@@ -203,6 +203,29 @@ class ToolsPage implements Registerable {
 				<?php wp_nonce_field( self::NONCE ); ?>
 				<button class="button" name="ndvr_tools_do" value="export_json"><?php esc_html_e( 'Export JSON', 'ndv-reviews' ); ?></button>
 			</form>
+
+			<hr />
+
+			<h2><?php esc_html_e( 'QR code & shareable review link', 'ndv-reviews' ); ?></h2>
+			<p><?php esc_html_e( 'Print a QR on packaging or receipts so customers can scan it and review the product. Enter a product ID to generate its link + QR.', 'ndv-reviews' ); ?></p>
+			<form method="get">
+				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
+				<input type="number" name="qr_product" value="<?php echo isset( $_GET['qr_product'] ) ? esc_attr( absint( wp_unslash( $_GET['qr_product'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>" placeholder="<?php esc_attr_e( 'Product ID', 'ndv-reviews' ); ?>" />
+				<button class="button"><?php esc_html_e( 'Generate', 'ndv-reviews' ); ?></button>
+			</form>
+			<?php
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$qr_product = isset( $_GET['qr_product'] ) ? absint( wp_unslash( $_GET['qr_product'] ) ) : 0;
+			if ( $qr_product && 'product' === get_post_type( $qr_product ) ) {
+				$link = add_query_arg( 'ndvr_review', 1, get_permalink( $qr_product ) ) . '#reviews';
+				echo '<p style="margin-top:14px;"><strong>' . esc_html__( 'Review link:', 'ndv-reviews' ) . '</strong> <a href="' . esc_url( $link ) . '" target="_blank" rel="noopener">' . esc_html( $link ) . '</a></p>';
+				echo '<div style="background:#fff;display:inline-block;padding:14px;border:1px solid #e6e9ef;border-radius:14px;">';
+				echo \NdvReviews\Display\Qr::svg( $link, 200 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				echo '</div>';
+			} elseif ( $qr_product ) {
+				echo '<p><em>' . esc_html__( 'That product was not found.', 'ndv-reviews' ) . '</em></p>';
+			}
+			?>
 		</div>
 		<?php
 	}

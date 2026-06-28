@@ -104,6 +104,24 @@
 		save: function () { return null; }
 	} );
 
+	blocks.registerBlockType( 'ndv-reviews/form', {
+		title: __( 'NDV Reviews: Form', 'ndv-reviews' ),
+		icon: icon,
+		category: 'widgets',
+		attributes: { product_id: { type: 'number', default: 0 } },
+		edit: function ( props ) {
+			return [
+				el( InspectorControls, { key: 'i' },
+					el( PanelBody, { title: __( 'Form', 'ndv-reviews' ) },
+						numberControl( __( 'Product ID (0 = current)', 'ndv-reviews' ), props.attributes, props.setAttributes, 'product_id' )
+					)
+				),
+				preview( 'ndv-reviews/form', props.attributes )
+			];
+		},
+		save: function () { return null; }
+	} );
+
 	blocks.registerBlockType( 'ndv-reviews/marquee', {
 		title: __( 'NDV Reviews: Reviews Marquee', 'ndv-reviews' ),
 		icon: icon,

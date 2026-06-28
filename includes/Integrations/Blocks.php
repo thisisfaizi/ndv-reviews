@@ -108,6 +108,16 @@ class Blocks implements Registerable {
 		);
 
 		register_block_type(
+			'ndv-reviews/form',
+			array(
+				'api_version'     => 2,
+				'editor_script'   => 'ndvr-blocks',
+				'attributes'      => $common,
+				'render_callback' => array( $this, 'render_form' ),
+			)
+		);
+
+		register_block_type(
 			'ndv-reviews/marquee',
 			array(
 				'api_version'     => 2,
@@ -181,6 +191,18 @@ class Blocks implements Registerable {
 				'orderby'    => isset( $attr['orderby'] ) ? sanitize_key( $attr['orderby'] ) : 'recent',
 			)
 		);
+	}
+
+	/**
+	 * Render the review form block (delegates to the [ndvr-form] shortcode).
+	 *
+	 * @param array<string,mixed> $attr Attributes.
+	 * @return string
+	 */
+	public function render_form( $attr ) {
+		$product_id = isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0;
+
+		return do_shortcode( '[ndvr-form product_id="' . $product_id . '"]' );
 	}
 
 	/**

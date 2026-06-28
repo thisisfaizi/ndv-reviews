@@ -89,6 +89,8 @@ class DesignPage implements Registerable {
 		$card     = isset( $_POST['design_card'] ) ? sanitize_key( wp_unslash( $_POST['design_card'] ) ) : 'soft';
 		$rating   = isset( $_POST['design_rating'] ) ? sanitize_key( wp_unslash( $_POST['design_rating'] ) ) : 'stars';
 		$accent   = isset( $_POST['design_accent'] ) ? Design::sanitize_color( wp_unslash( $_POST['design_accent'] ) ) : '';
+		$font     = isset( $_POST['design_font'] ) ? sanitize_key( wp_unslash( $_POST['design_font'] ) ) : 'system';
+		$scale    = isset( $_POST['design_scale'] ) ? sanitize_key( wp_unslash( $_POST['design_scale'] ) ) : 'normal';
 
 		$this->settings->update(
 			array(
@@ -97,6 +99,8 @@ class DesignPage implements Registerable {
 				'design_card'     => in_array( $card, array( 'soft', 'bordered', 'flat' ), true ) ? $card : 'soft',
 				'design_rating'   => in_array( $rating, array( 'stars', 'hearts', 'thumbs', 'emoji' ), true ) ? $rating : 'stars',
 				'design_accent'   => '' !== $accent ? $accent : '#181a1f',
+				'design_font'     => in_array( $font, array( 'system', 'serif', 'rounded', 'mono' ), true ) ? $font : 'system',
+				'design_scale'    => in_array( $scale, array( 'compact', 'normal', 'large' ), true ) ? $scale : 'normal',
 			)
 		);
 
@@ -206,6 +210,26 @@ class DesignPage implements Registerable {
 						$this->option( 'design_rating', 'emoji', $s->get( 'design_rating' ), __( 'Emoji', 'ndv-reviews' ), '<span class="ndvr-glyph">&#128525;&#128525;&#128525;</span>' );
 						?>
 					</div>
+				</section>
+
+				<section class="ndvr-design-section">
+					<h2><?php esc_html_e( 'Typography', 'ndv-reviews' ); ?></h2>
+					<p class="ndvr-typo-row" style="display:flex;gap:24px;flex-wrap:wrap;">
+						<label><?php esc_html_e( 'Font', 'ndv-reviews' ); ?><br>
+							<select name="design_font">
+								<?php foreach ( array( 'system' => __( 'System', 'ndv-reviews' ), 'serif' => __( 'Serif', 'ndv-reviews' ), 'rounded' => __( 'Rounded', 'ndv-reviews' ), 'mono' => __( 'Mono', 'ndv-reviews' ) ) as $val => $label ) : ?>
+									<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $s->get( 'design_font', 'system' ), $val ); ?>><?php echo esc_html( $label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</label>
+						<label><?php esc_html_e( 'Text size', 'ndv-reviews' ); ?><br>
+							<select name="design_scale">
+								<?php foreach ( array( 'compact' => __( 'Compact', 'ndv-reviews' ), 'normal' => __( 'Normal', 'ndv-reviews' ), 'large' => __( 'Large', 'ndv-reviews' ) ) as $val => $label ) : ?>
+									<option value="<?php echo esc_attr( $val ); ?>" <?php selected( $s->get( 'design_scale', 'normal' ), $val ); ?>><?php echo esc_html( $label ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						</label>
+					</p>
 				</section>
 
 				<p class="ndvr-design-actions">

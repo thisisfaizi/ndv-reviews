@@ -151,6 +151,7 @@ class Renderer implements Registerable {
 		do_action( 'ndv-reviews/after_summary', $product_id );
 
 		if ( ! empty( $summary['count'] ) ) {
+			$this->render_topic_pills( $product_id );
 			$this->render_filter_bar();
 		}
 
@@ -174,6 +175,29 @@ class Renderer implements Registerable {
 		$this->render_form( $product_id );
 
 		echo '</div>';
+	}
+
+	/**
+	 * Render shopper-facing topic filter pills (manual tags free; AI topics Pro).
+	 *
+	 * @param int $product_id Product id.
+	 * @return void
+	 */
+	private function render_topic_pills( $product_id ) {
+		$tags = \NdvReviews\Reviews\ReviewTags::for_post( $product_id );
+		if ( empty( $tags ) ) {
+			return;
+		}
+		?>
+		<div class="ndvr-topic-pills" role="group" aria-label="<?php esc_attr_e( 'Filter by topic', 'ndv-reviews' ); ?>">
+			<button type="button" class="ndvr-topic is-current" data-filter="tag" data-value=""><?php esc_html_e( 'All topics', 'ndv-reviews' ); ?></button>
+			<?php foreach ( $tags as $ndvr_tag => $ndvr_count ) : ?>
+				<button type="button" class="ndvr-topic" data-filter="tag" data-value="<?php echo esc_attr( $ndvr_tag ); ?>">
+					<?php echo esc_html( ucwords( str_replace( '-', ' ', $ndvr_tag ) ) ); ?> <span class="ndvr-topic-count"><?php echo esc_html( number_format_i18n( $ndvr_count ) ); ?></span>
+				</button>
+			<?php endforeach; ?>
+		</div>
+		<?php
 	}
 
 	/**
@@ -270,6 +294,7 @@ class Renderer implements Registerable {
 		$verified   = ! empty( $_POST['verified'] );
 		$with_media = ! empty( $_POST['with_media'] );
 		$orderby    = isset( $_POST['orderby'] ) ? sanitize_key( wp_unslash( $_POST['orderby'] ) ) : 'recent';
+		$tag        = isset( $_POST['tag'] ) ? sanitize_title( wp_unslash( $_POST['tag'] ) ) : '';
 		$page       = isset( $_POST['page'] ) ? max( 1, absint( $_POST['page'] ) ) : 1;
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
@@ -280,6 +305,7 @@ class Renderer implements Registerable {
 				'verified'   => $verified,
 				'with_media' => $with_media,
 				'orderby'    => $orderby,
+				'tag'        => $tag,
 				'page'       => $page,
 				'per_page'   => (int) apply_filters( 'ndv-reviews/per_page', 10 ),
 			)

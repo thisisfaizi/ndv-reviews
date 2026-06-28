@@ -75,9 +75,13 @@ class ReviewRepository {
 	 */
 	public function create( array $data ) {
 		$product_id = isset( $data['product_id'] ) ? absint( $data['product_id'] ) : 0;
-		if ( ! $product_id || 'product' !== get_post_type( $product_id ) ) {
-			return new \WP_Error( 'ndvr_invalid_product', __( 'Invalid product.', 'ndv-reviews' ) );
+		if ( ! $product_id || ! PostTypes::is_reviewable( $product_id ) ) {
+			return new \WP_Error( 'ndvr_invalid_product', __( 'This item cannot be reviewed.', 'ndv-reviews' ) );
 		}
+
+		// Aggregates (and the comment itself) attach to the pool — identity by
+		// default, a parent for variations/grouped/bundle/group pools (Pro).
+		$pool_id = Pool::resolve_id( $product_id );
 
 		$content = isset( $data['content'] ) ? trim( wp_kses_post( $data['content'] ) ) : '';
 		if ( '' === $content ) {
@@ -101,10 +105,27 @@ class ReviewRepository {
 			return new \WP_Error( 'ndvr_missing_email', __( 'Please enter a valid email address.', 'ndv-reviews' ) );
 		}
 
-		$approved = ! empty( $data['approved'] ) ? 1 : 0;
+		/**
+		 * Filter whether a new review is auto-approved (Pro auto-approve rules).
+		 *
+		 * @param bool                $approved Whether to approve immediately.
+		 * @param array<string,mixed> $data     Submitted data.
+		 */
+		$approved = (int) (bool) apply_filters( 'ndv-reviews/should_approve', ! empty( $data['approved'] ), $data );
+
+		/**
+		 * Allow rejecting a review before it is stored (Pro profanity/banned-word).
+		 *
+		 * @param true|\WP_Error      $ok   Pass true to allow.
+		 * @param array<string,mixed> $data Submitted data.
+		 */
+		$validation = apply_filters( 'ndv-reviews/validate_review', true, $data );
+		if ( is_wp_error( $validation ) ) {
+			return $validation;
+		}
 
 		$commentdata = array(
-			'comment_post_ID'      => $product_id,
+			'comment_post_ID'      => $pool_id,
 			'comment_author'       => $author,
 			'comment_author_email' => $email,
 			'comment_content'      => $content,
@@ -162,10 +183,10 @@ class ReviewRepository {
 			update_comment_meta( $comment_id, 'verified', 1 );
 		}
 
-		// Compute caches.
+		// Compute caches (aggregate recalculated on the pool id).
 		$this->ratings->recalc_review( $comment_id );
 		if ( $approved ) {
-			$this->ratings->recalc_product( $product_id );
+			$this->ratings->recalc_product( $pool_id );
 		}
 
 		/**
@@ -235,6 +256,14 @@ class ReviewRepository {
 				continue;
 			}
 
+			/**
+			 * Filter a review photo's moderation status (Pro image moderation).
+			 *
+			 * @param string $status        approved|pending|rejected.
+			 * @param int    $attachment_id Attachment id.
+			 */
+			$status = (string) apply_filters( 'ndv-reviews/review_media_status', 'approved', $attachment_id );
+
 			$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				$table,
 				array(
@@ -243,7 +272,7 @@ class ReviewRepository {
 					'attachment_id' => $attachment_id,
 					'url'           => wp_get_attachment_url( $attachment_id ),
 					'position'      => $position++,
-					'status'        => 'approved',
+					'status'        => in_array( $status, array( 'approved', 'pending', 'rejected' ), true ) ? $status : 'approved',
 				),
 				array( '%d', '%s', '%d', '%s', '%d', '%s' )
 			);

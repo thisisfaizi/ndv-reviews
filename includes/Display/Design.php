@@ -71,12 +71,44 @@ class Design {
 	 * @return string
 	 */
 	public static function inline_css( Settings $settings ) {
+		$vars = array();
+
 		$accent = self::sanitize_color( (string) $settings->get( 'design_accent' ) );
-		if ( '' === $accent ) {
+		if ( '' !== $accent ) {
+			$vars[] = '--ndvr-accent:' . $accent;
+		}
+
+		$fonts = array(
+			'system'  => '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+			'serif'   => 'Georgia, "Times New Roman", "Iowan Old Style", serif',
+			'rounded' => '"Segoe UI Rounded", ui-rounded, "SF Pro Rounded", system-ui, sans-serif',
+			'mono'    => 'ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace',
+		);
+		$font = (string) $settings->get( 'design_font', 'system' );
+		if ( isset( $fonts[ $font ] ) && 'system' !== $font ) {
+			$vars[] = '--ndvr-font:' . $fonts[ $font ];
+		}
+
+		$scales = array(
+			'compact' => '14px',
+			'normal'  => '15px',
+			'large'   => '17px',
+		);
+		$scale = (string) $settings->get( 'design_scale', 'normal' );
+
+		if ( empty( $vars ) && 'normal' === $scale ) {
 			return '';
 		}
 
-		return ':root{--ndvr-accent:' . $accent . ';}';
+		$css = '';
+		if ( ! empty( $vars ) ) {
+			$css .= ':root{' . implode( ';', $vars ) . ';}';
+		}
+		if ( isset( $scales[ $scale ] ) && 'normal' !== $scale ) {
+			$css .= '.ndvr-reviews-wrap,.ndvr-review-body,.ndvr-collect,.ndvr-marquee-body{font-size:' . $scales[ $scale ] . ';}';
+		}
+
+		return $css;
 	}
 
 	/**

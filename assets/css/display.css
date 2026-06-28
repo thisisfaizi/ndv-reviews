@@ -166,6 +166,27 @@
 .ndvr-ai-summary p { margin: 0; color: var(--ndvr-ink); line-height: 1.6; }
 
 /* =========================================================
+   Topic filter pills
+   ========================================================= */
+.ndvr-topic-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.ndvr-topic {
+	border: 1px solid var(--ndvr-line);
+	background: var(--ndvr-paper);
+	color: var(--ndvr-ink);
+	border-radius: 999px;
+	padding: 5px 13px;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	font-family: var(--ndvr-font);
+	transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.ndvr-topic:hover { border-color: var(--ndvr-ink); }
+.ndvr-topic.is-current { background: var(--ndvr-accent, var(--ndvr-ink)); color: #fff; border-color: var(--ndvr-accent, var(--ndvr-ink)); }
+.ndvr-topic-count { color: var(--ndvr-faint); font-weight: 400; }
+.ndvr-topic.is-current .ndvr-topic-count { color: rgba(255,255,255,.7); }
+
+/* =========================================================
    Filter / sort bar
    ========================================================= */
 .ndvr-filter-bar {

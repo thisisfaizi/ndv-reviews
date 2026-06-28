@@ -114,9 +114,10 @@ class Widgets {
 	 * @return string
 	 */
 	public function stars( $post_id = 0 ) {
-		$post_id = $this->resolve_id( $post_id );
-		$average = (float) get_post_meta( $post_id, '_wc_average_rating', true );
-		$count   = (int) get_post_meta( $post_id, '_wc_review_count', true );
+		$post_id = \NdvReviews\Reviews\Pool::resolve_id( $this->resolve_id( $post_id ) );
+		$agg     = \NdvReviews\Reviews\AggregateStore::get( $post_id );
+		$average = (float) $agg['average'];
+		$count   = (int) $agg['count'];
 
 		$this->enqueue();
 

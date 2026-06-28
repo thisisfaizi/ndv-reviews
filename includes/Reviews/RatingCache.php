@@ -104,12 +104,15 @@ class RatingCache {
 
 		$average = $total > 0 ? round( $sum / $total, 2 ) : 0;
 
-		update_post_meta( $product_id, '_wc_rating_count', $counts );
-		update_post_meta( $product_id, '_wc_average_rating', $average );
-		update_post_meta( $product_id, '_wc_review_count', $total );
-
-		if ( class_exists( '\WC_Comments' ) ) {
-			\WC_Comments::clear_transients( $product_id );
-		}
+		// Write through the aggregate store: products keep the native `_wc_*`
+		// meta (byte-identical); other post types use `_ndvr_*` meta.
+		AggregateStore::set(
+			$product_id,
+			array(
+				'average' => $average,
+				'count'   => $total,
+				'counts'  => $counts,
+			)
+		);
 	}
 }

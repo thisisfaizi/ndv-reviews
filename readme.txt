@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.8.2
+Stable tag: 0.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,9 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
 == Changelog ==
+
+= 0.9.0 =
+* Reviews on custom post types; aggregate/pool substrate (variation pooling-ready); shopper-facing topic filter pills (manual tags) + admin topic assignment; QR code generation for review links (bundled, no network); Recent Reviews / Rating Badge / Top-Rated classic widgets; review Form block; typography options; a General Settings screen; and stable extension hooks for the Pro add-on.
 
 = 0.8.2 =
 * Fix Reviews list-table layout: override WordPress fixed-table layout that squeezed the Product column to one character (causing vertical text + huge row heights); vertically center cells; single-line row actions. Now consistent and professional.

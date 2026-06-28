@@ -10,6 +10,9 @@ namespace NdvReviews\Integrations;
 use NdvReviews\Support\Registerable;
 use NdvReviews\Integrations\Widgets\SummaryWidget;
 use NdvReviews\Integrations\Widgets\MarqueeWidget;
+use NdvReviews\Integrations\Widgets\RecentReviewsWidget;
+use NdvReviews\Integrations\Widgets\RatingBadgeWidget;
+use NdvReviews\Integrations\Widgets\TopRatedWidget;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -36,5 +39,8 @@ class ClassicWidgets implements Registerable {
 	public function register_widgets() {
 		register_widget( SummaryWidget::class );
 		register_widget( MarqueeWidget::class );
+		register_widget( RecentReviewsWidget::class );
+		register_widget( RatingBadgeWidget::class );
+		register_widget( TopRatedWidget::class );
 	}
 }

@@ -215,6 +215,13 @@ class Page implements Registerable {
 		);
 		update_comment_meta( $id, '_ndvr_title', $title );
 
+		// Topic tags (comma-separated) — shared store used by the storefront pills.
+		if ( isset( $_POST['ndvr_tags'] ) ) {
+			$raw  = sanitize_text_field( wp_unslash( $_POST['ndvr_tags'] ) );
+			$tags = array_filter( array_map( 'trim', explode( ',', $raw ) ) );
+			\NdvReviews\Reviews\ReviewTags::set( $id, $tags );
+		}
+
 		// Criteria scores.
 		if ( isset( $_POST['ndvr_criteria'] ) && is_array( $_POST['ndvr_criteria'] ) ) {
 			$scores = array_map( 'floatval', wp_unslash( $_POST['ndvr_criteria'] ) );
@@ -387,6 +394,13 @@ class Page implements Registerable {
 					<tr>
 						<th><label for="ndvr_title"><?php esc_html_e( 'Title', 'ndv-reviews' ); ?></label></th>
 						<td><input name="ndvr_title" id="ndvr_title" type="text" class="regular-text" value="<?php echo esc_attr( $view['title'] ); ?>" /></td>
+					</tr>
+					<tr>
+						<th><label for="ndvr_tags"><?php esc_html_e( 'Topics', 'ndv-reviews' ); ?></label></th>
+						<td>
+							<input name="ndvr_tags" id="ndvr_tags" type="text" class="regular-text" value="<?php echo esc_attr( implode( ', ', \NdvReviews\Reviews\ReviewTags::get( $id ) ) ); ?>" placeholder="<?php esc_attr_e( 'e.g. fit, battery, support', 'ndv-reviews' ); ?>" />
+							<p class="description"><?php esc_html_e( 'Comma-separated. Shown as filter pills on the storefront.', 'ndv-reviews' ); ?></p>
+						</td>
 					</tr>
 					<tr>
 						<th><label for="ndvr_content"><?php esc_html_e( 'Review', 'ndv-reviews' ); ?></label></th>

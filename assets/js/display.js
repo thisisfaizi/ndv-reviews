@@ -15,7 +15,8 @@
 	var filterBar = wrap.querySelector( '.ndvr-filter-bar' );
 	var productId = wrap.getAttribute( 'data-product' );
 
-	var state = { star: 0, verified: false, with_media: false, orderby: 'recent', page: 1 };
+	var state = { star: 0, verified: false, with_media: false, orderby: 'recent', tag: '', page: 1 };
+	var pills = wrap.querySelector( '.ndvr-topic-pills' );
 
 	function fetchList() {
 		if ( ! listWrap ) {
@@ -31,6 +32,7 @@
 		body.append( 'verified', state.verified ? '1' : '' );
 		body.append( 'with_media', state.with_media ? '1' : '' );
 		body.append( 'orderby', state.orderby );
+		body.append( 'tag', state.tag );
 		body.append( 'page', state.page );
 
 		fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
@@ -43,6 +45,22 @@
 				}
 			} )
 			.catch( function () { listWrap.classList.remove( 'is-loading' ); } );
+	}
+
+	if ( pills ) {
+		pills.addEventListener( 'click', function ( e ) {
+			var btn = e.target.closest( '.ndvr-topic' );
+			if ( ! btn ) {
+				return;
+			}
+			Array.prototype.forEach.call( pills.querySelectorAll( '.ndvr-topic' ), function ( b ) {
+				b.classList.remove( 'is-current' );
+			} );
+			btn.classList.add( 'is-current' );
+			state.tag = btn.getAttribute( 'data-value' ) || '';
+			state.page = 1;
+			fetchList();
+		} );
 	}
 
 	if ( filterBar ) {

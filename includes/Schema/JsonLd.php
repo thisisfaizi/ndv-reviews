@@ -86,9 +86,10 @@ class JsonLd implements Registerable {
 			return;
 		}
 
-		$product_id = get_queried_object_id();
-		$average    = (float) get_post_meta( $product_id, '_wc_average_rating', true );
-		$count      = (int) get_post_meta( $product_id, '_wc_review_count', true );
+		$product_id = \NdvReviews\Reviews\Pool::resolve_id( get_queried_object_id() );
+		$agg        = \NdvReviews\Reviews\AggregateStore::get( $product_id );
+		$average    = (float) $agg['average'];
+		$count      = (int) $agg['count'];
 
 		if ( $count < 1 || $average <= 0 ) {
 			return;

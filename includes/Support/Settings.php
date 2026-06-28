@@ -32,6 +32,7 @@ class Settings {
 		return array(
 			'schema_version'      => 1,
 			'enable_reviews'      => true,
+			'reviewable_post_types' => array(), // extra post types beyond product.
 			'criteria_mode'       => 'mean',   // mean | primary.
 			'allow_guest_reviews' => true,
 			'require_verified'    => false,
@@ -43,6 +44,8 @@ class Settings {
 			'design_summary'      => 'panel',   // panel | compact.
 			'design_card'         => 'soft',    // soft | bordered | flat.
 			'design_rating'       => 'stars',   // stars | hearts | thumbs | emoji.
+			'design_font'         => 'system', // system | serif | rounded | mono.
+			'design_scale'        => 'normal', // compact | normal | large.
 			'schema_mode'         => 'auto',   // auto | plugin | off.
 			'recaptcha_enabled'   => false,
 			'recaptcha_site_key'  => '',

@@ -51,7 +51,7 @@ class ReviewQuery {
 
 		$query_args = array(
 			'post_id'   => $product_id,
-			'post_type' => 'product', // Restrict to product reviews (excludes blog comments store-wide).
+			'post_type' => PostTypes::all(), // Restrict to reviewable post types (excludes blog comments store-wide).
 			'type__in'  => array( 'review', 'comment' ),
 			'status'    => 'approve',
 			'number'    => $per_page,
@@ -59,6 +59,22 @@ class ReviewQuery {
 			'meta_query' => array(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 			'no_found_rows' => false,
 		);
+
+		// Topic/tag filter (S4): restrict to comments carrying a review tag term.
+		if ( ! empty( $args['tag'] ) ) {
+			$ids = ReviewTags::comment_ids_for_tag( $product_id, sanitize_title( $args['tag'] ) );
+			if ( empty( $ids ) ) {
+				return array(
+					'items' => array(),
+					'total' => 0,
+					'pages' => 0,
+					'page'  => $page,
+				);
+			}
+			$query_args['comment__in'] = isset( $query_args['comment__in'] )
+				? array_values( array_intersect( $query_args['comment__in'], $ids ) )
+				: $ids;
+		}
 
 		// Filters.
 		$star = (int) $args['star'];
@@ -89,8 +105,18 @@ class ReviewQuery {
 					'page'  => $page,
 				);
 			}
-			$query_args['comment__in'] = $ids;
+			$query_args['comment__in'] = isset( $query_args['comment__in'] )
+				? array_values( array_intersect( $query_args['comment__in'], $ids ) )
+				: $ids;
 		}
+
+		/**
+		 * Filter the review query args before they run (Pro extra filters).
+		 *
+		 * @param array<string,mixed> $query_args WP_Comment_Query args.
+		 * @param array<string,mixed> $args       The normalized request args.
+		 */
+		$query_args = (array) apply_filters( 'ndv-reviews/review_query_args', $query_args, $args );
 
 		// Sorting.
 		switch ( $args['orderby'] ) {
@@ -157,9 +183,17 @@ class ReviewQuery {
 	public function to_view( $comment ) {
 		$id = (int) $comment->comment_ID;
 
+		/**
+		 * Filter a review's displayed author name (Pro anonymous reviews).
+		 *
+		 * @param string      $author  Author display name.
+		 * @param \WP_Comment $comment The review comment.
+		 */
+		$author = (string) apply_filters( 'ndv-reviews/review_author', $comment->comment_author, $comment );
+
 		return array(
 			'id'         => $id,
-			'author'     => $comment->comment_author,
+			'author'     => $author,
 			'date'       => $comment->comment_date,
 			'content'    => $comment->comment_content,
 			'title'      => (string) get_comment_meta( $id, '_ndvr_title', true ),

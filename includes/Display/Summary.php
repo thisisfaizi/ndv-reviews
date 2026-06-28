@@ -24,23 +24,12 @@ class Summary {
 	 * @return array<string,mixed>
 	 */
 	public function for_product( $product_id ) {
-		$product_id = absint( $product_id );
+		$product_id = \NdvReviews\Reviews\Pool::resolve_id( absint( $product_id ) );
 
-		$distribution = get_post_meta( $product_id, '_wc_rating_count', true );
-		$distribution = is_array( $distribution ) ? $distribution : array();
-		$distribution = array_replace(
-			array(
-				5 => 0,
-				4 => 0,
-				3 => 0,
-				2 => 0,
-				1 => 0,
-			),
-			array_map( 'intval', $distribution )
-		);
-
-		$total   = array_sum( $distribution );
-		$average = (float) get_post_meta( $product_id, '_wc_average_rating', true );
+		$agg          = \NdvReviews\Reviews\AggregateStore::get( $product_id );
+		$distribution = $agg['counts'];
+		$total        = $agg['count'] > 0 ? (int) $agg['count'] : array_sum( $distribution );
+		$average      = (float) $agg['average'];
 
 		return array(
 			'average'      => round( $average, 2 ),

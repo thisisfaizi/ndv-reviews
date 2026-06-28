@@ -157,40 +157,38 @@ body.ndvr-admin .subsubsub a.current { color: var(--ndvr-verdant); font-weight: 
    List-table polish (Reviews moderation screen)
    ========================================================= */
 
-/* Tighten rows and align content to the top */
-body.ndvr-admin .widefat tbody td { vertical-align: top; padding-top: 14px; padding-bottom: 14px; line-height: 1.5; }
-body.ndvr-admin .widefat .column-author strong { font-weight: 700; }
-body.ndvr-admin .widefat .ndvr-email { color: var(--ndvr-faint); font-size: 12px; }
+/* Vertically center every cell so short content lines up with the tall author
+   cell — this is what removes the "content at top, empty below" look. */
+body.ndvr-admin .widefat tbody td,
+body.ndvr-admin .widefat tbody th { vertical-align: middle; padding-top: 16px; padding-bottom: 16px; line-height: 1.5; }
+body.ndvr-admin .widefat tbody .check-column { vertical-align: middle; }
+body.ndvr-admin .widefat .column-author strong { font-weight: 700; display: block; }
+body.ndvr-admin .widefat .ndvr-email { color: var(--ndvr-faint); font-size: 12px; word-break: break-all; }
 
-/* Row actions: always visible (faster moderation) and styled — this also fills
-   the space WordPress reserves for them, removing the empty gap under each row. */
+/* Let columns size to their content. WordPress's `fixed` layout, combined with
+   our custom columns, otherwise squeezes the Product column to ~1 character and
+   wraps its text vertically — which is what blew up the row heights. */
+body.ndvr-admin .widefat.fixed,
+body.ndvr-admin .widefat { table-layout: auto; }
+body.ndvr-admin .widefat .column-rating,
+body.ndvr-admin .widefat .column-media,
+body.ndvr-admin .widefat .column-date { white-space: nowrap; }
+body.ndvr-admin .widefat .column-author { min-width: 190px; }
+body.ndvr-admin .widefat .column-review { min-width: 200px; }
+
+/* Row actions: a single compact line of subtle text links (standard, clean) */
 body.ndvr-admin .row-actions {
 	visibility: visible;
 	position: static;
-	margin-top: 10px;
-	display: inline-flex;
-	flex-wrap: wrap;
-	gap: 6px;
-	font-size: 0;
-	color: transparent;
-}
-body.ndvr-admin .row-actions span { font-size: 0; }
-body.ndvr-admin .row-actions span::after { content: none; }
-body.ndvr-admin .row-actions a {
+	margin-top: 7px;
 	font-size: 12px;
-	font-weight: 600;
-	text-decoration: none;
-	color: var(--ndvr-slate);
-	border: 1px solid var(--ndvr-line);
-	border-radius: 999px;
-	padding: 3px 11px;
-	transition: border-color 0.15s, color 0.15s, background 0.15s;
+	color: var(--ndvr-faint);
 }
-body.ndvr-admin .row-actions a:hover { border-color: var(--ndvr-ink); color: var(--ndvr-ink); }
-body.ndvr-admin .row-actions .approve a { color: var(--ndvr-verdant); border-color: var(--ndvr-verdant-soft); background: var(--ndvr-verdant-soft); }
-body.ndvr-admin .row-actions .approve a:hover { border-color: var(--ndvr-verdant); }
+body.ndvr-admin .row-actions a { color: var(--ndvr-slate); text-decoration: none; font-weight: 500; }
+body.ndvr-admin .row-actions a:hover { color: var(--ndvr-ink); text-decoration: underline; }
+body.ndvr-admin .row-actions .approve a { color: var(--ndvr-verdant); font-weight: 600; }
 body.ndvr-admin .row-actions .spam a:hover,
-body.ndvr-admin .row-actions .trash a:hover { color: #c0392b; border-color: #f0c4bf; }
+body.ndvr-admin .row-actions .trash a:hover { color: #c0392b; }
 
 /* Hide the duplicate footer header row (modern tables don't repeat it) */
 body.ndvr-admin .widefat tfoot { display: none; }

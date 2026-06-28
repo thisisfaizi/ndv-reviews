@@ -1,116 +1,189 @@
-/* NDV Reviews — front-end review form. Scoped under .ndvr- prefixes. */
+/**
+ * NDV Reviews — review form + interactive star control. Theme-safe, scoped.
+ */
 
-.ndvr-fields { margin: 0; }
+.ndvr-fields {
+	--ndvr-ink: #181a1f;
+	--ndvr-slate: #626b7a;
+	--ndvr-faint: #9aa3b2;
+	--ndvr-paper: #ffffff;
+	--ndvr-haze: #f5f6f8;
+	--ndvr-line: #e2e5ea;
+	--ndvr-gold: #f6a93b;
+	--ndvr-verdant: #0f7d5b;
+	--ndvr-verdant-soft: #e7f3ee;
+	--ndvr-rose: #c0392b;
+	--ndvr-r: 14px;
+	--ndvr-r-sm: 10px;
+	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: var(--ndvr-font);
+	color: var(--ndvr-ink);
+	max-width: 620px;
+}
+.ndvr-fields * { box-sizing: border-box; }
 
+/* Criteria star pickers */
 .ndvr-criteria-group {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 16px 28px;
-	margin: 0 0 18px;
+	gap: 18px 34px;
+	margin: 0 0 22px;
+	padding: 18px 20px;
+	background: var(--ndvr-haze);
+	border-radius: var(--ndvr-r);
 }
-
-.ndvr-criterion {
-	border: 0;
-	margin: 0;
-	padding: 0;
-	min-width: 0;
-}
-
+.ndvr-criterion { border: 0; margin: 0; padding: 0; min-width: 0; }
 .ndvr-criterion-label {
 	display: block;
-	font-weight: 600;
-	font-size: 0.95em;
-	margin: 0 0 4px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--ndvr-slate);
+	margin: 0 0 6px;
 	padding: 0;
 }
 
-/* Star control: radios laid out reverse so :checked ~ siblings highlight. */
-.ndvr-stars {
-	display: inline-flex;
-	flex-direction: row-reverse;
-	justify-content: flex-end;
-}
-
-.ndvr-stars .ndvr-star-input {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	opacity: 0;
-}
-
+.ndvr-stars { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; }
+.ndvr-stars .ndvr-star-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .ndvr-stars .ndvr-star-label {
 	cursor: pointer;
-	font-size: 26px;
+	font-size: 30px;
 	line-height: 1;
-	color: #d6d6d6;
-	padding: 0 1px;
-	transition: color 0.12s ease;
+	color: #d9dce2;
+	padding: 0 2px;
+	transition: color 0.12s ease, transform 0.1s ease;
 }
-
-.ndvr-stars .ndvr-star-label::before { content: "\2605"; } /* ★ */
-
+.ndvr-stars .ndvr-star-label::before { content: "\2605"; }
 .ndvr-stars .ndvr-star-input:checked ~ .ndvr-star-label,
 .ndvr-stars .ndvr-star-label:hover,
-.ndvr-stars .ndvr-star-label:hover ~ .ndvr-star-label {
-	color: #f5a623;
-}
+.ndvr-stars .ndvr-star-label:hover ~ .ndvr-star-label { color: var(--ndvr-gold); }
+.ndvr-stars .ndvr-star-label:hover { transform: scale(1.12); }
+.ndvr-stars .ndvr-star-input:focus-visible + .ndvr-star-label { outline: 2px solid var(--ndvr-verdant); outline-offset: 2px; border-radius: 4px; }
 
-.ndvr-stars .ndvr-star-input:focus-visible + .ndvr-star-label {
-	outline: 2px solid #6c8cff;
-	outline-offset: 2px;
-	border-radius: 3px;
-}
-
-.ndvr-field { margin: 0 0 14px; }
-.ndvr-field label { display: block; margin-bottom: 4px; }
-.ndvr-field input[type="text"],
-.ndvr-field textarea {
+/* Fields */
+.ndvr-field { margin: 0 0 16px; }
+.ndvr-field > label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--ndvr-ink); }
+.ndvr-field .required { color: var(--ndvr-rose); }
+.ndvr-fields input[type="text"],
+.ndvr-fields input[type="email"],
+.ndvr-fields input[type="url"],
+.ndvr-fields textarea {
 	width: 100%;
 	max-width: 100%;
-	box-sizing: border-box;
+	font-family: inherit;
+	font-size: 15px;
+	color: var(--ndvr-ink);
+	background: var(--ndvr-paper);
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r-sm);
+	padding: 11px 14px;
+	transition: border-color 0.15s, box-shadow 0.15s;
 }
+.ndvr-fields input:focus,
+.ndvr-fields textarea:focus {
+	outline: none;
+	border-color: var(--ndvr-verdant);
+	box-shadow: 0 0 0 3px var(--ndvr-verdant-soft);
+}
+.ndvr-fields textarea { min-height: 120px; resize: vertical; }
 
-.ndvr-field-recommend {
-	border: 0;
-	padding: 0;
-	margin: 0 0 14px;
-}
-.ndvr-field-recommend legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+.ndvr-field-recommend { border: 0; padding: 0; margin: 0 0 16px; }
+.ndvr-field-recommend legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0; }
 .ndvr-field-recommend label {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
-	margin-right: 16px;
+	gap: 6px;
+	margin-right: 8px;
+	padding: 7px 14px;
+	border: 1px solid var(--ndvr-line);
+	border-radius: 999px;
+	cursor: pointer;
+	font-size: 14px;
+	transition: border-color 0.15s, background 0.15s;
 }
+.ndvr-field-recommend label:hover { border-color: var(--ndvr-ink); }
+.ndvr-field-recommend input { accent-color: var(--ndvr-verdant); }
 
-.ndvr-field-consent label {
-	display: inline-flex;
-	align-items: flex-start;
-	gap: 8px;
-}
+.ndvr-field-photos input[type="file"] { font-size: 13px; color: var(--ndvr-slate); }
 
-.ndvr-form-message {
-	margin: 12px 0 0;
-	padding: 0;
-}
-.ndvr-form-message.is-error {
-	color: #b32d2e;
-	padding: 10px 12px;
-	background: #fcf0f1;
-	border-radius: 6px;
-}
-.ndvr-form-message.is-success {
-	color: #1a7f57;
-	padding: 10px 12px;
-	background: #effaf3;
-	border-radius: 6px;
-}
+.ndvr-field-consent label { display: inline-flex; align-items: flex-start; gap: 9px; font-size: 14px; color: var(--ndvr-slate); font-weight: 400; }
+.ndvr-field-consent input { margin-top: 3px; accent-color: var(--ndvr-verdant); }
 
-.ndvr-review-form.is-submitting button[type="submit"] {
-	opacity: 0.6;
-	pointer-events: none;
+.ndvr-form-message { margin: 14px 0 0; font-size: 14px; }
+.ndvr-form-message.is-error { color: var(--ndvr-rose); padding: 11px 14px; background: #fcf0ef; border-radius: var(--ndvr-r-sm); }
+.ndvr-form-message.is-success { color: var(--ndvr-verdant); padding: 11px 14px; background: var(--ndvr-verdant-soft); border-radius: var(--ndvr-r-sm); }
+
+.ndvr-review-form.is-submitting button[type="submit"] { opacity: 0.6; pointer-events: none; }
+
+/* Pro video field */
+.ndvr-field-video input { width: 100%; }
+
+/* ---- The whole WooCommerce review form wrapper (author fields + submit) ---- */
+#ndvr-review-form {
+	--ndvr-ink: #181a1f;
+	--ndvr-slate: #626b7a;
+	--ndvr-paper: #ffffff;
+	--ndvr-line: #e2e5ea;
+	--ndvr-verdant: #0f7d5b;
+	--ndvr-verdant-soft: #e7f3ee;
+	--ndvr-r-sm: 10px;
+	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: var(--ndvr-font);
+	max-width: 620px;
 }
+#ndvr-review-form .comment-reply-title,
+.ndvr-form-title {
+	font-size: 21px;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	color: var(--ndvr-ink);
+	display: block;
+	margin-bottom: 6px;
+}
+#ndvr-review-form .comment-notes { color: var(--ndvr-slate); font-size: 14px; margin-bottom: 16px; }
+#ndvr-review-form .comment-form-author,
+#ndvr-review-form .comment-form-email,
+#ndvr-review-form .comment-form-url { margin: 0 0 14px; }
+#ndvr-review-form .comment-form-author label,
+#ndvr-review-form .comment-form-email label,
+#ndvr-review-form .comment-form-url label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--ndvr-ink); }
+#ndvr-review-form input[type="text"],
+#ndvr-review-form input[type="email"],
+#ndvr-review-form input[type="url"] {
+	width: 100%;
+	max-width: 100%;
+	font-family: inherit;
+	font-size: 15px;
+	color: var(--ndvr-ink);
+	background: var(--ndvr-paper);
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r-sm);
+	padding: 11px 14px;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+#ndvr-review-form input:focus { outline: none; border-color: var(--ndvr-verdant); box-shadow: 0 0 0 3px var(--ndvr-verdant-soft); }
+#ndvr-review-form .form-submit { margin-top: 20px; }
+/* Themes (e.g. Astra) style input#submit with high specificity; override decisively. */
+#ndvr-review-form .form-submit input#submit,
+#ndvr-review-form .form-submit .submit,
+#ndvr-review-form input[type="submit"] {
+	background: var(--ndvr-ink) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: var(--ndvr-r-sm) !important;
+	padding: 13px 30px !important;
+	font-size: 15px !important;
+	font-weight: 600 !important;
+	font-family: inherit !important;
+	cursor: pointer;
+	transition: transform 0.1s ease, opacity 0.15s;
+	-webkit-appearance: none;
+	appearance: none;
+}
+#ndvr-review-form .form-submit input#submit:hover { transform: translateY(-1px); background: #000 !important; }
 
 @media (prefers-reduced-motion: reduce) {
 	.ndvr-stars .ndvr-star-label { transition: none; }
+	.ndvr-stars .ndvr-star-label:hover { transform: none; }
 }

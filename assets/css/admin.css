@@ -1,0 +1,154 @@
+/**
+ * NDV Reviews — admin skin. Scoped to body.ndvr-admin so it only restyles our
+ * screens and never touches the rest of wp-admin. Modern, not "old WordPress".
+ */
+
+body.ndvr-admin {
+	--ndvr-ink: #181a1f;
+	--ndvr-slate: #5e6675;
+	--ndvr-faint: #8b93a3;
+	--ndvr-paper: #ffffff;
+	--ndvr-haze: #f4f6f9;
+	--ndvr-line: #e6e9ef;
+	--ndvr-gold: #f6a93b;
+	--ndvr-verdant: #0f7d5b;
+	--ndvr-verdant-soft: #e7f3ee;
+	--ndvr-r: 14px;
+	--ndvr-r-sm: 9px;
+	-webkit-font-smoothing: antialiased;
+}
+
+body.ndvr-admin #wpcontent { background: var(--ndvr-haze); }
+body.ndvr-admin .wrap { max-width: 1100px; padding-top: 8px; }
+
+/* Page title */
+body.ndvr-admin .wrap > h1:first-of-type {
+	font-size: 26px;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	color: var(--ndvr-ink);
+	padding: 0 0 16px;
+	margin: 8px 0 22px;
+	border-bottom: 1px solid var(--ndvr-line);
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+body.ndvr-admin .wrap > h1:first-of-type::before {
+	content: "";
+	width: 10px;
+	height: 22px;
+	border-radius: 3px;
+	background: linear-gradient(180deg, var(--ndvr-verdant), #0a5c43);
+}
+
+/* Section headings */
+body.ndvr-admin .wrap h2 {
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--ndvr-faint);
+	margin: 30px 0 14px;
+}
+
+/* Cards: tables and form-tables become panels */
+body.ndvr-admin .widefat,
+body.ndvr-admin .form-table {
+	background: var(--ndvr-paper);
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r);
+	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 18px 40px -30px rgba(20,22,28,.25);
+	overflow: hidden;
+}
+body.ndvr-admin .form-table { padding: 8px 22px; }
+body.ndvr-admin .widefat thead th {
+	background: var(--ndvr-haze);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--ndvr-faint);
+	border-bottom: 1px solid var(--ndvr-line);
+	padding: 13px 16px;
+}
+body.ndvr-admin .widefat td,
+body.ndvr-admin .widefat th { padding: 13px 16px; }
+body.ndvr-admin .widefat tbody tr { border-bottom: 1px solid var(--ndvr-line); }
+body.ndvr-admin .striped > tbody > :nth-child(odd) { background: #fbfcfd; }
+body.ndvr-admin .form-table th { color: var(--ndvr-ink); font-weight: 600; padding-top: 18px; padding-bottom: 18px; }
+
+/* Inputs */
+body.ndvr-admin .wrap input[type="text"],
+body.ndvr-admin .wrap input[type="email"],
+body.ndvr-admin .wrap input[type="url"],
+body.ndvr-admin .wrap input[type="password"],
+body.ndvr-admin .wrap input[type="number"],
+body.ndvr-admin .wrap textarea,
+body.ndvr-admin .wrap select {
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r-sm);
+	padding: 8px 12px;
+	box-shadow: none;
+	color: var(--ndvr-ink);
+	min-height: 38px;
+}
+body.ndvr-admin .wrap input:focus,
+body.ndvr-admin .wrap textarea:focus,
+body.ndvr-admin .wrap select:focus {
+	border-color: var(--ndvr-verdant);
+	box-shadow: 0 0 0 3px var(--ndvr-verdant-soft);
+	outline: none;
+}
+
+/* Buttons */
+body.ndvr-admin .wrap .button {
+	border-radius: 999px;
+	border: 1px solid var(--ndvr-line);
+	background: var(--ndvr-paper);
+	color: var(--ndvr-ink);
+	box-shadow: none;
+	padding: 4px 16px;
+	height: auto;
+	min-height: 34px;
+	font-weight: 600;
+	transition: border-color 0.15s, transform 0.1s;
+}
+body.ndvr-admin .wrap .button:hover { border-color: var(--ndvr-ink); }
+body.ndvr-admin .wrap .button:active { transform: translateY(1px); }
+body.ndvr-admin .wrap .button-primary {
+	background: var(--ndvr-verdant);
+	border-color: var(--ndvr-verdant);
+	color: #fff;
+}
+body.ndvr-admin .wrap .button-primary:hover { background: #0c6a4d; border-color: #0c6a4d; }
+body.ndvr-admin .wrap .button-link-delete { color: #c0392b; border-color: transparent; }
+
+/* Notices */
+body.ndvr-admin .wrap .notice {
+	border: 1px solid var(--ndvr-line);
+	border-left-width: 4px;
+	border-radius: var(--ndvr-r-sm);
+	box-shadow: 0 1px 2px rgba(20,22,28,.04);
+}
+body.ndvr-admin .wrap .notice-success { border-left-color: var(--ndvr-verdant); }
+
+/* Status pills (requests log) */
+body.ndvr-admin .ndvr-status {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: capitalize;
+	padding: 3px 10px;
+	border-radius: 999px;
+	background: var(--ndvr-haze);
+	color: var(--ndvr-slate);
+}
+body.ndvr-admin .ndvr-status-sent { background: var(--ndvr-verdant-soft); color: var(--ndvr-verdant); }
+body.ndvr-admin .ndvr-status-failed { background: #fcebe9; color: #c0392b; }
+body.ndvr-admin .ndvr-status-scheduled { background: #fff3e0; color: #b26a00; }
+
+/* Tab nav (status views on the reviews list) */
+body.ndvr-admin .subsubsub { margin-bottom: 14px; }
+body.ndvr-admin .subsubsub a { color: var(--ndvr-slate); }
+body.ndvr-admin .subsubsub a.current { color: var(--ndvr-verdant); font-weight: 700; }

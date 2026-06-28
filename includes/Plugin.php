@@ -160,6 +160,13 @@ final class Plugin {
 			}
 		);
 
+		$c->set(
+			'admin_assets',
+			static function () {
+				return new \NdvReviews\Admin\Assets();
+			}
+		);
+
 		// --- Phase 2: display, voting, schema, moderation ---
 
 		$c->set(
@@ -416,6 +423,7 @@ final class Plugin {
 		$services = array(
 			$this->container->get( 'review_form' ),
 			$this->container->get( 'admin_criteria_page' ),
+			$this->container->get( 'admin_assets' ),
 			$this->container->get( 'renderer' ),
 			$this->container->get( 'votes' ),
 			$this->container->get( 'json_ld' ),

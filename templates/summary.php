@@ -20,6 +20,7 @@ if ( empty( $summary ) || empty( $summary['count'] ) ) {
 $ndvr_total = (int) $summary['count'];
 ?>
 <div class="ndvr-summary">
+	<span class="ndvr-eyebrow ndvr-summary-eyebrow"><?php esc_html_e( 'Verified reviews', 'ndv-reviews' ); ?></span>
 	<div class="ndvr-summary-overall">
 		<div class="ndvr-summary-average"><?php echo esc_html( number_format_i18n( $summary['average'], 1 ) ); ?></div>
 		<?php

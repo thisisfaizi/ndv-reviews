@@ -1,46 +1,39 @@
-/* NDV Reviews — reviews marquee (Magic UI-style), vanilla CSS. */
+/**
+ * NDV Reviews — reviews marquee (Magic UI-style), vanilla CSS. Theme-safe.
+ */
 
 .ndvr-marquee {
+	--ndvr-ink: #181a1f;
+	--ndvr-slate: #626b7a;
+	--ndvr-paper: #ffffff;
+	--ndvr-line: #e8eaef;
+	--ndvr-gold: #f6a93b;
+	--ndvr-verdant: #0f7d5b;
+	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	--ndvr-duration: 40s;
-	--ndvr-gap: 16px;
+	--ndvr-gap: 18px;
+	font-family: var(--ndvr-font);
 	display: flex;
 	overflow: hidden;
 	gap: var(--ndvr-gap);
-	-webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-	mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+	mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
 }
+.ndvr-marquee * { box-sizing: border-box; }
 
-.ndvr-marquee-track {
-	display: flex;
-	gap: var(--ndvr-gap);
-	width: max-content;
-}
+.ndvr-marquee-track { display: flex; gap: var(--ndvr-gap); width: max-content; }
+.ndvr-marquee-group { display: flex; gap: var(--ndvr-gap); flex-shrink: 0; }
 
-.ndvr-marquee-group {
-	display: flex;
-	gap: var(--ndvr-gap);
-	flex-shrink: 0;
-}
-
-.ndvr-marquee-horizontal .ndvr-marquee-track {
-	animation: ndvr-scroll-x var(--ndvr-duration) linear infinite;
-}
-
-.ndvr-marquee-horizontal.ndvr-marquee-reverse .ndvr-marquee-track {
-	animation-direction: reverse;
-}
+.ndvr-marquee-horizontal .ndvr-marquee-track { animation: ndvr-scroll-x var(--ndvr-duration) linear infinite; }
+.ndvr-marquee-horizontal.ndvr-marquee-reverse .ndvr-marquee-track { animation-direction: reverse; }
 
 .ndvr-marquee-vertical {
 	flex-direction: column;
-	max-height: 460px;
-	-webkit-mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
-	mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+	max-height: 480px;
+	-webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+	mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
 }
-.ndvr-marquee-vertical .ndvr-marquee-track {
-	flex-direction: column;
-	width: auto;
-	animation: ndvr-scroll-y var(--ndvr-duration) linear infinite;
-}
+.ndvr-marquee-vertical .ndvr-marquee-track { flex-direction: column; width: auto; animation: ndvr-scroll-y var(--ndvr-duration) linear infinite; }
 .ndvr-marquee-vertical .ndvr-marquee-group { flex-direction: column; }
 .ndvr-marquee-vertical.ndvr-marquee-reverse .ndvr-marquee-track { animation-direction: reverse; }
 
@@ -48,31 +41,27 @@
 
 .ndvr-marquee-card {
 	box-sizing: border-box;
-	width: 280px;
+	width: 300px;
 	flex-shrink: 0;
-	background: #fff;
-	border: 1px solid #ececec;
-	border-radius: 12px;
-	padding: 16px;
+	background: var(--ndvr-paper);
+	border: 1px solid var(--ndvr-line);
+	border-radius: 16px;
+	padding: 20px;
 	margin: 0;
-	box-shadow: 0 1px 2px rgba(0,0,0,.04);
+	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 14px 30px -22px rgba(20,22,28,.3);
 }
+.ndvr-marquee-head { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+.ndvr-marquee-head img { border-radius: 50%; width: 36px; height: 36px; }
+.ndvr-marquee-name { font-weight: 700; font-size: 14px; color: var(--ndvr-ink); }
+.ndvr-marquee-verified { color: var(--ndvr-verdant); margin-left: 4px; font-weight: 800; }
+.ndvr-marquee-stars { margin-bottom: 10px; }
+.ndvr-marquee-stars .ndvr-stars-display { font-size: 15px; }
+.ndvr-marquee-stars .ndvr-star-full { color: var(--ndvr-gold); }
+.ndvr-marquee-stars .ndvr-star-empty, .ndvr-marquee-stars .ndvr-star-half { color: var(--ndvr-line); }
+.ndvr-marquee-body { margin: 0; font-size: 14px; color: #3a4150; line-height: 1.6; }
 
-.ndvr-marquee-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
-.ndvr-marquee-head img { border-radius: 50%; }
-.ndvr-marquee-name { font-weight: 600; font-size: 0.9em; }
-.ndvr-marquee-verified { color: #1a7f57; margin-left: 4px; }
-.ndvr-marquee-stars { margin-bottom: 8px; }
-.ndvr-marquee-body { margin: 0; font-size: 0.88em; color: #444; line-height: 1.5; }
-
-@keyframes ndvr-scroll-x {
-	from { transform: translateX(0); }
-	to { transform: translateX(calc(-100% - var(--ndvr-gap))); }
-}
-@keyframes ndvr-scroll-y {
-	from { transform: translateY(0); }
-	to { transform: translateY(calc(-100% - var(--ndvr-gap))); }
-}
+@keyframes ndvr-scroll-x { from { transform: translateX(0); } to { transform: translateX(calc(-100% - var(--ndvr-gap))); } }
+@keyframes ndvr-scroll-y { from { transform: translateY(0); } to { transform: translateY(calc(-100% - var(--ndvr-gap))); } }
 
 @media (prefers-reduced-motion: reduce) {
 	.ndvr-marquee {

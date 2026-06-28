@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.6.3
+Stable tag: 0.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,9 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
 == Changelog ==
+
+= 0.7.0 =
+* New "Trust Panel" design system: a modern, theme-safe visual identity across the summary, review list, form, marquee, collection page, and widgets — plus a modern admin skin. Distinctive, not the default WordPress look.
 
 = 0.6.3 =
 * Fix: PSR-4 autoloader returned after the first matching prefix even when the file was absent, so the Pro add-on's NdvReviewsPro classes never loaded and Pro would not boot. Now continues to more specific prefixes.

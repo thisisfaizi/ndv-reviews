@@ -11,6 +11,7 @@
 		{ id: 'overview', title: 'Overview', group: 'Getting Started', file: 'content/overview.md' },
 		{ id: 'architecture', title: 'Architecture', group: 'Getting Started', file: 'content/architecture.md' },
 		{ id: 'free-vs-pro', title: 'Free vs Pro', group: 'Getting Started', file: 'content/free-vs-pro.md' },
+		{ id: 'design', title: 'Design System', group: 'Getting Started', file: 'content/design.md' },
 		{ id: 'phase-0', title: 'Phase 0 — Scaffolding', group: 'Build Phases', file: 'content/phase-0.md' },
 		{ id: 'phase-1', title: 'Phase 1 — Core Reviews', group: 'Build Phases', file: 'content/phase-1.md' },
 		{ id: 'phase-2', title: 'Phase 2 — Moderation + Display', group: 'Build Phases', file: 'content/phase-2.md' },

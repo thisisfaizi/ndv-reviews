@@ -1,72 +1,101 @@
-/* NDV Reviews — tokenized collection landing page (standalone). */
+/**
+ * NDV Reviews — tokenized collection landing page (standalone, full page).
+ */
 
 .ndvr-collect-body {
+	--ndvr-ink: #181a1f;
+	--ndvr-slate: #626b7a;
+	--ndvr-faint: #9aa3b2;
+	--ndvr-paper: #ffffff;
+	--ndvr-haze: #f5f6f8;
+	--ndvr-line: #e6e8ee;
+	--ndvr-gold: #f6a93b;
+	--ndvr-verdant: #0f7d5b;
+	--ndvr-verdant-soft: #e7f3ee;
+	--ndvr-rose: #c0392b;
+	--ndvr-r: 18px;
+	--ndvr-r-sm: 10px;
+	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	margin: 0;
-	background: #f6f7f9;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-	color: #1f2430;
-	line-height: 1.6;
+	background:
+		radial-gradient(1100px 460px at 50% -8%, #eef6f2 0%, rgba(238,246,242,0) 60%),
+		var(--ndvr-haze);
+	min-height: 100vh;
+	font-family: var(--ndvr-font);
+	color: var(--ndvr-ink);
+	-webkit-font-smoothing: antialiased;
 }
 
-.ndvr-collect-main { max-width: 640px; margin: 0 auto; padding: 32px 16px 64px; }
+.ndvr-collect-main { max-width: 660px; margin: 0 auto; padding: 56px 18px 80px; }
 
-.ndvr-collect-header { text-align: center; margin-bottom: 24px; }
-.ndvr-collect-header h1 { margin: 0 0 6px; font-size: 26px; }
-.ndvr-collect-header p { margin: 0; color: #6b7280; }
+.ndvr-collect-header { text-align: center; margin-bottom: 30px; }
+.ndvr-collect-header h1 { margin: 0 0 8px; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.ndvr-collect-header p { margin: 0; color: var(--ndvr-slate); font-size: 16px; }
 
 .ndvr-collect-card {
-	background: #fff;
-	border: 1px solid #e6e8ec;
-	border-radius: 14px;
-	padding: 22px;
+	background: var(--ndvr-paper);
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r);
+	padding: 26px;
 	margin-bottom: 18px;
-	box-shadow: 0 1px 2px rgba(0,0,0,.03);
+	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 22px 48px -34px rgba(20,22,28,.3);
 }
-.ndvr-collect-card.is-done { opacity: 0.85; }
+.ndvr-collect-card.is-done { opacity: 0.7; }
+.ndvr-collect-card * { box-sizing: border-box; }
+.ndvr-collect-invalid h1 { color: var(--ndvr-rose); margin-top: 0; }
 
-.ndvr-collect-invalid h1 { color: #b32d2e; }
+.ndvr-collect-product { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--ndvr-line); }
+.ndvr-collect-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: var(--ndvr-r-sm); }
+.ndvr-collect-name { font-weight: 700; font-size: 17px; }
 
-.ndvr-collect-product {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin-bottom: 16px;
-	padding-bottom: 14px;
-	border-bottom: 1px solid #eee;
-}
-.ndvr-collect-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; }
-.ndvr-collect-name { font-weight: 600; font-size: 1.05em; }
-
-.ndvr-collect .ndvr-field { margin: 0 0 14px; }
-.ndvr-collect .ndvr-field label { display: block; font-weight: 500; }
+.ndvr-collect .ndvr-field { margin: 0 0 16px; }
+.ndvr-collect .ndvr-field label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
 .ndvr-collect .ndvr-field input[type="text"],
 .ndvr-collect .ndvr-field textarea {
 	width: 100%;
-	box-sizing: border-box;
-	padding: 9px 12px;
-	border: 1px solid #d6d9de;
-	border-radius: 8px;
-	margin-top: 4px;
-	font: inherit;
+	font-family: inherit;
+	font-size: 15px;
+	color: var(--ndvr-ink);
+	background: var(--ndvr-paper);
+	padding: 11px 14px;
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r-sm);
+	margin-top: 0;
+	transition: border-color 0.15s, box-shadow 0.15s;
 }
-.ndvr-collect .ndvr-field-recommend { border: 0; padding: 0; }
-.ndvr-collect .ndvr-field-recommend legend { font-weight: 500; margin-bottom: 6px; }
-.ndvr-collect .ndvr-field-recommend label { display: inline-flex; gap: 4px; margin-right: 14px; font-weight: 400; }
-.ndvr-collect .ndvr-field-consent label { display: inline-flex; gap: 8px; font-weight: 400; }
+.ndvr-collect .ndvr-field input:focus,
+.ndvr-collect .ndvr-field textarea:focus { outline: none; border-color: var(--ndvr-verdant); box-shadow: 0 0 0 3px var(--ndvr-verdant-soft); }
 
-.ndvr-collect-actions { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
+/* Reuse the form star control + criteria group from reviews.css */
+.ndvr-collect .ndvr-criteria-group { background: var(--ndvr-haze); border-radius: var(--ndvr-r); padding: 16px 18px; }
+
+.ndvr-collect .ndvr-field-recommend { border: 0; padding: 0; }
+.ndvr-collect .ndvr-field-recommend legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+.ndvr-collect .ndvr-field-recommend label { display: inline-flex; gap: 6px; margin-right: 8px; padding: 7px 14px; border: 1px solid var(--ndvr-line); border-radius: 999px; font-weight: 400; cursor: pointer; }
+.ndvr-collect .ndvr-field-consent label { display: inline-flex; gap: 9px; align-items: flex-start; font-weight: 400; color: var(--ndvr-slate); font-size: 14px; }
+
+.ndvr-collect-actions { display: flex; align-items: center; gap: 16px; margin-top: 8px; }
 .ndvr-collect-submit {
-	background: #111;
+	background: var(--ndvr-ink);
 	color: #fff;
 	border: 0;
-	border-radius: 8px;
-	padding: 11px 22px;
+	border-radius: var(--ndvr-r-sm);
+	padding: 12px 26px;
 	font-size: 15px;
+	font-weight: 600;
+	font-family: inherit;
 	cursor: pointer;
+	transition: transform 0.1s ease, opacity 0.15s;
 }
-.ndvr-collect-submit:disabled { opacity: 0.6; cursor: default; }
+.ndvr-collect-submit:hover { transform: translateY(-1px); }
+.ndvr-collect-submit:disabled { opacity: 0.55; cursor: default; transform: none; }
 
-.ndvr-form-message.is-success { color: #1a7f57; font-weight: 600; }
-.ndvr-form-message.is-error { color: #b32d2e; }
+.ndvr-form-message.is-success { color: var(--ndvr-verdant); font-weight: 600; }
+.ndvr-form-message.is-error { color: var(--ndvr-rose); }
 
-.ndvr-collect-home { color: #2563eb; }
+.ndvr-collect-home { color: var(--ndvr-verdant); font-weight: 600; text-decoration: none; }
+.ndvr-collect-home:hover { text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) {
+	.ndvr-collect-submit { transition: none; }
+}

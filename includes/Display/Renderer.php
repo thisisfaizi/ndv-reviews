@@ -123,6 +123,14 @@ class Renderer implements Registerable {
 		// Summary (pre-escaped template output).
 		echo View::render( 'summary.php', array( 'summary' => $summary ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
+		/**
+		 * Fires after the summary box, before the review list (Pro renders the AI
+		 * "Customers say…" summary and topic pills here).
+		 *
+		 * @param int $product_id Product id.
+		 */
+		do_action( 'ndv-reviews/after_summary', $product_id );
+
 		if ( ! empty( $summary['count'] ) ) {
 			$this->render_filter_bar();
 		}

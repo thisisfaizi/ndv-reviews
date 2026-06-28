@@ -74,4 +74,13 @@ if ( empty( $review ) ) {
 			<span class="ndvr-helpful-count">(<?php echo esc_html( number_format_i18n( $review['helpful_up'] ) ); ?>)</span>
 		</button>
 	</div>
+
+	<?php
+	/**
+	 * Fires after a review item's content (Pro renders video, admin reply, etc.).
+	 *
+	 * @param array<string,mixed> $review Review view-model.
+	 */
+	do_action( 'ndv-reviews/review_item_after', $review );
+	?>
 </li>

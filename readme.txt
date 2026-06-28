@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,9 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
 == Changelog ==
+
+= 0.6.0 =
+* Added stable extension hooks so the Pro add-on can plug in without editing free files (stars_html, review_items, review_item_after, review_form_fields).
 
 = 0.5.0 =
 * Integrations: shortcodes, Gutenberg blocks, Elementor widgets + dynamic tags, classic widgets, and the Reviews Marquee — all from one renderer.

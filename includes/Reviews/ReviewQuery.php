@@ -132,6 +132,14 @@ class ReviewQuery {
 			$items[] = $this->to_view( $comment );
 		}
 
+		/**
+		 * Filter the page of review view-models (Pro pins highlighted reviews).
+		 *
+		 * @param array<int,array<string,mixed>> $items Review view-models.
+		 * @param array<string,mixed>            $args  Query args.
+		 */
+		$items = apply_filters( 'ndv-reviews/review_items', $items, $args );
+
 		return array(
 			'items' => $items,
 			'total' => $total,

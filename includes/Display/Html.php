@@ -48,6 +48,12 @@ class Html {
 
 		$out .= '</span>';
 
-		return $out;
+		/**
+		 * Filter the rendered star markup (Pro swaps in hearts/emoji/thumbs styles).
+		 *
+		 * @param string $out    Star HTML.
+		 * @param float  $rating Rating value.
+		 */
+		return (string) apply_filters( 'ndv-reviews/stars_html', $out, $rating );
 	}
 }

@@ -219,6 +219,16 @@ class ReviewForm implements Registerable {
 				</p>
 			<?php endif; ?>
 
+			<?php
+			/**
+			 * Fires inside the review form before the consent field (Pro adds the
+			 * video field, anonymous toggle, etc.).
+			 *
+			 * @param \NdvReviews\Reviews\Criteria[] $criteria Active criteria.
+			 */
+			do_action( 'ndv-reviews/review_form_fields', $criteria );
+			?>
+
 			<p class="ndvr-field ndvr-field-consent">
 				<label>
 					<input type="checkbox" name="ndvr_consent" value="1" required />

@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.4.1
+Stable tag: 0.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,12 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
 == Changelog ==
+
+= 0.5.0 =
+* Integrations: shortcodes, Gutenberg blocks, Elementor widgets + dynamic tags, classic widgets, and the Reviews Marquee — all from one renderer.
+* Importers (native WooCommerce, CSV) and CSV/JSON export.
+* GDPR personal-data export/erasure + consent logging.
+* Standalone testimonial form.
 
 = 0.4.1 =
 * Verified storefront rendering; fixed Most-helpful sort excluding unvoted reviews and filter/helpful button contrast.

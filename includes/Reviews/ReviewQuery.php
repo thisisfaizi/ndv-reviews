@@ -50,11 +50,12 @@ class ReviewQuery {
 		$page       = max( 1, (int) $args['page'] );
 
 		$query_args = array(
-			'post_id' => $product_id,
-			'type__in' => array( 'review', 'comment' ),
-			'status'  => 'approve',
-			'number'  => $per_page,
-			'offset'  => ( $page - 1 ) * $per_page,
+			'post_id'   => $product_id,
+			'post_type' => 'product', // Restrict to product reviews (excludes blog comments store-wide).
+			'type__in'  => array( 'review', 'comment' ),
+			'status'    => 'approve',
+			'number'    => $per_page,
+			'offset'    => ( $page - 1 ) * $per_page,
 			'meta_query' => array(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 			'no_found_rows' => false,
 		);

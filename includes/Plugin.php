@@ -303,6 +303,95 @@ final class Plugin {
 				);
 			}
 		);
+
+		// --- Phase 4: integrations, importers, privacy ---
+
+		$c->set(
+			'widgets',
+			static function ( $c ) {
+				return new \NdvReviews\Display\Widgets( $c->get( 'summary' ), $c->get( 'review_query' ) );
+			}
+		);
+
+		$c->set(
+			'shortcodes',
+			static function ( $c ) {
+				return new \NdvReviews\Integrations\Shortcodes( $c->get( 'widgets' ) );
+			}
+		);
+
+		$c->set(
+			'blocks',
+			static function ( $c ) {
+				return new \NdvReviews\Integrations\Blocks( $c->get( 'widgets' ) );
+			}
+		);
+
+		$c->set(
+			'classic_widgets',
+			static function () {
+				return new \NdvReviews\Integrations\ClassicWidgets();
+			}
+		);
+
+		$c->set(
+			'elementor_module',
+			static function () {
+				return new \NdvReviews\Integrations\Elementor\Module();
+			}
+		);
+
+		$c->set(
+			'testimonial_form',
+			static function ( $c ) {
+				return new \NdvReviews\Forms\TestimonialForm(
+					$c->get( 'settings' ),
+					$c->get( 'criteria' ),
+					$c->get( 'reviews' ),
+					$c->get( 'antispam' ),
+					$c->get( 'upload' )
+				);
+			}
+		);
+
+		$c->set(
+			'privacy',
+			static function () {
+				return new \NdvReviews\Privacy\Privacy();
+			}
+		);
+
+		$c->set(
+			'woo_importer',
+			static function ( $c ) {
+				return new \NdvReviews\Importers\WooNative( $c->get( 'rating_cache' ), $c->get( 'verified_buyer' ) );
+			}
+		);
+
+		$c->set(
+			'csv_importer',
+			static function ( $c ) {
+				return new \NdvReviews\Importers\Csv( $c->get( 'reviews' ) );
+			}
+		);
+
+		$c->set(
+			'exporter',
+			static function ( $c ) {
+				return new \NdvReviews\Importers\Exporter( $c->get( 'review_query' ) );
+			}
+		);
+
+		$c->set(
+			'admin_tools_page',
+			static function ( $c ) {
+				return new \NdvReviews\Admin\ToolsPage(
+					$c->get( 'woo_importer' ),
+					$c->get( 'csv_importer' ),
+					$c->get( 'exporter' )
+				);
+			}
+		);
 	}
 
 	/**
@@ -337,6 +426,13 @@ final class Plugin {
 			$this->container->get( 'unsubscribe' ),
 			$this->container->get( 'health_check' ),
 			$this->container->get( 'admin_requests_page' ),
+			$this->container->get( 'shortcodes' ),
+			$this->container->get( 'blocks' ),
+			$this->container->get( 'classic_widgets' ),
+			$this->container->get( 'elementor_module' ),
+			$this->container->get( 'testimonial_form' ),
+			$this->container->get( 'privacy' ),
+			$this->container->get( 'admin_tools_page' ),
 		);
 
 		/**

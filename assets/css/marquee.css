@@ -1,0 +1,85 @@
+/* NDV Reviews — reviews marquee (Magic UI-style), vanilla CSS. */
+
+.ndvr-marquee {
+	--ndvr-duration: 40s;
+	--ndvr-gap: 16px;
+	display: flex;
+	overflow: hidden;
+	gap: var(--ndvr-gap);
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+	mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.ndvr-marquee-track {
+	display: flex;
+	gap: var(--ndvr-gap);
+	width: max-content;
+}
+
+.ndvr-marquee-group {
+	display: flex;
+	gap: var(--ndvr-gap);
+	flex-shrink: 0;
+}
+
+.ndvr-marquee-horizontal .ndvr-marquee-track {
+	animation: ndvr-scroll-x var(--ndvr-duration) linear infinite;
+}
+
+.ndvr-marquee-horizontal.ndvr-marquee-reverse .ndvr-marquee-track {
+	animation-direction: reverse;
+}
+
+.ndvr-marquee-vertical {
+	flex-direction: column;
+	max-height: 460px;
+	-webkit-mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+	mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+}
+.ndvr-marquee-vertical .ndvr-marquee-track {
+	flex-direction: column;
+	width: auto;
+	animation: ndvr-scroll-y var(--ndvr-duration) linear infinite;
+}
+.ndvr-marquee-vertical .ndvr-marquee-group { flex-direction: column; }
+.ndvr-marquee-vertical.ndvr-marquee-reverse .ndvr-marquee-track { animation-direction: reverse; }
+
+.ndvr-marquee-pause:hover .ndvr-marquee-track { animation-play-state: paused; }
+
+.ndvr-marquee-card {
+	box-sizing: border-box;
+	width: 280px;
+	flex-shrink: 0;
+	background: #fff;
+	border: 1px solid #ececec;
+	border-radius: 12px;
+	padding: 16px;
+	margin: 0;
+	box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+.ndvr-marquee-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.ndvr-marquee-head img { border-radius: 50%; }
+.ndvr-marquee-name { font-weight: 600; font-size: 0.9em; }
+.ndvr-marquee-verified { color: #1a7f57; margin-left: 4px; }
+.ndvr-marquee-stars { margin-bottom: 8px; }
+.ndvr-marquee-body { margin: 0; font-size: 0.88em; color: #444; line-height: 1.5; }
+
+@keyframes ndvr-scroll-x {
+	from { transform: translateX(0); }
+	to { transform: translateX(calc(-100% - var(--ndvr-gap))); }
+}
+@keyframes ndvr-scroll-y {
+	from { transform: translateY(0); }
+	to { transform: translateY(calc(-100% - var(--ndvr-gap))); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ndvr-marquee {
+		-webkit-mask-image: none;
+		mask-image: none;
+		overflow-x: auto;
+	}
+	.ndvr-marquee-track { animation: none !important; }
+	.ndvr-marquee-vertical { max-height: none; }
+}

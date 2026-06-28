@@ -147,6 +147,11 @@ class ReviewRepository {
 		// this meta) still includes reviews that have not been voted on yet.
 		update_comment_meta( $comment_id, '_ndvr_helpful_up', 0 );
 
+		// Log consent (timestamp only — we don't store the raw IP) for GDPR.
+		if ( ! empty( $data['consent'] ) ) {
+			update_comment_meta( $comment_id, '_ndvr_consent', current_time( 'mysql', true ) );
+		}
+
 		if ( ! empty( $data['order_id'] ) ) {
 			update_comment_meta( $comment_id, '_ndvr_order_id', absint( $data['order_id'] ) );
 		}

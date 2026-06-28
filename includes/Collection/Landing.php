@@ -237,6 +237,7 @@ class Landing implements Registerable {
 				'user_id'    => (int) $row->customer_id,
 				'source'     => 'magic_link',
 				'order_id'   => (int) $row->order_id,
+				'consent'    => ! empty( $input['ndvr_consent'] ),
 				'approved'   => 0,
 			)
 		);

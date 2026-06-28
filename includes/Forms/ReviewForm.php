@@ -301,6 +301,7 @@ class ReviewForm implements Registerable {
 				'media'      => $media,
 				'user_id'    => $user_id,
 				'source'     => 'onsite',
+				'consent'    => ! empty( $input['ndvr_consent'] ),
 				'approved'   => 0,
 			)
 		);

@@ -15,6 +15,7 @@
 		{ id: 'phase-1', title: 'Phase 1 — Core Reviews', group: 'Build Phases', file: 'content/phase-1.md' },
 		{ id: 'phase-2', title: 'Phase 2 — Moderation + Display', group: 'Build Phases', file: 'content/phase-2.md' },
 		{ id: 'phase-3', title: 'Phase 3 — Requests + Collection Link', group: 'Build Phases', file: 'content/phase-3.md' },
+		{ id: 'phase-4', title: 'Phase 4 — Integrations + Importers', group: 'Build Phases', file: 'content/phase-4.md' },
 		{ id: 'data-model', title: 'Data Model', group: 'Reference', file: 'content/data-model.md' },
 		{ id: 'hooks', title: 'Hooks & Filters', group: 'Reference', file: 'content/hooks.md' }
 	];

@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.8.0
+Stable tag: 0.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,9 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
 == Changelog ==
+
+= 0.8.1 =
+* Admin polish: Reviews list table — visible row-action pills (no empty gaps), aligned filter toolbar, hidden duplicate footer header.
 
 = 0.8.0 =
 * New Design screen (NDV Reviews → Design): pick accent color, layout (list/grid), summary style, card style, and rating icon (stars/hearts/thumbs/emoji) — free, with modern card selectors. Applies live on the storefront.

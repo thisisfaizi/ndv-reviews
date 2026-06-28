@@ -73,7 +73,12 @@ class Criteria {
 		$row              = (array) $row;
 		$c                = new self();
 		$c->id            = isset( $row['id'] ) ? (int) $row['id'] : 0;
-		$c->name          = isset( $row['name'] ) ? (string) $row['name'] : '';
+		/**
+		 * Filter a criterion's display name (Pro multilingual translates it).
+		 *
+		 * @param string $name Criterion name.
+		 */
+		$c->name          = isset( $row['name'] ) ? (string) apply_filters( 'ndv-reviews/criteria_name', (string) $row['name'] ) : '';
 		$c->slug          = isset( $row['slug'] ) ? (string) $row['slug'] : '';
 		$c->scope         = isset( $row['scope'] ) ? (string) $row['scope'] : 'global';
 		$c->scope_id      = isset( $row['scope_id'] ) && null !== $row['scope_id'] ? (int) $row['scope_id'] : null;

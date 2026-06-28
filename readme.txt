@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.6.1
+Stable tag: 0.6.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,9 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
 == Changelog ==
+
+= 0.6.2 =
+* Added the ndv-reviews/criteria_name filter (Pro multilingual translates criteria labels). Docs through Phase 9.
 
 = 0.6.1 =
 * Added the ndv-reviews/after_summary hook so Pro can render the AI "Customers say" summary above the review list.

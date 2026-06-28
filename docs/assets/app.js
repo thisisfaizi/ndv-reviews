@@ -19,6 +19,8 @@
 		{ id: 'phase-5', title: 'Phase 5 — Pro Foundation', group: 'Build Phases', file: 'content/phase-5.md' },
 		{ id: 'phase-6', title: 'Phase 6 — Automation + Incentives', group: 'Build Phases', file: 'content/phase-6.md' },
 		{ id: 'phase-7', title: 'Phase 7 — Q&A + AI', group: 'Build Phases', file: 'content/phase-7.md' },
+		{ id: 'phase-8', title: 'Phase 8 — Widgets+, Social, Feeds', group: 'Build Phases', file: 'content/phase-8.md' },
+		{ id: 'phase-9', title: 'Phase 9 — Analytics + Developer', group: 'Build Phases', file: 'content/phase-9.md' },
 		{ id: 'data-model', title: 'Data Model', group: 'Reference', file: 'content/data-model.md' },
 		{ id: 'hooks', title: 'Hooks & Filters', group: 'Reference', file: 'content/hooks.md' }
 	];

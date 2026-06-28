@@ -28,6 +28,20 @@ The **Trust Panel**: the big average numeral + the staggered **bar-fill animatio
 
 Responsive to mobile, visible keyboard focus, `prefers-reduced-motion` respected (animations resolve to their final state), and a modern admin skin scoped to NDV Reviews screens only (`body.ndvr-admin`) so the rest of wp-admin is untouched.
 
+## Design settings screen (free)
+
+**NDV Reviews → Design** lets the merchant choose how reviews look — with modern card selectors (an emerald check on the selected card, not the default WordPress look). Competitors gate design behind Pro; here it is **free**.
+
+| Control | Options | Effect |
+|---|---|---|
+| **Accent color** | swatch presets + custom picker | buttons, active filter pills, links, pagination (`--ndvr-accent`) |
+| **Layout** | List / Grid | review list as rows or a 2-up card grid |
+| **Summary style** | Trust Panel / Compact | full distribution panel, or an inline score |
+| **Card style** | Soft / Bordered / Flat | surface treatment of the summary + grid cards |
+| **Rating icon** | Stars / Hearts / Thumbs / Emoji | the glyph used everywhere stars render |
+
+Choices are stored in `ndv_reviews_settings` and applied with **zero markup churn**: `Display\Design` emits a root class list (`ndvr-template-grid`, `ndvr-summary-compact`, …), a body-level rating class so every star instance (reviews, widgets, marquee, form) swaps together, and one inline custom property for the accent. The CSS variants live in `display.css`.
+
 ## Files
 
 - `assets/css/display.css` — Trust Panel summary, filter bar, review list, voting, AI summary.

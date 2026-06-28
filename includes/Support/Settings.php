@@ -37,6 +37,12 @@ class Settings {
 			'require_verified'    => false,
 			'photo_uploads'       => true,
 			'max_photos'          => 5,
+			// Design (storefront appearance — see the Design screen).
+			'design_accent'       => '#181a1f', // brand/accent color for buttons, active pills, links.
+			'design_template'     => 'list',    // list | grid.
+			'design_summary'      => 'panel',   // panel | compact.
+			'design_card'         => 'soft',    // soft | bordered | flat.
+			'design_rating'       => 'stars',   // stars | hearts | thumbs | emoji.
 			'schema_mode'         => 'auto',   // auto | plugin | off.
 			'recaptcha_enabled'   => false,
 			'recaptcha_site_key'  => '',

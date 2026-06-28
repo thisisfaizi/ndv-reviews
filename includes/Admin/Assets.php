@@ -45,8 +45,17 @@ class Assets implements Registerable {
 	 * @return void
 	 */
 	public function enqueue() {
-		if ( $this->is_our_screen() ) {
-			wp_enqueue_style( 'ndvr-admin', NDVR_URL . 'assets/css/admin.css', array(), NDVR_VERSION );
+		if ( ! $this->is_our_screen() ) {
+			return;
+		}
+
+		wp_enqueue_style( 'ndvr-admin', NDVR_URL . 'assets/css/admin.css', array(), NDVR_VERSION );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( 'ndv-reviews-design' === $page ) {
+			wp_enqueue_style( 'ndvr-design-admin', NDVR_URL . 'assets/css/design-admin.css', array( 'ndvr-admin' ), NDVR_VERSION );
+			wp_enqueue_script( 'ndvr-design-admin', NDVR_URL . 'assets/js/design-admin.js', array(), NDVR_VERSION, true );
 		}
 	}
 

@@ -90,6 +90,11 @@ class Widgets {
 		wp_enqueue_script( 'ndvr-display', NDVR_URL . 'assets/js/display.js', array(), NDVR_VERSION, true );
 		wp_enqueue_script( 'ndvr-marquee', NDVR_URL . 'assets/js/marquee.js', array(), NDVR_VERSION, true );
 
+		$accent_css = Design::inline_css( new \NdvReviews\Support\Settings() );
+		if ( '' !== $accent_css ) {
+			wp_add_inline_style( 'ndvr-display', $accent_css );
+		}
+
 		wp_localize_script(
 			'ndvr-display',
 			'ndvrDisplay',

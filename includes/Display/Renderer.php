@@ -68,6 +68,20 @@ class Renderer implements Registerable {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'wp_ajax_' . self::AJAX_ACTION, array( $this, 'ajax_list' ) );
 		add_action( 'wp_ajax_nopriv_' . self::AJAX_ACTION, array( $this, 'ajax_list' ) );
+		add_filter( 'body_class', array( $this, 'body_class' ) );
+	}
+
+	/**
+	 * Add the chosen rating-icon class to the front-end body so every star
+	 * instance (reviews, widgets, marquee) swaps glyphs together.
+	 *
+	 * @param string[] $classes Body classes.
+	 * @return string[]
+	 */
+	public function body_class( $classes ) {
+		$classes[] = Design::rating_class( $this->settings );
+
+		return $classes;
 	}
 
 	/**
@@ -97,6 +111,11 @@ class Renderer implements Registerable {
 		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array(), NDVR_VERSION );
 		wp_enqueue_script( 'ndvr-display', NDVR_URL . 'assets/js/display.js', array(), NDVR_VERSION, true );
 
+		$accent_css = Design::inline_css( $this->settings );
+		if ( '' !== $accent_css ) {
+			wp_add_inline_style( 'ndvr-display', $accent_css );
+		}
+
 		wp_localize_script(
 			'ndvr-display',
 			'ndvrDisplay',
@@ -118,7 +137,7 @@ class Renderer implements Registerable {
 		$product_id = get_the_ID();
 		$summary    = $this->summary->for_product( $product_id );
 
-		echo '<div id="ndvr-reviews" class="ndvr-reviews-wrap" data-product="' . esc_attr( $product_id ) . '">';
+		echo '<div id="ndvr-reviews" class="ndvr-reviews-wrap ' . esc_attr( Design::classes( $this->settings ) ) . '" data-product="' . esc_attr( $product_id ) . '">';
 
 		// Summary (pre-escaped template output).
 		echo View::render( 'summary.php', array( 'summary' => $summary ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

@@ -191,7 +191,7 @@
 	transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 .ndvr-filter:hover { border-color: var(--ndvr-ink); }
-.ndvr-filter.is-current { background: var(--ndvr-ink); color: #fff; border-color: var(--ndvr-ink); }
+.ndvr-filter.is-current { background: var(--ndvr-accent, var(--ndvr-ink)); color: #fff; border-color: var(--ndvr-accent, var(--ndvr-ink)); }
 .ndvr-filter-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ndvr-slate); cursor: pointer; }
 .ndvr-filter-toggle input { accent-color: var(--ndvr-verdant); }
 .ndvr-sort { margin-left: auto; }
@@ -316,7 +316,62 @@
 	transition: border-color 0.15s;
 }
 .ndvr-page:hover { border-color: var(--ndvr-ink); }
-.ndvr-page.is-current { background: var(--ndvr-ink); color: #fff; border-color: var(--ndvr-ink); }
+.ndvr-page.is-current { background: var(--ndvr-accent, var(--ndvr-ink)); color: #fff; border-color: var(--ndvr-accent, var(--ndvr-ink)); }
+
+/* =========================================================
+   Design variants (driven by the Design settings screen)
+   ========================================================= */
+
+/* Layout: grid turns review rows into cards */
+.ndvr-template-grid .ndvr-review-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.ndvr-template-grid .ndvr-review {
+	padding: 22px;
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r);
+	box-shadow: var(--ndvr-shadow);
+}
+.ndvr-template-grid .ndvr-review:first-child { padding-top: 22px; }
+
+/* Summary: compact hides the distribution + criteria, inlines the score */
+.ndvr-summary-compact .ndvr-summary { grid-template-columns: 1fr; gap: 0; align-items: center; }
+.ndvr-summary-compact .ndvr-summary-bars,
+.ndvr-summary-compact .ndvr-summary-criteria { display: none; }
+.ndvr-summary-compact .ndvr-summary-overall { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; }
+.ndvr-summary-compact .ndvr-summary-average { font-size: 34px; }
+.ndvr-summary-compact .ndvr-summary-overall .ndvr-stars-display { margin: 0; }
+
+/* Card style: applies to the summary panel and grid review cards */
+.ndvr-card-bordered .ndvr-summary,
+.ndvr-card-bordered.ndvr-template-grid .ndvr-review { box-shadow: none; }
+.ndvr-card-flat .ndvr-summary {
+	box-shadow: none;
+	border: 0;
+	background: transparent;
+	padding-left: 0;
+	padding-right: 0;
+}
+.ndvr-card-flat.ndvr-template-grid .ndvr-review { box-shadow: none; border-color: var(--ndvr-line); }
+
+/* Rating icon (body-level so widgets + form swap together) */
+.ndvr-rating-hearts .ndvr-star-full::before,
+.ndvr-rating-hearts .ndvr-star-empty::before,
+.ndvr-rating-hearts .ndvr-star-half::before,
+.ndvr-rating-hearts .ndvr-star-half::after,
+.ndvr-rating-hearts .ndvr-stars .ndvr-star-label::before { content: "\2665"; }
+
+.ndvr-rating-thumbs .ndvr-star-full::before,
+.ndvr-rating-thumbs .ndvr-star-empty::before,
+.ndvr-rating-thumbs .ndvr-stars .ndvr-star-label::before { content: "\1F44D"; }
+.ndvr-rating-thumbs .ndvr-star-half::after { display: none; }
+
+.ndvr-rating-emoji .ndvr-star-full::before,
+.ndvr-rating-emoji .ndvr-star-empty::before,
+.ndvr-rating-emoji .ndvr-stars .ndvr-star-label::before { content: "\1F60D"; }
+.ndvr-rating-emoji .ndvr-star-half::after { display: none; }
+
+/* Color emoji ignore CSS color, so distinguish empty by opacity */
+.ndvr-rating-thumbs .ndvr-star-empty,
+.ndvr-rating-emoji .ndvr-star-empty { opacity: 0.3; }
 
 .ndvr-review-form-wrap { margin-top: 30px; }
 
@@ -332,6 +387,7 @@
 @media (max-width: 640px) {
 	.ndvr-summary { grid-template-columns: 1fr; padding: 24px 20px; gap: 18px; }
 	.ndvr-criterion-row { grid-template-columns: 100px 1fr 30px; }
+	.ndvr-template-grid .ndvr-review-list { grid-template-columns: 1fr; }
 	.ndvr-sort { margin-left: 0; width: 100%; }
 }
 

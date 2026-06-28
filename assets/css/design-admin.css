@@ -1,0 +1,101 @@
+/**
+ * NDV Reviews — Design admin screen (card selectors). Scoped to .ndvr-design.
+ */
+
+.ndvr-design .ndvr-design-intro { color: var(--ndvr-slate, #5e6675); font-size: 14px; margin: 0 0 8px; }
+
+.ndvr-design .ndvr-design-section {
+	background: #fff;
+	border: 1px solid var(--ndvr-line, #e6e9ef);
+	border-radius: 14px;
+	padding: 20px 22px;
+	margin: 0 0 18px;
+	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 18px 40px -30px rgba(20,22,28,.22);
+}
+.ndvr-design .ndvr-design-section h2 {
+	margin: 0 0 14px !important;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--ndvr-faint, #8b93a3);
+}
+
+/* Option cards */
+.ndvr-design .ndvr-opts { display: flex; flex-wrap: wrap; gap: 14px; }
+.ndvr-design .ndvr-opt { cursor: pointer; }
+.ndvr-design .ndvr-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ndvr-design .ndvr-opt-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	width: 130px;
+	padding: 16px 14px 12px;
+	border: 2px solid var(--ndvr-line, #e6e9ef);
+	border-radius: 14px;
+	background: #fff;
+	position: relative;
+	transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+.ndvr-design .ndvr-opt:hover .ndvr-opt-card { transform: translateY(-2px); box-shadow: 0 12px 26px -18px rgba(20,22,28,.3); }
+.ndvr-design .ndvr-opt input:focus-visible + .ndvr-opt-card { box-shadow: 0 0 0 3px var(--ndvr-verdant-soft, #e7f3ee); }
+.ndvr-design .ndvr-opt input:checked + .ndvr-opt-card {
+	border-color: var(--ndvr-verdant, #0f7d5b);
+}
+.ndvr-design .ndvr-opt input:checked + .ndvr-opt-card::after {
+	content: "\2713";
+	position: absolute;
+	top: -9px;
+	right: -9px;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: var(--ndvr-verdant, #0f7d5b);
+	color: #fff;
+	font-size: 13px;
+	font-weight: 800;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 6px rgba(15,125,91,.4);
+}
+.ndvr-design .ndvr-opt-preview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 56px;
+	width: 100%;
+	border-radius: 8px;
+	background: var(--ndvr-haze, #f4f6f9);
+}
+.ndvr-design .ndvr-opt-preview svg { display: block; }
+.ndvr-design .ndvr-opt-label { font-size: 13px; font-weight: 600; color: var(--ndvr-ink, #181a1f); }
+.ndvr-design .ndvr-opts-rating .ndvr-glyph { font-size: 18px; letter-spacing: 2px; }
+
+/* Accent picker */
+.ndvr-design .ndvr-accent-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ndvr-design input[type="color"] {
+	width: 52px;
+	height: 40px;
+	padding: 2px;
+	border: 1px solid var(--ndvr-line, #e6e9ef);
+	border-radius: 10px;
+	background: #fff;
+	cursor: pointer;
+}
+.ndvr-design .ndvr-swatches { display: inline-flex; gap: 8px; }
+.ndvr-design .ndvr-swatch {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	box-shadow: 0 0 0 1px var(--ndvr-line, #e6e9ef);
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.1s;
+}
+.ndvr-design .ndvr-swatch:hover { transform: scale(1.12); }
+.ndvr-design .ndvr-accent-help { color: var(--ndvr-slate, #5e6675); font-size: 13px; }
+
+.ndvr-design .ndvr-design-actions { margin-top: 8px; }

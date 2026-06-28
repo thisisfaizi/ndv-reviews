@@ -168,7 +168,7 @@
 #ndvr-review-form .form-submit input#submit,
 #ndvr-review-form .form-submit .submit,
 #ndvr-review-form input[type="submit"] {
-	background: var(--ndvr-ink) !important;
+	background: var(--ndvr-accent, var(--ndvr-ink)) !important;
 	color: #fff !important;
 	border: 0 !important;
 	border-radius: var(--ndvr-r-sm) !important;

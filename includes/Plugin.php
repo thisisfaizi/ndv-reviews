@@ -167,6 +167,13 @@ final class Plugin {
 			}
 		);
 
+		$c->set(
+			'admin_design_page',
+			static function ( $c ) {
+				return new \NdvReviews\Admin\DesignPage( $c->get( 'settings' ) );
+			}
+		);
+
 		// --- Phase 2: display, voting, schema, moderation ---
 
 		$c->set(
@@ -424,6 +431,7 @@ final class Plugin {
 			$this->container->get( 'review_form' ),
 			$this->container->get( 'admin_criteria_page' ),
 			$this->container->get( 'admin_assets' ),
+			$this->container->get( 'admin_design_page' ),
 			$this->container->get( 'renderer' ),
 			$this->container->get( 'votes' ),
 			$this->container->get( 'json_ld' ),

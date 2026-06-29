@@ -29,7 +29,7 @@ defined( 'ABSPATH' ) || exit;
  * Renaming the brand = change these (plus slug folder + readme).
  * ---------------------------------------------------------------------------
  */
-define( 'NDVR_VERSION', '0.9.6' );
+define( 'NDVR_VERSION', '0.9.7' );
 define( 'NDVR_DB_VERSION', '1' );
 define( 'NDVR_SLUG', 'ndv-reviews' );
 define( 'NDVR_NAME', 'NDV Reviews' );

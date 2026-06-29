@@ -3,7 +3,7 @@
  * Plugin Name:       NDV Reviews
  * Plugin URI:        https://nowdigiverse.com/ndv-reviews
  * Description:        Reliable, self-hosted reviews for WooCommerce — multi-criteria ratings, photo reviews, working reminders, and rich schema. No account or external service required.
- * Version:           0.9.3
+ * Version:           0.9.7
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Nowdigiverse

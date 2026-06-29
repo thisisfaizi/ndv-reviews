@@ -78,16 +78,29 @@ class ReviewTags {
 		global $wpdb;
 
 		$post_id = absint( $post_id );
-		$where   = $post_id ? $wpdb->prepare( 'AND c.comment_post_ID = %d', $post_id ) : '';
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
-		$rows = $wpdb->get_results(
-			"SELECT cm.meta_value AS tag, COUNT(*) AS total
-			FROM {$wpdb->commentmeta} cm
-			INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
-			WHERE cm.meta_key = '_ndvr_tag' AND c.comment_approved = '1' {$where}
-			GROUP BY cm.meta_value ORDER BY total DESC"
-		);
+		if ( $post_id ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT cm.meta_value AS tag, COUNT(*) AS total
+					FROM {$wpdb->commentmeta} cm
+					INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
+					WHERE cm.meta_key = '_ndvr_tag' AND c.comment_approved = '1' AND c.comment_post_ID = %d
+					GROUP BY cm.meta_value ORDER BY total DESC",
+					$post_id
+				)
+			);
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+			$rows = $wpdb->get_results(
+				"SELECT cm.meta_value AS tag, COUNT(*) AS total
+				FROM {$wpdb->commentmeta} cm
+				INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
+				WHERE cm.meta_key = '_ndvr_tag' AND c.comment_approved = '1'
+				GROUP BY cm.meta_value ORDER BY total DESC"
+			);
+		}
 
 		$out = array();
 		foreach ( (array) $rows as $row ) {
@@ -113,18 +126,30 @@ class ReviewTags {
 			return array();
 		}
 
-		$where = $post_id ? $wpdb->prepare( 'AND c.comment_post_ID = %d', $post_id ) : '';
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
-		$ids = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT cm.comment_id
-				FROM {$wpdb->commentmeta} cm
-				INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
-				WHERE cm.meta_key = '_ndvr_tag' AND cm.meta_value = %s AND c.comment_approved = '1' {$where}",
-				$tag
-			)
-		);
+		if ( $post_id ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$ids = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT cm.comment_id
+					FROM {$wpdb->commentmeta} cm
+					INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
+					WHERE cm.meta_key = '_ndvr_tag' AND cm.meta_value = %s AND c.comment_approved = '1' AND c.comment_post_ID = %d",
+					$tag,
+					$post_id
+				)
+			);
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$ids = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT cm.comment_id
+					FROM {$wpdb->commentmeta} cm
+					INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
+					WHERE cm.meta_key = '_ndvr_tag' AND cm.meta_value = %s AND c.comment_approved = '1'",
+					$tag
+				)
+			);
+		}
 
 		return array_map( 'absint', (array) $ids );
 	}

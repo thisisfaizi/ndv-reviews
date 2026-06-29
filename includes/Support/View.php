@@ -56,8 +56,10 @@ class View {
 			return '';
 		}
 
-		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract
-		extract( $vars, EXTR_SKIP );
+		foreach ( $vars as $__ndvr_key => $__ndvr_value ) {
+			$$__ndvr_key = $__ndvr_value;
+		}
+		unset( $__ndvr_key, $__ndvr_value );
 
 		ob_start();
 		include $file;

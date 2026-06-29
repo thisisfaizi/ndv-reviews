@@ -3,10 +3,14 @@
  * Minimal, dependency-free QR Code encoder (byte mode, EC level M, versions
  * 1-10, fixed mask 0). Pure PHP, no network, no extensions — WordPress.org safe.
  *
+ * Original work © 2024 Nowdigiverse. Licensed under GPL-2.0-or-later.
+ * See https://www.gnu.org/licenses/gpl-2.0.html
+ *
  * The fixed-mask-0 approach keeps the encoder small and correct: the chosen mask
  * is written into the format information, so any conformant reader decodes it.
  *
  * @package NdvReviews
+ * @license GPL-2.0-or-later
  */
 
 namespace NdvReviews\Vendor;

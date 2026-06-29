@@ -14,6 +14,8 @@
 /docs               export-ignore
 /build-plan.md      export-ignore
 /claude.md          export-ignore
+/README.md          export-ignore
+/NDV-Reviews-Feature-List.md export-ignore
 /.github            export-ignore
 /bin                export-ignore
 /tests              export-ignore

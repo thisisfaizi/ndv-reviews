@@ -2,9 +2,9 @@
 Contributors: nowdigiverse
 Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
-Tested up to: 7.0
+Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.9.0
+Stable tag: 0.9.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,7 +43,40 @@ No. The free plugin is fully self-hosted and makes no external calls by default.
 
 Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
 
+== Screenshots ==
+
+1. Modern review summary with star distribution, criteria bars, and verified-buyer badge.
+2. Multi-criteria review form with custom photo upload zone and recommend pills.
+3. Review card showing verified badge, criteria ratings, helpful button, and photo gallery.
+4. Admin Reviews screen with bulk actions, star filter, and inline editing.
+5. Settings → General: configure guest reviews, pagination, and sorting.
+6. Settings → Rating Criteria: label and enable/disable each criterion.
+7. Settings → Design: accent color, layout, and rating icon selector.
+
 == Changelog ==
+
+= 0.9.7 =
+* Add six `ndv-reviews/show_*` filter hooks to the review card template so the
+  Pro add-on (or themes) can hide individual card elements without editing
+  template files.
+
+= 0.9.6 =
+* Fix: `pre_option_comment_registration` now returns an explicit '0' or '1'
+  on product pages, making our plugin the sole authority over login-gating
+  regardless of the site-wide WordPress Discussion setting.
+
+= 0.9.5 =
+* Fix: "Allow guest reviews" setting now enforced both via the
+  `pre_option_comment_registration` filter (hides the form for non-logged-in
+  visitors) and server-side AJAX validation on submission.
+* Fix: "Must be logged in" message now reads "post a review" instead of
+  "post a comment".
+
+= 0.9.4 =
+* Review form UI overhaul: clean open-grid criteria layout (no grey box),
+  larger star icons, haze-fill inputs with focus ring, custom drag-and-drop
+  photo zone, and a full-width green pill submit button.
+* Recommend field now uses hidden radio inputs with CSS pill selection state.
 
 = 0.9.0 =
 * Reviews on custom post types; aggregate/pool substrate (variation pooling-ready); shopper-facing topic filter pills (manual tags) + admin topic assignment; QR code generation for review links (bundled, no network); Recent Reviews / Rating Badge / Top-Rated classic widgets; review Form block; typography options; a General Settings screen; and stable extension hooks for the Pro add-on.

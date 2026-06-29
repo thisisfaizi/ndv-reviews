@@ -78,51 +78,236 @@ body.ndvr-admin .widefat tbody tr { border-bottom: 1px solid var(--ndvr-line); }
 body.ndvr-admin .striped > tbody > :nth-child(odd) { background: #fbfcfd; }
 body.ndvr-admin .form-table th { color: var(--ndvr-ink); font-weight: 600; padding-top: 18px; padding-bottom: 18px; }
 
-/* Inputs */
+/* =========================================================
+   Inputs — every text/select/textarea: same height, same radius,
+   same padding. Numbers & small-text get explicit sizing so they
+   never look half the height of adjacent inputs.
+   ========================================================= */
 body.ndvr-admin .wrap input[type="text"],
 body.ndvr-admin .wrap input[type="email"],
 body.ndvr-admin .wrap input[type="url"],
 body.ndvr-admin .wrap input[type="password"],
+body.ndvr-admin .wrap input[type="search"],
 body.ndvr-admin .wrap input[type="number"],
 body.ndvr-admin .wrap textarea,
 body.ndvr-admin .wrap select {
-	border: 1px solid var(--ndvr-line);
+	border: 1.5px solid var(--ndvr-line);
 	border-radius: var(--ndvr-r-sm);
-	padding: 8px 12px;
+	padding: 9px 13px;
 	box-shadow: none;
 	color: var(--ndvr-ink);
-	min-height: 38px;
+	font-size: 13.5px;
+	line-height: 1.45;
+	height: 40px;
+	box-sizing: border-box;
+	transition: border-color .15s, box-shadow .15s;
+	background: var(--ndvr-paper);
 }
+body.ndvr-admin .wrap textarea { height: auto; min-height: 90px; }
+body.ndvr-admin .wrap select { padding-right: 32px; }
+body.ndvr-admin .wrap input[type="number"].small-text { width: 70px; }
+
 body.ndvr-admin .wrap input:focus,
 body.ndvr-admin .wrap textarea:focus,
 body.ndvr-admin .wrap select:focus {
 	border-color: var(--ndvr-verdant);
-	box-shadow: 0 0 0 3px var(--ndvr-verdant-soft);
+	box-shadow: 0 0 0 3px rgba(15,125,91,.13);
 	outline: none;
 }
+body.ndvr-admin .wrap input::placeholder,
+body.ndvr-admin .wrap textarea::placeholder { color: var(--ndvr-faint); }
 
-/* Buttons */
-body.ndvr-admin .wrap .button {
+/* =========================================================
+   Buttons — one height (40px), one radius (pill), three variants.
+   ========================================================= */
+body.ndvr-admin .wrap .button,
+body.ndvr-admin .wrap button.button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
 	border-radius: 999px;
-	border: 1px solid var(--ndvr-line);
+	border: 1.5px solid var(--ndvr-line);
 	background: var(--ndvr-paper);
 	color: var(--ndvr-ink);
 	box-shadow: none;
-	padding: 4px 16px;
-	height: auto;
-	min-height: 34px;
+	padding: 0 20px;
+	height: 40px;
+	font-size: 13.5px;
 	font-weight: 600;
-	transition: border-color 0.15s, transform 0.1s;
+	cursor: pointer;
+	text-decoration: none;
+	transition: border-color .15s, background .15s, transform .1s, box-shadow .15s;
+	white-space: nowrap;
 }
-body.ndvr-admin .wrap .button:hover { border-color: var(--ndvr-ink); }
-body.ndvr-admin .wrap .button:active { transform: translateY(1px); }
-body.ndvr-admin .wrap .button-primary {
+body.ndvr-admin .wrap .button:hover,
+body.ndvr-admin .wrap button.button:hover {
+	border-color: var(--ndvr-ink);
+	box-shadow: 0 2px 8px rgba(20,22,28,.08);
+	color: var(--ndvr-ink);
+}
+body.ndvr-admin .wrap .button:active,
+body.ndvr-admin .wrap button.button:active { transform: translateY(1px); box-shadow: none; }
+
+body.ndvr-admin .wrap .button-primary,
+body.ndvr-admin .wrap button.button-primary {
 	background: var(--ndvr-verdant);
 	border-color: var(--ndvr-verdant);
 	color: #fff;
 }
-body.ndvr-admin .wrap .button-primary:hover { background: #0c6a4d; border-color: #0c6a4d; }
-body.ndvr-admin .wrap .button-link-delete { color: #c0392b; border-color: transparent; }
+body.ndvr-admin .wrap .button-primary:hover,
+body.ndvr-admin .wrap button.button-primary:hover {
+	background: #0c6a4d;
+	border-color: #0c6a4d;
+	color: #fff;
+	box-shadow: 0 4px 12px rgba(15,125,91,.28);
+}
+body.ndvr-admin .wrap .button-secondary,
+body.ndvr-admin .wrap button.button-secondary {
+	background: var(--ndvr-haze);
+	border-color: var(--ndvr-line);
+	color: var(--ndvr-ink);
+}
+body.ndvr-admin .wrap .button-secondary:hover { background: #e9edf3; border-color: #c8cdd8; }
+body.ndvr-admin .wrap .button-link-delete { color: #c0392b; border-color: transparent; background: none; }
+body.ndvr-admin .wrap .button:disabled,
+body.ndvr-admin .wrap button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+/* =========================================================
+   NDV form cards — a layout for non-form-table pages
+   ========================================================= */
+body.ndvr-admin .ndvr-card {
+	background: var(--ndvr-paper);
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r);
+	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 18px 40px -30px rgba(20,22,28,.18);
+	padding: 24px 28px;
+	margin-bottom: 20px;
+}
+body.ndvr-admin .ndvr-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 18px;
+	padding-bottom: 14px;
+	border-bottom: 1px solid var(--ndvr-line);
+}
+body.ndvr-admin .ndvr-card-header h2 {
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--ndvr-faint);
+	margin: 0;
+}
+body.ndvr-admin .ndvr-card-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	padding: 4px 12px;
+	border-radius: 999px;
+}
+body.ndvr-admin .ndvr-card-status.connected { background: var(--ndvr-verdant-soft); color: var(--ndvr-verdant); }
+body.ndvr-admin .ndvr-card-status.connected::before { content: "●"; font-size: 8px; }
+body.ndvr-admin .ndvr-card-status.disconnected { background: var(--ndvr-haze); color: var(--ndvr-faint); }
+body.ndvr-admin .ndvr-card-status.disconnected::before { content: "○"; font-size: 8px; }
+
+body.ndvr-admin .ndvr-field { margin-bottom: 16px; }
+body.ndvr-admin .ndvr-field:last-of-type { margin-bottom: 0; }
+body.ndvr-admin .ndvr-field label {
+	display: block;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--ndvr-ink);
+	margin-bottom: 6px;
+}
+body.ndvr-admin .ndvr-field .description {
+	display: block;
+	font-size: 12px;
+	color: var(--ndvr-faint);
+	margin-top: 5px;
+}
+body.ndvr-admin .ndvr-field input[type="text"],
+body.ndvr-admin .ndvr-field input[type="url"],
+body.ndvr-admin .ndvr-field input[type="password"],
+body.ndvr-admin .ndvr-field input[type="email"],
+body.ndvr-admin .ndvr-field input[type="number"],
+body.ndvr-admin .ndvr-field textarea,
+body.ndvr-admin .ndvr-field select { width: 100%; max-width: 560px; }
+
+body.ndvr-admin .ndvr-field-row {
+	display: flex;
+	gap: 12px;
+	align-items: flex-end;
+	flex-wrap: wrap;
+}
+body.ndvr-admin .ndvr-field-row .ndvr-field { flex: 1; min-width: 200px; margin-bottom: 0; }
+
+body.ndvr-admin .ndvr-card-footer {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-top: 20px;
+	padding-top: 16px;
+	border-top: 1px solid var(--ndvr-line);
+	flex-wrap: wrap;
+}
+body.ndvr-admin .ndvr-card-footer .ndvr-sync-info {
+	font-size: 12px;
+	color: var(--ndvr-faint);
+	margin-left: auto;
+}
+
+/* Spinner inside a button */
+body.ndvr-admin .ndvr-btn-spinner {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border: 2px solid currentColor;
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: ndvr-spin .6s linear infinite;
+}
+@keyframes ndvr-spin { to { transform: rotate(360deg); } }
+
+/* Collapsible advanced section */
+body.ndvr-admin .ndvr-advanced-toggle {
+	background: none;
+	border: none;
+	color: var(--ndvr-verdant);
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	margin-top: 14px;
+}
+body.ndvr-admin .ndvr-advanced-toggle::before { content: "▸"; font-size: 10px; transition: transform .2s; }
+body.ndvr-admin .ndvr-advanced-toggle.open::before { transform: rotate(90deg); }
+body.ndvr-admin .ndvr-advanced-section { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--ndvr-line); }
+body.ndvr-admin .ndvr-advanced-section.open { display: block; }
+
+/* Tabs (for pages with multiple provider sections) */
+body.ndvr-admin .ndvr-tabs { display: flex; gap: 4px; margin-bottom: 0; border-bottom: 2px solid var(--ndvr-line); }
+body.ndvr-admin .ndvr-tab-btn {
+	background: none;
+	border: none;
+	padding: 10px 18px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--ndvr-slate);
+	cursor: pointer;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -2px;
+	transition: color .15s, border-color .15s;
+}
+body.ndvr-admin .ndvr-tab-btn.active { color: var(--ndvr-verdant); border-bottom-color: var(--ndvr-verdant); }
+body.ndvr-admin .ndvr-tab-btn:hover { color: var(--ndvr-ink); }
+body.ndvr-admin .ndvr-tab-panel { display: none; padding-top: 24px; }
+body.ndvr-admin .ndvr-tab-panel.active { display: block; }
 
 /* Notices */
 body.ndvr-admin .wrap .notice {

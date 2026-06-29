@@ -127,59 +127,102 @@ class SettingsPage implements Registerable {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Settings', 'ndv-reviews' ); ?></h1>
+
 			<?php if ( '' !== $this->notice ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php echo esc_html( $this->notice ); ?></p></div>
 			<?php endif; ?>
+
 			<form method="post">
 				<?php wp_nonce_field( self::NONCE ); ?>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Reviews', 'ndv-reviews' ); ?></th>
-						<td><label><input type="checkbox" name="enable_reviews" value="1" <?php checked( (bool) $s->get( 'enable_reviews' ) ); ?> /> <?php esc_html_e( 'Enable reviews', 'ndv-reviews' ); ?></label>
-						<br><label><input type="checkbox" name="allow_guest_reviews" value="1" <?php checked( (bool) $s->get( 'allow_guest_reviews' ) ); ?> /> <?php esc_html_e( 'Allow guest (logged-out) reviews', 'ndv-reviews' ); ?></label></td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Reviewable content', 'ndv-reviews' ); ?></th>
-						<td>
-							<p class="description"><?php esc_html_e( 'WooCommerce products are always reviewable. Enable other post types to collect reviews on them (use the [ndvr-reviews] / [ndvr-form] shortcodes on those templates).', 'ndv-reviews' ); ?></p>
-							<?php if ( empty( $cpts ) ) : ?>
-								<p><em><?php esc_html_e( 'No other public post types found.', 'ndv-reviews' ); ?></em></p>
-							<?php else : ?>
-								<?php foreach ( $cpts as $cpt ) : ?>
-									<label style="display:inline-block;margin:0 14px 6px 0;"><input type="checkbox" name="reviewable_post_types[]" value="<?php echo esc_attr( $cpt->name ); ?>" <?php checked( in_array( $cpt->name, $enabled, true ) ); ?> /> <?php echo esc_html( $cpt->labels->singular_name ); ?></label>
-								<?php endforeach; ?>
-							<?php endif; ?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Photos', 'ndv-reviews' ); ?></th>
-						<td><label><input type="checkbox" name="photo_uploads" value="1" <?php checked( (bool) $s->get( 'photo_uploads' ) ); ?> /> <?php esc_html_e( 'Allow photo uploads', 'ndv-reviews' ); ?></label>
-						&nbsp; <?php esc_html_e( 'Max:', 'ndv-reviews' ); ?> <input type="number" name="max_photos" min="0" value="<?php echo esc_attr( $s->get( 'max_photos', 5 ) ); ?>" class="small-text" /></td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'reCAPTCHA v3', 'ndv-reviews' ); ?></th>
-						<td>
-							<label><input type="checkbox" name="recaptcha_enabled" value="1" <?php checked( (bool) $s->get( 'recaptcha_enabled' ) ); ?> /> <?php esc_html_e( 'Enable (your own keys)', 'ndv-reviews' ); ?></label><br>
-							<input type="text" name="recaptcha_site_key" value="<?php echo esc_attr( $s->get( 'recaptcha_site_key' ) ); ?>" placeholder="<?php esc_attr_e( 'Site key', 'ndv-reviews' ); ?>" class="regular-text" />
-							<input type="text" name="recaptcha_secret" value="<?php echo esc_attr( $s->get( 'recaptcha_secret' ) ); ?>" placeholder="<?php esc_attr_e( 'Secret key', 'ndv-reviews' ); ?>" class="regular-text" />
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'SEO schema', 'ndv-reviews' ); ?></th>
-						<td>
-							<select name="schema_mode">
-								<option value="auto" <?php selected( $s->get( 'schema_mode' ), 'auto' ); ?>><?php esc_html_e( 'Auto (defer to WooCommerce / SEO plugin)', 'ndv-reviews' ); ?></option>
-								<option value="plugin" <?php selected( $s->get( 'schema_mode' ), 'plugin' ); ?>><?php esc_html_e( 'Always output our schema', 'ndv-reviews' ); ?></option>
-								<option value="off" <?php selected( $s->get( 'schema_mode' ), 'off' ); ?>><?php esc_html_e( 'Off', 'ndv-reviews' ); ?></option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Uninstall', 'ndv-reviews' ); ?></th>
-						<td><label><input type="checkbox" name="remove_data_on_uninstall" value="1" <?php checked( (bool) $s->get( 'remove_data_on_uninstall' ) ); ?> /> <?php esc_html_e( 'Delete all NDV Reviews data when the plugin is uninstalled', 'ndv-reviews' ); ?></label></td>
-					</tr>
-				</table>
-				<p><button type="submit" name="ndvr_settings_save" value="1" class="button button-primary"><?php esc_html_e( 'Save settings', 'ndv-reviews' ); ?></button></p>
+
+				<?php // ── Card: Collection ── ?>
+				<div class="ndvr-card">
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Collection', 'ndv-reviews' ); ?></h2></div>
+					<div class="ndvr-field">
+						<label style="font-weight:700;"><?php esc_html_e( 'Reviews', 'ndv-reviews' ); ?></label>
+						<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-bottom:8px;">
+							<input type="checkbox" name="enable_reviews" value="1" <?php checked( (bool) $s->get( 'enable_reviews' ) ); ?> />
+							<?php esc_html_e( 'Enable reviews', 'ndv-reviews' ); ?>
+						</label>
+						<label style="display:flex;align-items:center;gap:8px;font-weight:400;">
+							<input type="checkbox" name="allow_guest_reviews" value="1" <?php checked( (bool) $s->get( 'allow_guest_reviews' ) ); ?> />
+							<?php esc_html_e( 'Allow guest (logged-out) reviews', 'ndv-reviews' ); ?>
+						</label>
+					</div>
+
+					<?php if ( ! empty( $cpts ) ) : ?>
+					<div class="ndvr-field" style="margin-top:18px;">
+						<label style="font-weight:700;"><?php esc_html_e( 'Also collect reviews on', 'ndv-reviews' ); ?></label>
+						<span class="description" style="display:block;margin-bottom:10px;"><?php esc_html_e( 'WooCommerce products are always reviewable. Add other public post types here.', 'ndv-reviews' ); ?></span>
+						<div style="display:flex;flex-wrap:wrap;gap:10px;">
+							<?php foreach ( $cpts as $cpt ) : ?>
+								<label style="display:inline-flex;align-items:center;gap:7px;background:var(--ndvr-haze);border-radius:8px;padding:7px 12px;font-weight:500;cursor:pointer;">
+									<input type="checkbox" name="reviewable_post_types[]" value="<?php echo esc_attr( $cpt->name ); ?>" <?php checked( in_array( $cpt->name, $enabled, true ) ); ?> />
+									<?php echo esc_html( $cpt->labels->singular_name ); ?>
+								</label>
+							<?php endforeach; ?>
+						</div>
+					</div>
+					<?php endif; ?>
+
+					<div class="ndvr-field" style="margin-top:18px;">
+						<label style="font-weight:700;"><?php esc_html_e( 'Photo uploads', 'ndv-reviews' ); ?></label>
+						<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+							<label style="display:flex;align-items:center;gap:7px;font-weight:400;">
+								<input type="checkbox" name="photo_uploads" value="1" <?php checked( (bool) $s->get( 'photo_uploads' ) ); ?> />
+								<?php esc_html_e( 'Allow photo uploads', 'ndv-reviews' ); ?>
+							</label>
+							<label style="display:flex;align-items:center;gap:7px;font-weight:400;color:var(--ndvr-slate);">
+								<?php esc_html_e( 'Max per review:', 'ndv-reviews' ); ?>
+								<input type="number" name="max_photos" min="0" max="20" value="<?php echo esc_attr( $s->get( 'max_photos', 5 ) ); ?>" style="width:60px;" />
+							</label>
+						</div>
+					</div>
+				</div>
+
+				<?php // ── Card: Spam protection ── ?>
+				<div class="ndvr-card">
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Spam Protection', 'ndv-reviews' ); ?></h2></div>
+					<div class="ndvr-field">
+						<label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:14px;">
+							<input type="checkbox" name="recaptcha_enabled" value="1" <?php checked( (bool) $s->get( 'recaptcha_enabled' ) ); ?> />
+							<?php esc_html_e( 'Enable reCAPTCHA v3 (your own keys)', 'ndv-reviews' ); ?>
+						</label>
+						<div class="ndvr-field-row">
+							<div class="ndvr-field">
+								<label><?php esc_html_e( 'Site key', 'ndv-reviews' ); ?></label>
+								<input type="text" name="recaptcha_site_key" value="<?php echo esc_attr( $s->get( 'recaptcha_site_key' ) ); ?>" placeholder="6Lcxxx..." />
+							</div>
+							<div class="ndvr-field">
+								<label><?php esc_html_e( 'Secret key', 'ndv-reviews' ); ?></label>
+								<input type="text" name="recaptcha_secret" value="<?php echo esc_attr( $s->get( 'recaptcha_secret' ) ); ?>" placeholder="6Lcxxx..." />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<?php // ── Card: SEO & Advanced ── ?>
+				<div class="ndvr-card">
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'SEO & Advanced', 'ndv-reviews' ); ?></h2></div>
+					<div class="ndvr-field">
+						<label><?php esc_html_e( 'Schema markup (JSON-LD)', 'ndv-reviews' ); ?></label>
+						<select name="schema_mode" style="max-width:340px;">
+							<option value="auto"   <?php selected( $s->get( 'schema_mode' ), 'auto' ); ?>><?php esc_html_e( 'Auto — defer to WooCommerce / SEO plugin', 'ndv-reviews' ); ?></option>
+							<option value="plugin" <?php selected( $s->get( 'schema_mode' ), 'plugin' ); ?>><?php esc_html_e( 'Always output NDV Reviews schema', 'ndv-reviews' ); ?></option>
+							<option value="off"    <?php selected( $s->get( 'schema_mode' ), 'off' ); ?>><?php esc_html_e( 'Off', 'ndv-reviews' ); ?></option>
+						</select>
+					</div>
+					<div class="ndvr-field" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ndvr-line);">
+						<label style="display:flex;align-items:center;gap:8px;font-weight:400;color:var(--ndvr-slate);">
+							<input type="checkbox" name="remove_data_on_uninstall" value="1" <?php checked( (bool) $s->get( 'remove_data_on_uninstall' ) ); ?> />
+							<?php esc_html_e( 'Delete all NDV Reviews data when the plugin is uninstalled', 'ndv-reviews' ); ?>
+						</label>
+					</div>
+				</div>
+
+				<div style="margin-top:4px;">
+					<button type="submit" name="ndvr_settings_save" value="1" class="button button-primary"><?php esc_html_e( 'Save settings', 'ndv-reviews' ); ?></button>
+				</div>
 			</form>
 		</div>
 		<?php

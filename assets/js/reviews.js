@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — front-end review form submission.
+ * NDV Reviews — front-end review form submission + UI enhancements.
  * Vanilla JS, no jQuery. Intercepts the WooCommerce review form and submits
  * it over AJAX so there is no full page reload.
  */
@@ -9,11 +9,75 @@
 	var cfg = window.ndvrReviews || {};
 	var form = document.getElementById( 'ndvr-review-form' );
 
-	if ( ! form || ! cfg.ajaxUrl ) {
+	if ( ! form ) {
 		return;
 	}
 
 	var messageEl = form.querySelector( '.ndvr-form-message' );
+
+	// ── Recommend pills ── JS fallback for browsers without CSS :has() ──────
+	var recommendLabels = form.querySelectorAll( '.ndvr-field-recommend label' );
+	function syncRecommendPills() {
+		recommendLabels.forEach( function ( label ) {
+			var radio = label.querySelector( 'input[type="radio"]' );
+			if ( radio ) {
+				label.classList.toggle( 'is-checked', radio.checked );
+			}
+		} );
+	}
+	recommendLabels.forEach( function ( label ) {
+		label.addEventListener( 'click', function () {
+			// Let the browser process the click first, then sync
+			setTimeout( syncRecommendPills, 0 );
+		} );
+	} );
+	syncRecommendPills(); // mark the pre-checked "Neutral" on load
+
+	// ── Upload zone enhancements ─────────────────────────────────────────────
+	var uploadWrappers = form.querySelectorAll( '.ndvr-upload-wrapper' );
+	uploadWrappers.forEach( function ( wrapper ) {
+		var fileInput = wrapper.querySelector( 'input[type="file"]' );
+		var countEl   = wrapper.querySelector( '.ndvr-upload-count' );
+
+		if ( ! fileInput ) return;
+
+		function updateCount() {
+			if ( ! countEl ) return;
+			var n = fileInput.files ? fileInput.files.length : 0;
+			if ( n === 0 ) {
+				countEl.textContent = '';
+			} else {
+				countEl.textContent = n === 1
+					? '1 photo selected'
+					: n + ' photos selected';
+			}
+		}
+
+		fileInput.addEventListener( 'change', updateCount );
+
+		// Drag-over visual feedback
+		wrapper.addEventListener( 'dragenter', function ( e ) {
+			e.preventDefault();
+			wrapper.classList.add( 'is-dragging' );
+		} );
+		wrapper.addEventListener( 'dragover', function ( e ) {
+			e.preventDefault();
+		} );
+		wrapper.addEventListener( 'dragleave', function ( e ) {
+			if ( ! wrapper.contains( e.relatedTarget ) ) {
+				wrapper.classList.remove( 'is-dragging' );
+			}
+		} );
+		wrapper.addEventListener( 'drop', function () {
+			wrapper.classList.remove( 'is-dragging' );
+			setTimeout( updateCount, 0 );
+		} );
+	} );
+
+	// ── Form submission ──────────────────────────────────────────────────────
+	if ( ! cfg.ajaxUrl ) {
+		return;
+	}
 
 	function setMessage( text, type ) {
 		if ( ! messageEl ) {
@@ -65,6 +129,13 @@
 				if ( res && res.success ) {
 					setMessage( ( res.data && res.data.message ) || ( cfg.i18n && cfg.i18n.thanks ), 'success' );
 					form.reset();
+					// Reset upload count displays
+					uploadWrappers.forEach( function ( wrapper ) {
+						var c = wrapper.querySelector( '.ndvr-upload-count' );
+						if ( c ) c.textContent = '';
+					} );
+					// Reset recommend pills
+					syncRecommendPills();
 				} else {
 					setMessage( ( res && res.data && res.data.message ) || ( cfg.i18n && cfg.i18n.error ), 'error' );
 				}

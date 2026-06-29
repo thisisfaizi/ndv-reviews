@@ -87,22 +87,43 @@ class ReviewForm implements Registerable {
 		add_action( 'wp_ajax_nopriv_' . self::AJAX_ACTION, array( $this, 'handle_submit' ) );
 		// Gate the WooCommerce review form for logged-out users when disabled.
 		add_filter( 'pre_option_comment_registration', array( $this, 'maybe_require_login' ) );
+		// Fix the "post a comment" login message to say "review" on product pages.
+		add_filter( 'comment_form_must_log_in', array( $this, 'fix_login_message' ) );
 	}
 
 	/**
-	 * When guest reviews are disabled, tell WooCommerce that login is required.
-	 * WooCommerce reads comment_registration to decide whether to show the form
-	 * or a "must log in" prompt — we filter it dynamically so we never touch
-	 * the site-wide WP Discussion setting.
+	 * Own the comment_registration value on product pages so our setting is
+	 * the single source of truth — regardless of WP's Discussion setting.
 	 *
-	 * @param mixed $pre Existing pre-filter value.
-	 * @return mixed '1' to require login, original $pre otherwise.
+	 * Returns '0' (guests allowed) or '1' (login required) when on a product
+	 * page; otherwise defers to whatever WP has stored in the DB.
+	 *
+	 * @param mixed $pre Pre-filter value (false = not filtered yet).
+	 * @return mixed
 	 */
 	public function maybe_require_login( $pre ) {
-		if ( $this->is_active_context() && ! $this->settings->get( 'allow_guest_reviews', true ) ) {
-			return '1';
+		if ( ! $this->is_active_context() ) {
+			return $pre;
 		}
-		return $pre;
+		return $this->settings->get( 'allow_guest_reviews', true ) ? '0' : '1';
+	}
+
+	/**
+	 * Replace the generic "post a comment" login message with "post a review"
+	 * on product pages.
+	 *
+	 * @param string $html Default must-log-in HTML from comment_form().
+	 * @return string
+	 */
+	public function fix_login_message( $html ) {
+		if ( ! $this->is_active_context() ) {
+			return $html;
+		}
+		return '<p class="must-log-in">' . sprintf(
+			/* translators: %s: login URL */
+			__( 'You must be <a href="%s">logged in</a> to post a review.', 'ndv-reviews' ),
+			esc_url( wp_login_url( (string) apply_filters( 'the_permalink', get_permalink() ) ) )
+		) . '</p>';
 	}
 
 	/**

@@ -51,7 +51,9 @@ class SettingsPage implements Registerable {
 	 * @return void
 	 */
 	public function register() {
-		add_action( 'admin_menu', array( $this, 'register_menu' ), 9 );
+		// Priority 11 — after CriteriaPage (10) creates the parent menu, so the
+		// submenu's page hook is computed against the real parent (not "admin_*").
+		add_action( 'admin_menu', array( $this, 'register_menu' ), 11 );
 		add_action( 'admin_init', array( $this, 'handle_save' ) );
 	}
 

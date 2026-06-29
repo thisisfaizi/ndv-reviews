@@ -85,6 +85,24 @@ class ReviewForm implements Registerable {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'wp_ajax_' . self::AJAX_ACTION, array( $this, 'handle_submit' ) );
 		add_action( 'wp_ajax_nopriv_' . self::AJAX_ACTION, array( $this, 'handle_submit' ) );
+		// Gate the WooCommerce review form for logged-out users when disabled.
+		add_filter( 'pre_option_comment_registration', array( $this, 'maybe_require_login' ) );
+	}
+
+	/**
+	 * When guest reviews are disabled, tell WooCommerce that login is required.
+	 * WooCommerce reads comment_registration to decide whether to show the form
+	 * or a "must log in" prompt — we filter it dynamically so we never touch
+	 * the site-wide WP Discussion setting.
+	 *
+	 * @param mixed $pre Existing pre-filter value.
+	 * @return mixed '1' to require login, original $pre otherwise.
+	 */
+	public function maybe_require_login( $pre ) {
+		if ( $this->is_active_context() && ! $this->settings->get( 'allow_guest_reviews', true ) ) {
+			return '1';
+		}
+		return $pre;
 	}
 
 	/**
@@ -265,6 +283,10 @@ class ReviewForm implements Registerable {
 	public function handle_submit() {
 		if ( ! check_ajax_referer( self::NONCE_ACTION, 'ndvr_nonce', false ) ) {
 			wp_send_json_error( array( 'message' => __( 'Your session expired. Please reload the page.', 'ndv-reviews' ) ), 403 );
+		}
+
+		if ( ! $this->settings->get( 'allow_guest_reviews', true ) && ! is_user_logged_in() ) {
+			wp_send_json_error( array( 'message' => __( 'You must be logged in to submit a review.', 'ndv-reviews' ) ), 403 );
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- verified above.

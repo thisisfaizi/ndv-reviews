@@ -61,7 +61,15 @@ body.ndvr-admin .form-table {
 	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 18px 40px -30px rgba(20,22,28,.25);
 	overflow: hidden;
 }
-body.ndvr-admin .form-table { padding: 8px 22px; }
+body.ndvr-admin .form-table { padding: 8px 0; }
+body.ndvr-admin .form-table th {
+	padding-left: 28px;
+	padding-right: 20px;
+}
+body.ndvr-admin .form-table td {
+	padding-left: 8px;
+	padding-right: 28px;
+}
 body.ndvr-admin .widefat thead th {
 	background: var(--ndvr-haze);
 	font-size: 11px;
@@ -76,7 +84,8 @@ body.ndvr-admin .widefat td,
 body.ndvr-admin .widefat th { padding: 13px 16px; }
 body.ndvr-admin .widefat tbody tr { border-bottom: 1px solid var(--ndvr-line); }
 body.ndvr-admin .striped > tbody > :nth-child(odd) { background: #fbfcfd; }
-body.ndvr-admin .form-table th { color: var(--ndvr-ink); font-weight: 600; padding-top: 18px; padding-bottom: 18px; }
+body.ndvr-admin .form-table th { color: var(--ndvr-ink); font-weight: 600; padding-top: 18px; padding-bottom: 18px; padding-left: 28px; padding-right: 20px; }
+body.ndvr-admin .form-table td { padding-top: 18px; padding-bottom: 18px; padding-left: 8px; padding-right: 28px; }
 
 /* =========================================================
    Inputs — every text/select/textarea: same height, same radius,

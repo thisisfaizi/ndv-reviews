@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.9.7
+Stable tag: 0.9.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,10 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.9.8 =
+* Add [ndvr-qa] shortcode stub — returns empty unless NDV Reviews Pro is active,
+  where it renders the full Q&A section for the current (or specified) product.
 
 = 0.9.7 =
 * Add six `ndv-reviews/show_*` filter hooks to the review card template so the

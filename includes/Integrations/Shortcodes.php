@@ -45,6 +45,25 @@ class Shortcodes implements Registerable {
 		add_shortcode( 'ndvr-criteria-graph', array( $this, 'criteria_graph' ) );
 		add_shortcode( 'ndvr-stars', array( $this, 'stars' ) );
 		add_shortcode( 'ndvr-marquee', array( $this, 'marquee' ) );
+		// Pro-rendered shortcode — returns empty unless Pro hooks this filter.
+		add_shortcode( 'ndvr-qa', array( $this, 'qa' ) );
+	}
+
+	/**
+	 * [ndvr-qa product_id=""] — renders Q&A for a product (Pro feature).
+	 *
+	 * @param array<string,mixed>|string $atts Attributes.
+	 * @return string
+	 */
+	public function qa( $atts ) {
+		$atts = shortcode_atts( array( 'product_id' => 0 ), $atts, 'ndvr-qa' );
+		/**
+		 * Filter the Q&A shortcode output. Pro hooks here to render the full Q&A section.
+		 *
+		 * @param string $html       Default empty string.
+		 * @param int    $product_id Product ID (0 = current post).
+		 */
+		return (string) apply_filters( 'ndv-reviews/qa_shortcode_output', '', (int) $atts['product_id'] );
 	}
 
 	/**

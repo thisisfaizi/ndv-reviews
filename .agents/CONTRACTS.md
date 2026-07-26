@@ -57,6 +57,10 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
     and the photo lightbox previously silently no-op'd wherever this method's output was used outside the
     native WooCommerce Reviews tab. Pro's Elementor override path (`filter_render`, non-default layouts)
     renders its own markup instead and is unaffected.
+  - `templates/review-item.php`'s photo anchor carries `data-elementor-open-lightbox="no"` (T-QA2, Phase 6b)
+    — opts the review-photo link out of Elementor's site-wide "Image Lightbox" kit setting, which otherwise
+    auto-attaches to any `<a>` linking to an image file and opens its own dialog simultaneously with ours.
+    Elementor-specific but harmless where Elementor is absent (unrecognized data attribute, no-op).
   - `[ndvr-marquee]` `direction` accepts `left|right|up|down` (preferred) or legacy `horizontal|vertical`
     (+ `reverse`). `category` (slug or term id, requires `source="category"`) and `rows` (1|2 — `rows="2"`
     renders two independent crisscrossing tracks) added Phase 5 (T-M3b). Same on the Gutenberg block +

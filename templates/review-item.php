@@ -92,7 +92,7 @@ if ( empty( $review ) ) {
 	<?php if ( ! empty( $review['media'] ) ) : ?>
 		<div class="ndvr-review-media">
 			<?php foreach ( $review['media'] as $ndvr_m ) : ?>
-				<a class="ndvr-review-photo" href="<?php echo esc_url( $ndvr_m['url'] ); ?>" target="_blank" rel="noopener">
+				<a class="ndvr-review-photo" href="<?php echo esc_url( $ndvr_m['url'] ); ?>" target="_blank" rel="noopener" data-elementor-open-lightbox="no">
 					<img src="<?php echo esc_url( $ndvr_m['thumb'] ); ?>" alt="<?php esc_attr_e( 'Customer photo', 'ndv-reviews' ); ?>" loading="lazy" />
 				</a>
 			<?php endforeach; ?>

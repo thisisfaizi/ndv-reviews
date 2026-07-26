@@ -304,3 +304,48 @@ RESULT: pass — 2 real bugs found and fixed, which is the actual value this kin
 items remain honestly unresolved rather than rubber-stamped. NEXT: T-QA2 (finish what this pass couldn't
 close — ideally on a plain, non-Elementor-templated product/page, and a disposable install for the
 uninstall check), then T-L1 (licensing, deferred by design) is the only thing left in the backlog.
+
+## Phase 6b — T-QA2 close-out (2026-07-27, free 0.15.1)
+CONTEXT: user asked to "fix the open issues" (T-QA2) and separately to research/plan a CSV-import feature
+(see below). Rather than fight the same Elementor-templated product page again, created a disposable admin
+page (`wp_posts` row, deleted at the end of this pass) carrying `[ndvr-reviews product_id="165"]` +
+`[ndvr-marquee source="category" category="wellness"]` + `[ndvr-marquee rows="2"]` — sidesteps both the
+Elementor-template question and the Gutenberg-editor automation friction noted last pass.
+LIGHTBOX — CONFIRMED, ROOT CAUSE FOUND, FIXED:
+- `get_network_requests` on the plain page showed `ndv-reviews/assets/js/display.min.js` and
+  `marquee.min.js` DO enqueue correctly here — proving last pass's hypothesis right: the missing assets on
+  the Elementor-templated product page were specific to that template/pipeline, not a general plugin defect.
+- Clicking the photo thumbnail still showed a competing overlay — but this time `get_element_info` proved
+  BOTH dialogs were open simultaneously (`.ndvr-lightbox-dialog` AND Elementor's
+  `.dialog-lightbox-close-button` both present, ours on top intercepting pointer events to theirs
+  underneath). This is a **different, more precise finding** than last pass's "Elementor's own lightbox
+  wins entirely" — display.js's init and wrapper fix from Phase 6 both work correctly; the conflict is
+  narrower than believed.
+- Root cause: `templates/review-item.php`'s photo anchor (`<a class="ndvr-review-photo" href="{full-image}"
+  target="_blank">`) matches Elementor's global "Image Lightbox" kit setting (`global_image_lightbox`,
+  default on, `core/kits/documents/tabs/settings-lightbox.php`) — it auto-attaches to ANY `<a>` linking to
+  an image file sitewide, Elementor-authored or not (confirmed by reading `assets/js/frontend.js`'s
+  `isLightboxLink()`).
+- Fix: added `data-elementor-open-lightbox="no"` to that anchor — Elementor's own documented per-link
+  opt-out. First attempt used `"none"` (wrong — `isLightboxLink()` does a strict `'no' !== value` check,
+  not a truthy/falsy one; `"none"` doesn't match so it silently did nothing). Corrected to `"no"` and
+  re-verified: Elementor's dialog no longer appears in the DOM at all; ours opens alone; close button
+  dismisses correctly (`verify_element` confirmed hidden after click). Keyboard (Escape/arrow-keys) was not
+  separately click-tested — no keyboard-press capability in the available browser tool this session — but
+  that logic is unchanged Phase-4 code, not touched by this fix.
+MARQUEE — CONFIRMED: `verify_element` found 3 `.ndvr-marquee` track elements on the page (1 for the
+`category` shortcode + 2 for the `rows="2"` shortcode) — both variants render with real data, matching the
+expected row counts.
+PRO RATINGCACHE FIX — RE-VERIFIED LIVE (previously only code-inspected): submitted "+ Add Review" with
+approve-immediately checked via the actual admin screen (had to fix my own selector first — `text=Add
+Review` matched the `<h1>` before the submit button; switched to `button[name="ndvr_manual_save"]`).
+Confirmed via direct DB query: comment created (`comment_approved=1`), `_wc_average_rating`/
+`_wc_review_count` on the product recalculated correctly (4.50 / 2) — no fatal, matching the Phase 6 fix.
+UNINSTALL — still deliberately not run this pass; same reasoning as Phase 6 (shared staging site, opt-in
+uninstall now deletes review comments too). Remains T-QA2b in the backlog for a disposable install.
+CLEANUP: deleted the disposable test page (direct `wp_posts` row removal — it was pure scratch, unlike the
+Phase 6 seeded "Wellness" category/"Photo Tester" review, which stay as harmless permanent test data). Left
+the new "QA Retest" review from the RatingCache re-test in place, same precedent.
+RESULT: pass — 1 new real bug found and fixed (Elementor lightbox conflict), 3 of T-QA1's 4 owed items
+closed with actual live verification. Only the uninstall dry-run remains, and only because it requires an
+environment this session doesn't have (a disposable install) rather than any remaining doubt about the fix.

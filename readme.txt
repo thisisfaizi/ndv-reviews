@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.15.0
+Stable tag: 0.15.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,11 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.15.1 =
+* Fixed: on sites running Elementor, the review-photo lightbox could open behind Elementor's own global
+  image lightbox (Elementor auto-attaches to any image link sitewide). The review photo link now opts out
+  of that behavior so only the review lightbox opens.
 
 = 0.15.0 =
 * Fixed: the `[ndvr-reviews]` shortcode (and the matching Gutenberg block) never wrapped its output in the

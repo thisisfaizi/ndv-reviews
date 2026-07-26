@@ -59,7 +59,7 @@ class TopRatedWidget extends \WP_Widget {
 			return;
 		}
 
-		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array(), NDVR_VERSION );
+		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 
 		echo $args['before_widget']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		$title = ! empty( $instance['title'] ) ? $instance['title'] : __( 'Top-rated products', 'ndv-reviews' );

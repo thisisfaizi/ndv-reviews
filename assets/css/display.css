@@ -4,28 +4,8 @@
  * its own tokens, and never relies on the host theme's colors or fonts.
  */
 
-/* ---- Design tokens (scoped to our roots so they never leak) ---- */
-.ndvr-reviews-wrap,
-.ndvr-summary,
-.ndvr-stars-inline,
-.ndvr-review-list-wrap,
-.ndvr-filter-bar {
-	--ndvr-ink: #181a1f;
-	--ndvr-slate: #626b7a;
-	--ndvr-faint: #9aa3b2;
-	--ndvr-paper: #ffffff;
-	--ndvr-haze: #f5f6f8;
-	--ndvr-line: #e8eaef;
-	--ndvr-gold: #f6a93b;
-	--ndvr-gold-soft: #fbe7c6;
-	--ndvr-verdant: #0f7d5b;
-	--ndvr-verdant-soft: #e7f3ee;
-	--ndvr-rose: #c0392b;
-	--ndvr-r: 16px;
-	--ndvr-r-sm: 10px;
-	--ndvr-shadow: 0 1px 2px rgba(20,22,28,.05), 0 14px 30px -20px rgba(20,22,28,.25);
-	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
+/* Design tokens: see tokens.css (:root, shared across every front-end
+   stylesheet in both plugins — enqueue dependency ensures it loads first). */
 
 .ndvr-reviews-wrap {
 	font-family: var(--ndvr-font);
@@ -318,6 +298,65 @@
 .ndvr-helpful.is-voted { border-color: var(--ndvr-verdant); color: var(--ndvr-verdant); background: var(--ndvr-verdant-soft); cursor: default; }
 
 .ndvr-no-reviews { color: var(--ndvr-slate); padding: 28px 0; text-align: center; }
+
+/* =========================================================
+   Photo lightbox (built once, appended to <body> by display.js)
+   ========================================================= */
+.ndvr-lightbox { position: fixed; inset: 0; z-index: 100000; }
+.ndvr-lightbox[hidden] { display: none; }
+.ndvr-lightbox-overlay { position: absolute; inset: 0; background: rgba(15,17,20,.82); }
+.ndvr-lightbox-dialog {
+	position: relative;
+	z-index: 1;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 40px;
+}
+.ndvr-lightbox-img {
+	max-width: 100%;
+	max-height: 100%;
+	border-radius: var(--ndvr-r-sm);
+	box-shadow: 0 20px 60px -20px rgba(0,0,0,.6);
+}
+.ndvr-lightbox-close,
+.ndvr-lightbox-prev,
+.ndvr-lightbox-next {
+	position: absolute;
+	background: rgba(255,255,255,.12);
+	color: #fff;
+	border: 0;
+	border-radius: 50%;
+	cursor: pointer;
+	line-height: 1;
+	transition: background 0.15s;
+}
+.ndvr-lightbox-close:hover,
+.ndvr-lightbox-prev:hover,
+.ndvr-lightbox-next:hover { background: rgba(255,255,255,.22); }
+.ndvr-lightbox-close:focus-visible,
+.ndvr-lightbox-prev:focus-visible,
+.ndvr-lightbox-next:focus-visible { outline: 2px solid var(--ndvr-gold); outline-offset: 2px; }
+.ndvr-lightbox-close { top: 18px; right: 18px; width: 40px; height: 40px; font-size: 24px; }
+.ndvr-lightbox-prev,
+.ndvr-lightbox-next {
+	top: 50%;
+	transform: translateY(-50%);
+	width: 48px;
+	height: 48px;
+	font-size: 30px;
+}
+.ndvr-lightbox-prev { left: 18px; }
+.ndvr-lightbox-next { right: 18px; }
+.ndvr-lightbox-prev[hidden],
+.ndvr-lightbox-next[hidden] { display: none; }
+
+@media (max-width: 640px) {
+	.ndvr-lightbox-dialog { padding: 16px; }
+	.ndvr-lightbox-prev { left: 6px; }
+	.ndvr-lightbox-next { right: 6px; }
+}
 
 /* =========================================================
    Pagination

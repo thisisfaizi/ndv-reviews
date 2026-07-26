@@ -2,20 +2,8 @@
  * NDV Reviews — tokenized collection landing page (standalone, full page).
  */
 
+/* Design tokens: see tokens.css (:root, shared front-end source). */
 .ndvr-collect-body {
-	--ndvr-ink: #181a1f;
-	--ndvr-slate: #626b7a;
-	--ndvr-faint: #9aa3b2;
-	--ndvr-paper: #ffffff;
-	--ndvr-haze: #f5f6f8;
-	--ndvr-line: #e6e8ee;
-	--ndvr-gold: #f6a93b;
-	--ndvr-verdant: #0f7d5b;
-	--ndvr-verdant-soft: #e7f3ee;
-	--ndvr-rose: #c0392b;
-	--ndvr-r: 18px;
-	--ndvr-r-sm: 10px;
-	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	margin: 0;
 	background:
 		radial-gradient(1100px 460px at 50% -8%, #eef6f2 0%, rgba(238,246,242,0) 60%),

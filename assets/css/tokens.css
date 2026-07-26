@@ -1,0 +1,32 @@
+/**
+ * NDV Reviews — shared front-end design tokens.
+ *
+ * Single canonical source for the customer-facing "Trust Panel" design
+ * system. Every front-end stylesheet in both plugins (free display/collect/
+ * marquee/reviews + Pro qanda/widgets/elementor) depends on this handle
+ * instead of hand-copying these custom properties — they used to each
+ * declare their own near-identical copy, which drifted slightly out of
+ * sync file to file. Declared at :root so it's available anywhere on the
+ * page, including elements appended directly to <body> (e.g. the photo
+ * lightbox), not just inside a specific wrapper class.
+ *
+ * The wp-admin skin (assets/css/admin.css) intentionally keeps its own
+ * separate token set — it's a different visual context, not customer-facing.
+ */
+:root {
+	--ndvr-ink: #181a1f;
+	--ndvr-slate: #626b7a;
+	--ndvr-faint: #9aa3b2;
+	--ndvr-paper: #ffffff;
+	--ndvr-haze: #f5f6f8;
+	--ndvr-line: #e8eaef;
+	--ndvr-gold: #f6a93b;
+	--ndvr-gold-soft: #fbe7c6;
+	--ndvr-verdant: #0f7d5b;
+	--ndvr-verdant-soft: #e7f3ee;
+	--ndvr-rose: #c0392b;
+	--ndvr-r: 16px;
+	--ndvr-r-sm: 10px;
+	--ndvr-shadow: 0 1px 2px rgba(20,22,28,.05), 0 14px 30px -20px rgba(20,22,28,.25);
+	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}

@@ -2,20 +2,8 @@
  * NDV Reviews — review form + interactive star control. Theme-safe, scoped.
  */
 
+/* Design tokens: see tokens.css (:root, shared front-end source). */
 .ndvr-fields {
-	--ndvr-ink: #181a1f;
-	--ndvr-slate: #626b7a;
-	--ndvr-faint: #9aa3b2;
-	--ndvr-paper: #ffffff;
-	--ndvr-haze: #f5f6f8;
-	--ndvr-line: #e2e5ea;
-	--ndvr-gold: #f6a93b;
-	--ndvr-verdant: #0f7d5b;
-	--ndvr-verdant-soft: #e7f3ee;
-	--ndvr-rose: #c0392b;
-	--ndvr-r: 14px;
-	--ndvr-r-sm: 10px;
-	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	font-family: var(--ndvr-font);
 	color: var(--ndvr-ink);
 	max-width: 620px;
@@ -246,16 +234,6 @@
 
 /* ── WooCommerce review form wrapper ─────────────────────────────────────── */
 #ndvr-review-form {
-	--ndvr-ink: #181a1f;
-	--ndvr-slate: #626b7a;
-	--ndvr-faint: #9aa3b2;
-	--ndvr-paper: #ffffff;
-	--ndvr-haze: #f5f6f8;
-	--ndvr-line: #e2e5ea;
-	--ndvr-verdant: #0f7d5b;
-	--ndvr-verdant-soft: #e7f3ee;
-	--ndvr-r-sm: 10px;
-	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	font-family: var(--ndvr-font);
 	max-width: 620px;
 }

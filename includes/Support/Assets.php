@@ -38,12 +38,29 @@ class Assets implements Registerable {
 	 * @return void
 	 */
 	public function register() {
+		add_action( 'wp_enqueue_scripts', array( $this, 'register_tokens' ) );
+		add_action( 'elementor/frontend/after_register_styles', array( $this, 'register_tokens' ) );
+		add_action( 'elementor/editor/after_enqueue_styles', array( $this, 'register_tokens' ) );
+
 		// Skip entirely when debugging — always serve readable source then.
 		if ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) {
 			return;
 		}
 		add_filter( 'style_loader_src', array( $this, 'minify' ), 10, 2 );
 		add_filter( 'script_loader_src', array( $this, 'minify' ), 10, 2 );
+	}
+
+	/**
+	 * Register the shared front-end design-token stylesheet (idempotent) so
+	 * every `ndvr-*` front-end handle, in either plugin, can depend on it
+	 * instead of hand-copying the same custom properties.
+	 *
+	 * @return void
+	 */
+	public function register_tokens() {
+		if ( ! wp_style_is( 'ndvr-tokens', 'registered' ) ) {
+			wp_register_style( 'ndvr-tokens', NDVR_URL . 'assets/css/tokens.css', array(), NDVR_VERSION );
+		}
 	}
 
 	/**

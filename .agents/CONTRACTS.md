@@ -86,7 +86,10 @@ for Q&A voting, same `UNIQUE KEY (entity_id, user_id, ip_hash)` shape as `review
 
 ## Script / style handles
 - Free: `ndvr-display` (css + js), `ndvr-marquee`, `ndvr-collect`, `ndvr-design-admin`, `ndvr-admin`,
-  `ndvr-criteria`. JS localized object: `ndvrDisplay` (`ajaxUrl`, `action`, `nonce`, `voteAction`).
+  `ndvr-criteria`, `ndvr-tokens` (css only — shared `:root` design tokens; every other front-end style
+  handle in both plugins depends on it, added Phase 4). JS localized object: `ndvrDisplay` (`ajaxUrl`,
+  `action`, `nonce`, `voteAction`, `i18n` — `photo`/`close`/`prev`/`next`, added Phase 4 for the photo
+  lightbox).
 - Pro: `ndvr-qa`, `ndvr-pro-widgets`, `ndvr-pro-elementor`, `ndvr-translate`.
 
 ## Constants

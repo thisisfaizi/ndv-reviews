@@ -15,6 +15,7 @@ body.ndvr-admin {
 	--ndvr-verdant-soft: #e7f3ee;
 	--ndvr-r: 14px;
 	--ndvr-r-sm: 9px;
+	--ndvr-shadow: 0 1px 2px rgba(20,22,28,.04), 0 18px 40px -30px rgba(20,22,28,.18);
 	-webkit-font-smoothing: antialiased;
 }
 
@@ -58,7 +59,7 @@ body.ndvr-admin .form-table {
 	background: var(--ndvr-paper);
 	border: 1px solid var(--ndvr-line);
 	border-radius: var(--ndvr-r);
-	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 18px 40px -30px rgba(20,22,28,.25);
+	box-shadow: var(--ndvr-shadow);
 	overflow: hidden;
 }
 body.ndvr-admin .form-table { padding: 8px 0; }
@@ -188,7 +189,7 @@ body.ndvr-admin .ndvr-card {
 	background: var(--ndvr-paper);
 	border: 1px solid var(--ndvr-line);
 	border-radius: var(--ndvr-r);
-	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 18px 40px -30px rgba(20,22,28,.18);
+	box-shadow: var(--ndvr-shadow);
 	padding: 24px 28px;
 	margin-bottom: 20px;
 }
@@ -221,6 +222,58 @@ body.ndvr-admin .ndvr-card-status.connected { background: var(--ndvr-verdant-sof
 body.ndvr-admin .ndvr-card-status.connected::before { content: "●"; font-size: 8px; }
 body.ndvr-admin .ndvr-card-status.disconnected { background: var(--ndvr-haze); color: var(--ndvr-faint); }
 body.ndvr-admin .ndvr-card-status.disconnected::before { content: "○"; font-size: 8px; }
+
+/* A table nested inside a .ndvr-card already has the card's own border/shadow —
+   drop the .widefat/.form-table rule's so it doesn't double up. */
+body.ndvr-admin .ndvr-card .widefat,
+body.ndvr-admin .ndvr-card .form-table { border: 0; box-shadow: none; }
+body.ndvr-admin .ndvr-card > h3:first-child { margin-top: 0; }
+body.ndvr-admin .ndvr-card h3 {
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--ndvr-ink);
+	margin: 22px 0 10px;
+}
+
+/* KPI row (Analytics dashboard) */
+body.ndvr-admin .ndvr-stat-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+body.ndvr-admin .ndvr-stat {
+	flex: 1 1 180px;
+	background: var(--ndvr-paper);
+	border: 1px solid var(--ndvr-line);
+	border-radius: var(--ndvr-r);
+	box-shadow: var(--ndvr-shadow);
+	padding: 18px 22px;
+}
+body.ndvr-admin .ndvr-stat-value {
+	display: block;
+	font-size: 28px;
+	font-weight: 800;
+	letter-spacing: -0.02em;
+	color: var(--ndvr-ink);
+	font-variant-numeric: tabular-nums;
+}
+body.ndvr-admin .ndvr-stat-label {
+	display: block;
+	font-size: 12px;
+	color: var(--ndvr-faint);
+	margin-top: 4px;
+}
+
+/* Inline bar (Analytics monthly chart) */
+body.ndvr-admin .ndvr-analytics-bar-track { display: inline-block; width: 100%; height: 10px; border-radius: 6px; background: var(--ndvr-haze); overflow: hidden; }
+body.ndvr-admin .ndvr-analytics-bar-fill { display: block; height: 100%; border-radius: 6px; background: var(--ndvr-gold); }
+
+/* Pill row (Analytics top keywords) */
+body.ndvr-admin .ndvr-pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+body.ndvr-admin .ndvr-pill {
+	display: inline-block;
+	padding: 4px 12px;
+	background: var(--ndvr-haze);
+	color: var(--ndvr-ink);
+	border-radius: 999px;
+	font-size: 13px;
+}
 
 body.ndvr-admin .ndvr-field { margin-bottom: 16px; }
 body.ndvr-admin .ndvr-field:last-of-type { margin-bottom: 0; }

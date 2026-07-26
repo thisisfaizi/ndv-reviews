@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.12.0
+Stable tag: 0.13.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,20 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.13.0 =
+* Accessibility: review photos now open in a keyboard-operable lightbox
+  (Escape/overlay/close-button dismiss, arrow-key navigation between a
+  review's photos, focus returns to the trigger link on close) instead of
+  opening the raw image in a new tab. The AJAX-filtered review list now
+  announces itself to screen readers on update (`aria-live`), and star/topic
+  filter pills expose their toggle state (`aria-pressed`).
+* Design: consolidated the front-end CSS design tokens (colors, radii,
+  shadow) that had drifted slightly out of sync across display/collect/
+  marquee/reviews.css into one shared source, so widgets appearing together
+  on the same page (e.g. the review list and a marquee) render with
+  identical borders/colors. Fixed a couple of hardcoded off-palette colors
+  along the way.
 
 = 0.12.0 =
 * Performance: review list pages now batch-fetch criteria scores and photos

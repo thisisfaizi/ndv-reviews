@@ -23,6 +23,7 @@
 			return;
 		}
 		listWrap.classList.add( 'is-loading' );
+		listWrap.setAttribute( 'aria-busy', 'true' );
 
 		var body = new FormData();
 		body.append( 'action', cfg.action );
@@ -43,8 +44,12 @@
 					listWrap.innerHTML = res.data.html;
 					wrap.scrollIntoView( { behavior: 'smooth', block: 'start' } );
 				}
+				listWrap.setAttribute( 'aria-busy', 'false' );
 			} )
-			.catch( function () { listWrap.classList.remove( 'is-loading' ); } );
+			.catch( function () {
+				listWrap.classList.remove( 'is-loading' );
+				listWrap.setAttribute( 'aria-busy', 'false' );
+			} );
 	}
 
 	if ( pills ) {
@@ -55,8 +60,10 @@
 			}
 			Array.prototype.forEach.call( pills.querySelectorAll( '.ndvr-topic' ), function ( b ) {
 				b.classList.remove( 'is-current' );
+				b.setAttribute( 'aria-pressed', 'false' );
 			} );
 			btn.classList.add( 'is-current' );
+			btn.setAttribute( 'aria-pressed', 'true' );
 			state.tag = btn.getAttribute( 'data-value' ) || '';
 			state.page = 1;
 			fetchList();
@@ -71,8 +78,10 @@
 			}
 			Array.prototype.forEach.call( filterBar.querySelectorAll( '.ndvr-filter[data-filter="star"]' ), function ( b ) {
 				b.classList.remove( 'is-current' );
+				b.setAttribute( 'aria-pressed', 'false' );
 			} );
 			btn.classList.add( 'is-current' );
+			btn.setAttribute( 'aria-pressed', 'true' );
 			state.star = parseInt( btn.getAttribute( 'data-value' ), 10 ) || 0;
 			state.page = 1;
 			fetchList();
@@ -95,7 +104,7 @@
 		} );
 	}
 
-	// Pagination (delegated, survives list replacement).
+	// Pagination + photo lightbox (delegated, survives list replacement).
 	wrap.addEventListener( 'click', function ( e ) {
 		var page = e.target.closest( '.ndvr-page' );
 		if ( page ) {
@@ -107,8 +116,126 @@
 		var helpful = e.target.closest( '.ndvr-helpful' );
 		if ( helpful && ! helpful.disabled ) {
 			vote( helpful );
+			return;
+		}
+
+		var photo = e.target.closest( '.ndvr-review-photo' );
+		if ( photo ) {
+			e.preventDefault();
+			openLightbox( photo );
 		}
 	} );
+
+	// ── Photo lightbox ──────────────────────────────────────────────
+	// Keyboard-operable modal: Escape/overlay/close-button dismiss, Left/Right
+	// arrows step through the same review's photos, focus moves into the
+	// dialog on open and returns to the trigger link on close.
+	var lightbox = null;
+	var lbGroup = [];
+	var lbIndex = 0;
+	var lbReturnFocus = null;
+
+	function buildLightbox() {
+		if ( lightbox ) {
+			return lightbox;
+		}
+		lightbox = document.createElement( 'div' );
+		lightbox.className = 'ndvr-lightbox';
+		lightbox.hidden = true;
+		var i18n = cfg.i18n || {};
+		lightbox.innerHTML =
+			'<div class="ndvr-lightbox-overlay" data-ndvr-close></div>' +
+			'<div class="ndvr-lightbox-dialog" role="dialog" aria-modal="true" aria-label="' + ( i18n.photo || 'Customer photo' ) + '">' +
+			'<button type="button" class="ndvr-lightbox-close" data-ndvr-close aria-label="' + ( i18n.close || 'Close' ) + '">&times;</button>' +
+			'<button type="button" class="ndvr-lightbox-prev" aria-label="' + ( i18n.prev || 'Previous photo' ) + '">&lsaquo;</button>' +
+			'<img class="ndvr-lightbox-img" src="" alt="" />' +
+			'<button type="button" class="ndvr-lightbox-next" aria-label="' + ( i18n.next || 'Next photo' ) + '">&rsaquo;</button>' +
+			'</div>';
+		document.body.appendChild( lightbox );
+
+		lightbox.addEventListener( 'click', function ( e ) {
+			if ( e.target.closest( '[data-ndvr-close]' ) ) {
+				closeLightbox();
+			} else if ( e.target.closest( '.ndvr-lightbox-prev' ) ) {
+				stepLightbox( -1 );
+			} else if ( e.target.closest( '.ndvr-lightbox-next' ) ) {
+				stepLightbox( 1 );
+			}
+		} );
+
+		lightbox.addEventListener( 'keydown', function ( e ) {
+			if ( e.key === 'Escape' ) {
+				closeLightbox();
+			} else if ( e.key === 'ArrowLeft' ) {
+				stepLightbox( -1 );
+			} else if ( e.key === 'ArrowRight' ) {
+				stepLightbox( 1 );
+			} else if ( e.key === 'Tab' ) {
+				// Simple focus trap: only the dialog's own buttons are focusable.
+				var focusable = lightbox.querySelectorAll( 'button' );
+				var first = focusable[ 0 ];
+				var last = focusable[ focusable.length - 1 ];
+				if ( e.shiftKey && document.activeElement === first ) {
+					e.preventDefault();
+					last.focus();
+				} else if ( ! e.shiftKey && document.activeElement === last ) {
+					e.preventDefault();
+					first.focus();
+				}
+			}
+		} );
+
+		return lightbox;
+	}
+
+	function showLightboxImage() {
+		var link = lbGroup[ lbIndex ];
+		var img = lightbox.querySelector( '.ndvr-lightbox-img' );
+		img.src = link.getAttribute( 'href' );
+		img.alt = link.querySelector( 'img' ) ? link.querySelector( 'img' ).alt : '';
+		var multi = lbGroup.length > 1;
+		lightbox.querySelector( '.ndvr-lightbox-prev' ).hidden = ! multi;
+		lightbox.querySelector( '.ndvr-lightbox-next' ).hidden = ! multi;
+	}
+
+	function stepLightbox( delta ) {
+		lbIndex = ( lbIndex + delta + lbGroup.length ) % lbGroup.length;
+		showLightboxImage();
+	}
+
+	function openLightbox( trigger ) {
+		var media = trigger.closest( '.ndvr-review-media' );
+		lbGroup = media ? Array.prototype.slice.call( media.querySelectorAll( '.ndvr-review-photo' ) ) : [ trigger ];
+		lbIndex = lbGroup.indexOf( trigger );
+		if ( lbIndex < 0 ) {
+			lbIndex = 0;
+		}
+		lbReturnFocus = trigger;
+
+		buildLightbox();
+		showLightboxImage();
+		lightbox.hidden = false;
+		lightbox.querySelector( '.ndvr-lightbox-close' ).focus();
+		document.addEventListener( 'keydown', trapEscapeAtDocument, true );
+	}
+
+	function closeLightbox() {
+		if ( ! lightbox || lightbox.hidden ) {
+			return;
+		}
+		lightbox.hidden = true;
+		document.removeEventListener( 'keydown', trapEscapeAtDocument, true );
+		if ( lbReturnFocus ) {
+			lbReturnFocus.focus();
+		}
+	}
+
+	// Belt-and-braces: Escape closes even if focus somehow left the dialog.
+	function trapEscapeAtDocument( e ) {
+		if ( e.key === 'Escape' ) {
+			closeLightbox();
+		}
+	}
 
 	function vote( btn ) {
 		var body = new FormData();

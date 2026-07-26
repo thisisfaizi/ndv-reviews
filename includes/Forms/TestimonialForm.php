@@ -109,7 +109,7 @@ class TestimonialForm implements Registerable {
 			$product_id = (int) get_the_ID();
 		}
 
-		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array(), NDVR_VERSION );
+		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 		wp_enqueue_script( 'ndvr-collect', NDVR_URL . 'assets/js/collect.js', array(), NDVR_VERSION, true );
 
 		return $this->render( $product_id, $atts['title'] );

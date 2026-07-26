@@ -301,8 +301,14 @@ class Landing implements Registerable {
 	<meta name="robots" content="noindex,nofollow" />
 	<title><?php esc_html_e( 'Write a review', 'ndv-reviews' ); ?> — <?php bloginfo( 'name' ); ?></title>
 		<?php
-		wp_enqueue_style( 'ndvr-collect', NDVR_URL . 'assets/css/collect.css', array(), NDVR_VERSION );
-		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array(), NDVR_VERSION );
+		// This standalone page never calls wp_head()/wp_enqueue_scripts, so the
+		// shared tokens handle (normally registered by Support\Assets on that
+		// hook) must be registered directly here too.
+		if ( ! wp_style_is( 'ndvr-tokens', 'registered' ) ) {
+			wp_register_style( 'ndvr-tokens', NDVR_URL . 'assets/css/tokens.css', array(), NDVR_VERSION );
+		}
+		wp_enqueue_style( 'ndvr-collect', NDVR_URL . 'assets/css/collect.css', array( 'ndvr-tokens' ), NDVR_VERSION );
+		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 		wp_print_styles( array( 'ndvr-collect', 'ndvr-reviews' ) );
 		?>
 </head>

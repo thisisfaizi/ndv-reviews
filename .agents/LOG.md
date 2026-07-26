@@ -120,3 +120,62 @@ this task's main open risk.
 RESULT: pass (static). NEXT: live-site verification per the plan's Verification section (DB upgrade,
 N+1 query count, uninstall dry-run, Q&A vote dedup, secrets masking, AutoPoster retry, AI summary async
 regen) — then T-M3b, T-A1, or T-L1 (licensing) from the backlog.
+
+## 2026-07-27 — Phase 4: accessibility (T-A1) + UI polish pass (T-UI1) — @fe/@be — free 0.13.0 / Pro 0.13.0
+CHANGED (free): includes/Display/Renderer.php (`#ndvr-review-list` gains `aria-live="polite"`/
+`aria-busy`; star/topic filter pill buttons gain `aria-pressed`; new `i18n` block in the `ndvrDisplay`
+localize array for the lightbox's 4 strings), assets/js/display.js (aria-pressed toggling on pill click,
+aria-busy toggling around the AJAX fetch, new photo-lightbox feature — delegated click on
+`.ndvr-review-photo`, `role="dialog" aria-modal`, Escape/overlay/close-button dismiss, Left/Right arrow
+prev/next scoped to the clicked review's own photo set via the closest `.ndvr-review-media`, focus moves
+to the close button on open and back to the trigger link on close, Tab-key focus trap), assets/css/
+display.css (new `.ndvr-lightbox*` rules; removed the old per-selector token block — now reads from the
+new shared tokens.css), NEW assets/css/tokens.css (`:root` — canonical color/radius/shadow/font tokens),
+includes/Support/Assets.php (new `register_tokens()` registers the `ndvr-tokens` handle on
+`wp_enqueue_scripts` + the two Elementor style-registration hooks), includes/Display/Widgets.php,
+includes/Collection/Landing.php (also defensively self-registers `ndvr-tokens` — this standalone page
+never fires `wp_head`/`wp_enqueue_scripts`), includes/Forms/{ReviewForm,TestimonialForm}.php, includes/
+Integrations/Widgets/{TopRatedWidget,RecentReviewsWidget}.php (all 7: add `ndvr-tokens` as a style dep),
+assets/css/{collect,marquee,reviews}.css (removed their own hand-copied token blocks — reviews.css had
+two), assets/css/admin.css (+`--ndvr-shadow` token replacing 3 hand-typed alpha-drifted copies across
+admin.css ×2 + design-admin.css ×1; new `.ndvr-stat-row`/`.ndvr-stat`/`.ndvr-analytics-bar-*`/
+`.ndvr-pill-row`/`.ndvr-pill` classes for the Pro Analytics reskin; `.ndvr-card .widefat`/`.form-table`
+border/shadow reset so tables nested in a card don't double up), assets/css/design-admin.css (shadow now
+`var(--ndvr-shadow, ...)`), readme.txt + version → 0.13.0.
+CHANGED (pro): includes/Elementor/LoopModule.php (`ndvrDisplay` localize gains the same `i18n` block;
+`ndvr-display`/`ndvr-pro-elementor` registration now depends on `ndvr-tokens`), includes/Widgets/
+Catalog.php, includes/Social/AutoPoster.php, includes/QandA/QandA.php (all defensively self-register
+`ndvr-tokens` before enqueuing, since they can fire outside the normal `wp_enqueue_scripts` timing),
+includes/Elementor/GridRenderer.php (elementor.css enqueue gains the dependency), assets/css/qanda.css
+(removed its own token block + `.ndvr-qa-message.is-error` now uses `var(--ndvr-rose)`), assets/css/
+widgets.css (removed its own token block — this incidentally fixes a real pre-existing bug: the block was
+scoped to `.ndvr-carousel,.ndvr-gallery,.ndvr-wall,.ndvr-badge`, but `.ndvr-sidebar-list`/`.ndvr-popup`/
+`.ndvr-trust-badge` further down the file aren't nested inside any of those, so their `var(--ndvr-slate)`
+etc. never resolved before — the new `:root`-scoped tokens.css reaches them correctly now), assets/css/
+elementor.css (2 hardcoded colors — `#0f7d5b`, `#b4462b` — now `var(--ndvr-verdant, ...)`/
+`var(--ndvr-rose, ...)`), includes/Analytics/Dashboard.php (reskinned: KPI stat-row at top — total
+reviews/blended average/keyword count, computed from data already fetched, no new queries — monthly table
+and keyword pills now `.ndvr-card`-wrapped, `#6c8cff` bar → `var(--ndvr-gold)`, `#f0f2f7` pills →
+`.ndvr-pill`), includes/Admin/SettingsPage.php (biggest single change — `render()` restructured from one
+flat sequence of 14 `<h2>` sections into 5 `.ndvr-tabs` (General / AI & Replies / Automation & Channels /
+Moderation & Reputation / Social & Developer) × `.ndvr-card` groups, reusing the exact tab-switching
+pattern already in `External\ExternalReviews`; every one of the ~70 existing field names/sanitizer keys
+carried over unchanged — verified with a small script that cross-checked every `$keys` sanitizer entry
+against a rendered `name="..."` attribute, 0 missing/duplicated other than one pre-existing gap
+(`external_target_post` has a sanitizer entry but no field anywhere, predates this change)), version →
+0.13.0.
+OBSERVED: `php -l`/`node --check` clean on every changed file, both repos. Live-verified in a real browser
+(Local site, `?localwp_auto_login=1`): Pro Settings screen — all 5 tabs render, tab-switching JS works, no
+double-bordered tables, secret-field masking placeholder still shows correctly, 0 console errors. Pro
+Analytics — KPI cards + gold accent bar + pill keywords render correctly with real data (3 reviews, 4.33
+avg). Regression-checked External Reviews and Design screens (both untouched but share admin.css) — no
+visual change. Product page marquee widget (uses the now-shared tokens.css via marquee.css) — unchanged
+visually, 0 console errors. Lightbox itself not yet exercised in a live browser click-through (this test
+site's product template doesn't render the native reviews tab with photos) — static/code-level verified
+only; flagged as the main open risk for this task, along with the DB/AJAX runtime checks still owed from
+Phase 3.
+RESULT: pass (static + partial live verification). NEXT: exercise the lightbox live on a product with
+photo reviews (open/close/arrow-keys/focus-return); the still-owed Phase 3 live-runtime checks; then
+T-M3b (marquee data gaps), T-UI2 (remaining UI polish: free CriteriaPage/RequestsPage/ToolsPage, Pro QandA
+Moderation hex colors, the orphaned `external_target_post` setting), or T-L1 (licensing, deferred by
+design) from the backlog.

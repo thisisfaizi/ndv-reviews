@@ -85,8 +85,8 @@ class Widgets {
 		}
 		$this->assets_enqueued = true;
 
-		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array(), NDVR_VERSION );
-		wp_enqueue_style( 'ndvr-marquee', NDVR_URL . 'assets/css/marquee.css', array(), NDVR_VERSION );
+		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array( 'ndvr-tokens' ), NDVR_VERSION );
+		wp_enqueue_style( 'ndvr-marquee', NDVR_URL . 'assets/css/marquee.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 		wp_enqueue_script( 'ndvr-display', NDVR_URL . 'assets/js/display.js', array(), NDVR_VERSION, true );
 		wp_enqueue_script( 'ndvr-marquee', NDVR_URL . 'assets/js/marquee.js', array(), NDVR_VERSION, true );
 

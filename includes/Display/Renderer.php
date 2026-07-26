@@ -108,7 +108,7 @@ class Renderer implements Registerable {
 			return;
 		}
 
-		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array(), NDVR_VERSION );
+		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 		wp_enqueue_script( 'ndvr-display', NDVR_URL . 'assets/js/display.js', array(), NDVR_VERSION, true );
 
 		$accent_css = Design::inline_css( $this->settings );
@@ -120,10 +120,16 @@ class Renderer implements Registerable {
 			'ndvr-display',
 			'ndvrDisplay',
 			array(
-				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-				'action'    => self::AJAX_ACTION,
-				'nonce'     => wp_create_nonce( self::NONCE ),
+				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+				'action'     => self::AJAX_ACTION,
+				'nonce'      => wp_create_nonce( self::NONCE ),
 				'voteAction' => Votes::AJAX_ACTION,
+				'i18n'       => array(
+					'photo' => __( 'Customer photo', 'ndv-reviews' ),
+					'close' => __( 'Close', 'ndv-reviews' ),
+					'prev'  => __( 'Previous photo', 'ndv-reviews' ),
+					'next'  => __( 'Next photo', 'ndv-reviews' ),
+				),
 			)
 		);
 	}
@@ -162,7 +168,7 @@ class Renderer implements Registerable {
 			)
 		);
 
-		echo '<div id="ndvr-review-list" class="ndvr-review-list-wrap">';
+		echo '<div id="ndvr-review-list" class="ndvr-review-list-wrap" aria-live="polite" aria-busy="false">';
 		echo View::render( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			'review-list.php',
 			array(
@@ -190,9 +196,9 @@ class Renderer implements Registerable {
 		}
 		?>
 		<div class="ndvr-topic-pills" role="group" aria-label="<?php esc_attr_e( 'Filter by topic', 'ndv-reviews' ); ?>">
-			<button type="button" class="ndvr-topic is-current" data-filter="tag" data-value=""><?php esc_html_e( 'All topics', 'ndv-reviews' ); ?></button>
+			<button type="button" class="ndvr-topic is-current" data-filter="tag" data-value="" aria-pressed="true"><?php esc_html_e( 'All topics', 'ndv-reviews' ); ?></button>
 			<?php foreach ( $tags as $ndvr_tag => $ndvr_count ) : ?>
-				<button type="button" class="ndvr-topic" data-filter="tag" data-value="<?php echo esc_attr( $ndvr_tag ); ?>">
+				<button type="button" class="ndvr-topic" data-filter="tag" data-value="<?php echo esc_attr( $ndvr_tag ); ?>" aria-pressed="false">
 					<?php echo esc_html( ucwords( str_replace( '-', ' ', $ndvr_tag ) ) ); ?> <span class="ndvr-topic-count"><?php echo esc_html( number_format_i18n( $ndvr_count ) ); ?></span>
 				</button>
 			<?php endforeach; ?>
@@ -209,9 +215,9 @@ class Renderer implements Registerable {
 		?>
 		<div class="ndvr-filter-bar" role="region" aria-label="<?php esc_attr_e( 'Filter reviews', 'ndv-reviews' ); ?>">
 			<div class="ndvr-filter-stars" role="group" aria-label="<?php esc_attr_e( 'Filter by star', 'ndv-reviews' ); ?>">
-				<button type="button" class="ndvr-filter is-current" data-filter="star" data-value="0"><?php esc_html_e( 'All', 'ndv-reviews' ); ?></button>
+				<button type="button" class="ndvr-filter is-current" data-filter="star" data-value="0" aria-pressed="true"><?php esc_html_e( 'All', 'ndv-reviews' ); ?></button>
 				<?php for ( $ndvr_s = 5; $ndvr_s >= 1; $ndvr_s-- ) : ?>
-					<button type="button" class="ndvr-filter" data-filter="star" data-value="<?php echo esc_attr( $ndvr_s ); ?>"><?php echo esc_html( $ndvr_s ); ?>★</button>
+					<button type="button" class="ndvr-filter" data-filter="star" data-value="<?php echo esc_attr( $ndvr_s ); ?>" aria-pressed="false"><?php echo esc_html( $ndvr_s ); ?>★</button>
 				<?php endfor; ?>
 			</div>
 			<label class="ndvr-filter-toggle"><input type="checkbox" data-filter="verified" /> <?php esc_html_e( 'Verified only', 'ndv-reviews' ); ?></label>

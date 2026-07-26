@@ -7,14 +7,8 @@
  * overflow the viewport (see marquee_items repeat calc).
  */
 
+/* Design tokens: see tokens.css (:root, shared front-end source). */
 .ndvr-marquee {
-	--ndvr-ink: #181a1f;
-	--ndvr-slate: #626b7a;
-	--ndvr-paper: #ffffff;
-	--ndvr-line: #e8eaef;
-	--ndvr-gold: #f6a93b;
-	--ndvr-verdant: #0f7d5b;
-	--ndvr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	--ndvr-duration: 40s;
 	--ndvr-gap: 18px;
 	font-family: var(--ndvr-font);

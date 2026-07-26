@@ -232,3 +232,75 @@ RESULT: pass (static + partial live verification). NEXT: exercise the category f
 product-category data, the double-row marquee variant, and the still-owed Phase 3/4 live-runtime checks
 (lightbox click-through, DB/AJAX/uninstall dry-run) — then T-L1 (licensing, deferred by design) is the
 only item left in the backlog.
+
+## 2026-07-27 — Phase 6: @qa live-verification pass (T-QA1) — free 0.15.0 / Pro 0.15.0
+CONTEXT: user asked to "start next phase according to AGENTS.md". Board showed every backlog item shipped
+except T-L1 (licensing, deferred by design), but the last 3 phases' LOG.md entries all signed off as
+"static + partial live verification" with named items never actually clicked through: the photo lightbox,
+category-filtered marquee, double-row marquee, and a DB/AJAX/uninstall dry-run. AGENTS.md §9 names "marking
+work done from reasoning instead of loading the page" as a failure mode — routed this as `@qa`: close that
+debt with the real Local site (`?localwp_auto_login=1`) rather than starting new feature work.
+SEEDED DATA (needed — none of this existed before): created a "Wellness" product category, assigned it to
+"Detend drops" (the one product with existing reviews); added a manual review with 1 uploaded photo via
+Pro's "+ Add Review" screen (needed to exercise the lightbox).
+FOUND + FIXED (the actual point of this pass — 2 real, previously undiscovered bugs):
+1. **Fatal error**, `ndv-reviews-pro/includes/Admin/ManualReviews.php:195` — the very first attempt to add
+   a manual review with "Approve immediately" checked threw `Uncaught Error: Non-static method
+   NdvReviews\Reviews\RatingCache::recalc_product() cannot be called statically`. Confirmed via
+   `includes/Reviews/RatingCache.php` (a plain instance method) and `Plugin.php`'s DI registration
+   (`'rating_cache' => new RatingCache()`) that this has always been an instance method — the static-style
+   call in ManualReviews.php was wrong from whenever this line was written. Fixed to
+   `\NdvReviews\Plugin::instance()->container()->get('rating_cache')->recalc_product($pool_id)`, matching
+   the existing pattern in `Developer/Cli.php`; removed the now-dead `use NdvReviews\Reviews\RatingCache;`
+   import. The review row itself was NOT lost — `wp_insert_comment()` and all the meta writes happen
+   BEFORE this line, so the fatal only skipped the aggregate recalc for that one row.
+2. **Missing DOM wrapper**, `ndv-reviews/includes/Display/Widgets.php::reviews()` — the `[ndvr-reviews]`
+   shortcode (and the Gutenberg `ndv-reviews/reviews` block, which calls the same method) rendered
+   `review-list.php`'s output directly with no surrounding container. `assets/js/display.js`'s init guard
+   (`if (!wrap || !cfg.ajaxUrl) return;`, `wrap = document.getElementById('ndvr-reviews')`) silently exits
+   without that id — meaning the helpful-vote button, pagination, AND the new Phase 4 photo lightbox never
+   initialize when reviews are shown this way outside the native WooCommerce Reviews tab. Found by testing
+   the lightbox on a plain shortcode-embedded review list and noticing `.ndvr-helpful` clicks also did
+   nothing (a much older, pre-Phase-4 feature) — that comparison is what confirmed this was a missing-init
+   problem, not a lightbox-specific bug. Fixed: `reviews()` now wraps its output in
+   `<div id="ndvr-reviews" data-product="...">/<div id="ndvr-review-list">`. Also added the `i18n` lightbox
+   strings to this method's OWN separate `wp_localize_script('ndvr-display', 'ndvrDisplay', ...)` call in
+   `Widgets::enqueue()` — a second, independent call site I'd missed in Phase 4 (only `Renderer.php` and
+   Pro's `LoopModule.php` got it then).
+VERIFIED LIVE: deactivate → reactivate, both plugins, correct dependency order (Pro first, since free
+"cannot be deactivated until the plugins that require it are deactivated" — WordPress enforces this in the
+UI). No fatal errors either direction; front-end degrades gracefully while off (marquee/reviews sections
+just don't render, rest of the page unaffected); full restoration on reactivate, confirming
+`Deactivator::deactivate()` still runs cleanly and no data/options were lost across the cycle.
+NOT RESOLVED — recorded honestly rather than silently dropped:
+- **Photo lightbox**: still could not be confirmed opening in a live click-through. The one product with
+  reviews on this site renders its description (where I embedded `[ndvr-reviews]` for testing) through an
+  Elementor-built template. Clicking the photo showed AN overlay, but `get_network_requests` (filtered on
+  `ndvr`) showed **zero** `ndvr-display.js`/`ndvr-tokens.css` requests on that page load at all, even
+  though the review cards visibly rendered with fully-correct Trust Panel styling — inconsistent with
+  "the CSS never loaded" and much more consistent with Elementor's own asset-optimization pipeline inlining
+  the CSS into one of its generated bundles while the plain JS enqueue got dropped or never printed in this
+  specific rendering context. Ruled out one hypothesis directly: deactivated "Rich Showcase for Google
+  Reviews" (an unrelated third-party plugin also on this shared site) and reactivated — the identical
+  competing overlay still appeared, so that wasn't it. Network log then showed the actual source:
+  `elementor/assets/js/lightbox.*.bundle.min.js` + `.../lib/share-link/share-link.min.js` load on this
+  page — Elementor's own bundled lightbox, whose fullscreen/zoom/share/close icon set is exactly what
+  appeared. Did not attempt to force a fix (racing Elementor's own handler via capture-phase binding would
+  be fragile and isn't a real fix for what's fundamentally this one shared site's Elementor-template
+  choice, not a defect in the plugin).
+- **Category-filtered + double-row marquee**: added `[ndvr-marquee source="category" category="wellness"]`
+  and `[ndvr-marquee rows="2"]` to the same product's description alongside `[ndvr-reviews]` — only the
+  reviews shortcode's output rendered before the page hit its footer; neither marquee shortcode produced
+  visible output on this specific Elementor-templated product page. Not resolved this pass (same
+  rendering-path family of issue, not chased further given the point above).
+- **Uninstall test — deliberately skipped, not just incomplete**: `uninstall.php` (since Phase 3) also
+  deletes every review comment on opt-in. This is a shared staging site hosting other unrelated client
+  projects' data (jewelry-pricing calculators, HubSpot integrations, etc. visible in the plugins list) —
+  running a real uninstall here would be a destructive action against data outside this task's blast
+  radius. Recommending the user run this specific check on a disposable/throwaway install instead.
+CLEANUP: reverted the "Detend drops" product description back to empty (removed the 3 test shortcodes);
+left the seeded "Wellness" category and the "Photo Tester" review + photo in place as harmless test data.
+RESULT: pass — 2 real bugs found and fixed, which is the actual value this kind of pass is for; several
+items remain honestly unresolved rather than rubber-stamped. NEXT: T-QA2 (finish what this pass couldn't
+close — ideally on a plain, non-Elementor-templated product/page, and a disposable install for the
+uninstall check), then T-L1 (licensing, deferred by design) is the only thing left in the backlog.

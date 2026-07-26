@@ -103,6 +103,12 @@ class Widgets {
 				'action'     => Renderer::AJAX_ACTION,
 				'nonce'      => wp_create_nonce( Renderer::NONCE ),
 				'voteAction' => Votes::AJAX_ACTION,
+				'i18n'       => array(
+					'photo' => __( 'Customer photo', 'ndv-reviews' ),
+					'close' => __( 'Close', 'ndv-reviews' ),
+					'prev'  => __( 'Previous photo', 'ndv-reviews' ),
+					'next'  => __( 'Next photo', 'ndv-reviews' ),
+				),
 			)
 		);
 	}
@@ -174,12 +180,25 @@ class Widgets {
 
 		$result = $this->query->paginate( $args );
 
-		return View::render(
+		$list_html = View::render(
 			'review-list.php',
 			array(
 				'result'     => $result,
 				'vote_nonce' => wp_create_nonce( Votes::NONCE_ACTION ),
 			)
+		);
+
+		// display.js's delegated click handler (helpful vote, photo lightbox,
+		// pagination) only attaches when #ndvr-reviews exists, and its AJAX
+		// re-fetch on pagination/filter only runs when #ndvr-review-list also
+		// exists — without these two wrapper ids, every review-list.php
+		// consumer (this shortcode/block, and the classic widget below) would
+		// silently render a dead list: the vote button, the pagination
+		// buttons, and the photo lightbox all no-op with no visible error.
+		return sprintf(
+			'<div id="ndvr-reviews" data-product="%d"><div id="ndvr-review-list">%s</div></div>',
+			(int) $args['product_id'],
+			$list_html // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render() output is pre-escaped.
 		);
 	}
 

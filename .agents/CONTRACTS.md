@@ -51,6 +51,12 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
 ## Shortcodes
 - Free: `[ndvr-reviews]` `[ndvr-summary]` `[ndvr-criteria-graph]` `[ndvr-stars]` `[ndvr-marquee]`
   `[ndvr-qa]` `[ndvr-testimonial]` `[ndvr-form]`
+  - `[ndvr-reviews]` (`Display\Widgets::reviews()`, also used by the Elementor Review Section widget's
+    default list layout) now wraps its output in `#ndvr-reviews[data-product]` > `#ndvr-review-list` (T-QA1,
+    Phase 6) — without these ids `display.js` never initializes, so the helpful-vote button, pagination,
+    and the photo lightbox previously silently no-op'd wherever this method's output was used outside the
+    native WooCommerce Reviews tab. Pro's Elementor override path (`filter_render`, non-default layouts)
+    renders its own markup instead and is unaffected.
   - `[ndvr-marquee]` `direction` accepts `left|right|up|down` (preferred) or legacy `horizontal|vertical`
     (+ `reverse`). `category` (slug or term id, requires `source="category"`) and `rows` (1|2 — `rows="2"`
     renders two independent crisscrossing tracks) added Phase 5 (T-M3b). Same on the Gutenberg block +

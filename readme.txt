@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.14.0
+Stable tag: 0.15.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,11 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.15.0 =
+* Fixed: the `[ndvr-reviews]` shortcode (and the matching Gutenberg block) never wrapped its output in the
+  container the front-end script needs — so the helpful-vote button, pagination, and the photo lightbox
+  all silently did nothing when reviews were shown this way outside the native WooCommerce Reviews tab.
 
 = 0.14.0 =
 * Marquee: fixed the category filter (was accepted but silently ignored),

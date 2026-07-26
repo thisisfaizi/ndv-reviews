@@ -237,6 +237,10 @@ class TestimonialForm implements Registerable {
 		);
 
 		if ( is_wp_error( $result ) ) {
+			// Delete orphaned uploads when body validation fails (no media flood).
+			foreach ( $media as $orphan_id ) {
+				wp_delete_attachment( (int) $orphan_id, true );
+			}
 			wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 );
 		}
 

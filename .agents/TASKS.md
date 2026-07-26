@@ -20,15 +20,19 @@ Cross-plugin tasks are duplicated on the Pro board with the same id.
 |---|---|---|---|---|---|
 | T-00 | USER runtime-verify Elementor editor (parts styled; grid + loop-item modes; each card = different review) | user | in_review | — | parts render styled in editor; grid columns lay out; loop template renders per-review data |
 
-## Backlog — from PRODUCTION-PLAN.md (Phase 1 security/data first)
+## Phase 1 — DONE (2026-07, free 0.9.9 / Pro 1.9.1)
+| id | title | evidence |
+|---|---|---|
+| T-C1 | Cache (comment meta per review+locale) + per-IP rate-limit + review-type restriction on `ndvr_translate` | php -l clean; `Translate.php` |
+| T-B1 | Require ≥1 star rating (client `reviews.js` + server `ReviewForm`); `RatingCache` deletes stale `rating` on recompute-to-zero | php -l + node --check clean |
+| T-C2 | Pro settings screens now **merge** into `ndv_reviews_pro_settings` | `SettingsPage.php` array_merge |
+| T-B2 | Rating checked before upload; orphaned attachments deleted on create() failure (Review + Testimonial forms); rate limiter counts every attempt | `AntiSpam.php`, both forms |
+| T-C3 | New `ndv-reviews/should_send_reminder` filter; Pro `Automation\Engine::suppress_free_reminder()` returns false when automation/ESP/SMS/WA active | both plugins |
+| T-C5 | Pro version header 1.7.4 → 1.9.1 (matches constant) | `ndv-reviews-pro.php` |
+
+## Backlog — from PRODUCTION-PLAN.md (Phase 2 next)
 | id | title | owner | status | AC |
 |---|---|---|---|---|
-| T-C1 | Cache + rate-limit + type-restrict the public `ndvr_translate` AI endpoint | pro/@sec | todo | no repeat paid call for same comment+locale; nopriv rate-limited; reviews only |
-| T-B1 | Require a star rating; delete stale `rating` meta on recompute-to-zero | free/@be | todo | rating-less submit rejected (client+server); Woo average never desyncs |
-| T-C2 | Pro settings screens **merge** into `ndv_reviews_pro_settings` (no full replace) | pro/@data | todo | saving Pro Settings preserves `external_sync_interval` + other-screen keys |
-| T-B2 | Rate-limit before upload; upload after body validation; delete orphaned attachments | free/@sec | todo | failed submit leaves no attachment; every attempt counted |
-| T-C3 | Suppress free reminder when Pro automation/ESP active | both/@be | todo | one review request per order, not 2–3 |
-| T-C5 | Fix Pro version header (1.7.4 → match `NDVR_PRO_VERSION`) | pro/@integrate | todo | header == constant |
 | T-M1 | Marquee: seamless infinite loop | free/@fe | todo | no visible jump; degrades to scroll under reduced-motion |
 | T-M2 | Marquee: left/right (+up/down) direction on Elementor/shortcode/block | free/@fe | todo | direction control on all 3 surfaces |
 | T-M3 | Marquee: polish (real avatar, responsive width, speed=px/s, double-row) + data gaps (category, min_rating order, Elementor parity) | free/@fe | todo | avatar shows; mobile-sized cards; category filter works or removed |

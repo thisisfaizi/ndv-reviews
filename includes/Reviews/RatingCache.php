@@ -46,6 +46,11 @@ class RatingCache {
 		update_comment_meta( $comment_id, '_ndvr_overall_rating', $decimal );
 		if ( $decimal > 0 ) {
 			update_comment_meta( $comment_id, 'rating', $integer );
+		} else {
+			// Recomputed to zero (all criteria removed): drop the stale native
+			// rating so the review is consistently treated as unrated and never
+			// contributes a phantom value to the WooCommerce product average.
+			delete_comment_meta( $comment_id, 'rating' );
 		}
 
 		return $decimal;

@@ -68,18 +68,19 @@ class AntiSpam {
 	}
 
 	/**
-	 * Record a successful submission for rate-limiting purposes.
+	 * Kept for backward compatibility. Rate-limit counting now happens on every
+	 * attempt inside check() (see check_rate_limit()), so a failed/abusive
+	 * submission is throttled too — not only successful ones. This is a no-op.
 	 *
 	 * @return void
 	 */
 	public function record() {
-		$key   = $this->rate_key();
-		$count = (int) get_transient( $key );
-		set_transient( $key, $count + 1, HOUR_IN_SECONDS );
+		// Intentionally empty — counting moved to check_rate_limit().
 	}
 
 	/**
-	 * Enforce a per-IP submission ceiling.
+	 * Enforce a per-IP submission ceiling, counting EVERY attempt (pass or fail)
+	 * so a stream of invalid submissions can't bypass the limit.
 	 *
 	 * @return true|\WP_Error
 	 */
@@ -95,10 +96,15 @@ class AntiSpam {
 			return true;
 		}
 
-		$count = (int) get_transient( $this->rate_key() );
+		$key   = $this->rate_key();
+		$count = (int) get_transient( $key );
 		if ( $count >= $max ) {
 			return new \WP_Error( 'ndvr_spam_rate', __( 'You are submitting reviews too quickly. Please try again later.', 'ndv-reviews' ) );
 		}
+
+		// Count this attempt now — before body validation can fail — so failures
+		// are throttled the same as successes.
+		set_transient( $key, $count + 1, HOUR_IN_SECONDS );
 
 		return true;
 	}

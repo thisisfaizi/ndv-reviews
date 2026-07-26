@@ -79,6 +79,19 @@ class Scheduler implements Registerable {
 		}
 
 		$order_id = absint( $order_id );
+
+		/**
+		 * Allow another module to suppress the built-in review reminder for an
+		 * order — e.g. the Pro add-on when its own automation/ESP already sends a
+		 * request, so a customer isn't messaged twice.
+		 *
+		 * @param bool $send     Whether to schedule the free reminder. Default true.
+		 * @param int  $order_id Order id.
+		 */
+		if ( ! apply_filters( 'ndv-reviews/should_send_reminder', true, $order_id ) ) {
+			return;
+		}
+
 		if ( ! $order_id || $this->requests->exists_for_order( $order_id ) ) {
 			return;
 		}

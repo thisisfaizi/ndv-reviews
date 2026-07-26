@@ -107,6 +107,14 @@
 	}
 
 	function submit() {
+		// Require at least one star rating before submitting — a rating-less
+		// review would be excluded from the product average.
+		var ratingChecked = form.querySelector( 'input[name^="ndvr_criteria"]:checked' );
+		if ( ! ratingChecked || parseFloat( ratingChecked.value ) <= 0 ) {
+			setMessage( ( cfg.i18n && cfg.i18n.rating ) || 'Please give a star rating before submitting.', 'error' );
+			return;
+		}
+
 		var data = new FormData( form );
 		data.append( 'action', cfg.action );
 

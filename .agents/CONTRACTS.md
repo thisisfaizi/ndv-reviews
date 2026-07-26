@@ -17,6 +17,7 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
 | `should_approve` | f | `ReviewRepository` — auto-approve decision |
 | `validate_review` | f→`true`\|`WP_Error` | `ReviewRepository` before insert (profanity/purchase gate) |
 | `review_media_status` | f | `ReviewRepository::save_media()` |
+| `should_send_reminder` | f | `Requests\Scheduler::on_order_status()` — Pro suppresses free reminder when its automation/ESP is active |
 | `review_items` | f | `ReviewQuery::paginate()` — Pro pins highlighted reviews |
 | `review_author` | f | `ReviewQuery::to_view()` — Pro anonymizes |
 | `review_query_args` | f | `ReviewQuery::paginate()` |

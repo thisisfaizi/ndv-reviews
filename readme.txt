@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.9.8
+Stable tag: 0.9.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,19 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.9.9 =
+* Security/data integrity: reviews now require a star rating (client + server).
+  A rating-less review used to display but was silently excluded from the
+  product average — fixed. Recomputing a review to zero now clears its stale
+  rating so it never contributes a phantom value to the WooCommerce aggregate.
+* Security: review photos now upload only after the cheap validations pass, and
+  any orphaned attachments from a failed submission are deleted. The per-IP
+  rate limiter now counts every attempt (not only successful ones), so failed
+  spam is throttled too.
+* Add the `ndv-reviews/should_send_reminder` filter so an add-on can suppress
+  the built-in review reminder for an order (prevents double-messaging when Pro
+  automation/ESP is active).
 
 = 0.9.8 =
 * Add [ndvr-qa] shortcode stub — returns empty unless NDV Reviews Pro is active,

@@ -336,7 +336,21 @@ class ReviewForm implements Registerable {
 			}
 		}
 
-		// Photos (uploaded via FormData).
+		// Require at least one star rating — a rating-less review would display
+		// but be silently excluded from the WooCommerce product average. Checked
+		// BEFORE any file upload so a bad submission never stores attachments.
+		$has_rating = false;
+		foreach ( $criteria as $criterion_rating ) {
+			if ( (float) $criterion_rating > 0 ) {
+				$has_rating = true;
+				break;
+			}
+		}
+		if ( ! $has_rating ) {
+			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
+		}
+
+		// Photos (uploaded via FormData) — only after the cheap validations above.
 		$media = array();
 		if ( $this->settings->get( 'photo_uploads' ) ) {
 			$uploaded = $this->upload->handle( 'ndvr_photos', $product_id );
@@ -366,6 +380,11 @@ class ReviewForm implements Registerable {
 		);
 
 		if ( is_wp_error( $result ) ) {
+			// Body validation failed after files were stored — delete the orphaned
+			// attachments so a failing submission can't flood the media library.
+			foreach ( $media as $orphan_id ) {
+				wp_delete_attachment( (int) $orphan_id, true );
+			}
 			wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 );
 		}
 

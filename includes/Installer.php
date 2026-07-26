@@ -156,6 +156,17 @@ class Installer {
 			KEY question_idx (question_id, status)
 		) {$charset_collate};";
 
+		// Q&A question votes (dedup — Pro). Mirrors review_votes' shape/intent.
+		$tables[] = "CREATE TABLE {$prefix}question_votes (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			question_id bigint(20) unsigned NOT NULL,
+			user_id bigint(20) unsigned DEFAULT NULL,
+			ip_hash char(64) DEFAULT NULL,
+			created_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY uniq_qvote (question_id, user_id, ip_hash)
+		) {$charset_collate};";
+
 		// AI enrichment cache (Pro).
 		$tables[] = "CREATE TABLE {$prefix}ai_meta (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -249,6 +260,7 @@ class Installer {
 			$prefix . 'requests',
 			$prefix . 'questions',
 			$prefix . 'answers',
+			$prefix . 'question_votes',
 			$prefix . 'ai_meta',
 			$prefix . 'forms',
 			$prefix . 'connections',

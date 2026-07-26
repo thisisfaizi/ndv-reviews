@@ -21,8 +21,11 @@ class Deactivator {
 	 * @return void
 	 */
 	public static function deactivate() {
-		// Clear any scheduled Action Scheduler / cron hooks added in later phases.
-		wp_clear_scheduled_hook( 'ndv_reviews_daily' );
+		// Cancel pending review-reminder jobs. These run on Action Scheduler (not
+		// wp-cron) — see Requests\Scheduler::SEND_HOOK, group 'ndv-reviews'.
+		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+			as_unschedule_all_actions( Requests\Scheduler::SEND_HOOK, array(), 'ndv-reviews' );
+		}
 
 		flush_rewrite_rules();
 	}

@@ -46,7 +46,7 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
   (`ReviewForm`, nopriv), testimonial submit (`TestimonialForm`, nopriv), collection landing
   (`Collection\Landing`, nopriv).
 - Pro: `ndvr_qa_ask`, `ndvr_qa_vote`, `ndvr_ai_reply`, `ndvr_translate`, `ndvr_refresh_external`,
-  `ndvr_search_products`, `ndvr_external_status` (planned).
+  `ndvr_search_products` (now nonce-gated via `ManualReviews::NONCE`), `ndvr_external_status` (planned).
 
 ## Shortcodes
 - Free: `[ndvr-reviews]` `[ndvr-summary]` `[ndvr-criteria-graph]` `[ndvr-stars]` `[ndvr-marquee]`
@@ -55,7 +55,9 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
     (+ `reverse`). Same on the Gutenberg block + Elementor Marquee widget.
 - Pro: `[ndvr-carousel]` `[ndvr-gallery]` `[ndvr-wall]` `[ndvr-badge]` `[ndvr-video-carousel]`
   `[ndvr-avatar-carousel]` `[ndvr-auto-slider]` `[ndvr-inline]` `[ndvr-sidebar]` `[ndvr-popup]`
-  `[ndvr-trust-badge]` `[ndvr-all-reviews]` `[ndvr-google-badge]`
+  `[ndvr-trust-badge]` `[ndvr-all-reviews]` `[ndvr-google-badge]` (real synced Google rating; `link`
+  attribute defaults to the `google_profile_url` setting) `[ndvr-store-rating-badge]` (on-site aggregate
+  only — renamed from `[ndvr-trustpilot-badge]`, which never pulled live Trustpilot data)
 
 ## Options
 - Free: `ndv_reviews_settings`, `ndv_reviews_db_version`, `ndv_reviews_unsubscribed`. Transient marker
@@ -64,9 +66,10 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
 
 ## DB tables (`{$wpdb->prefix}ndvr_`, named via `Db::table('<suffix>')`)
 `criteria`, `review_criteria`, `review_media`, `review_votes`, `requests`, `review_tokens`, `questions`,
-`answers`, `ai_meta`, `connections`, `campaigns`, `forms`.
-(Note: `questions`/`answers`/`ai_meta`/`connections`/`campaigns`/`forms` are created by the free installer
-but only written by Pro.)
+`answers`, `question_votes`, `ai_meta`, `connections`, `campaigns`, `forms`.
+(Note: `questions`/`answers`/`question_votes`/`ai_meta`/`connections`/`campaigns`/`forms` are created by
+the free installer but only written by Pro. `question_votes` added in `NDVR_DB_VERSION` 2 — dedup table
+for Q&A voting, same `UNIQUE KEY (entity_id, user_id, ip_hash)` shape as `review_votes`.)
 
 ## Comment meta
 - Free: `rating` (Woo), `verified` (Woo), `_ndvr_overall_rating`, `_ndvr_title`, `_ndvr_recommend`,
@@ -90,7 +93,7 @@ but only written by Pro.)
 - Free: `NDVR_VERSION`, `NDVR_DB_VERSION`, `NDVR_SLUG`, `NDVR_NAME`, `NDVR_TEXTDOMAIN`,
   `NDVR_TABLE_PREFIX='ndvr_'`, `NDVR_OPTION_SETTINGS='ndv_reviews_settings'`,
   `NDVR_OPTION_DB_VERSION='ndv_reviews_db_version'`, `NDVR_FILE/DIR/URL/BASENAME`.
-- Pro: `NDVR_PRO_VERSION`, `NDVR_PRO_FILE/DIR/URL`, `NDVR_PRO_OPTION_SETTINGS='ndv_reviews_pro_settings'`.
+- Pro: `NDVR_PRO_VERSION`, `NDVR_PRO_FILE/DIR/URL/BASENAME`, `NDVR_PRO_OPTION_SETTINGS='ndv_reviews_pro_settings'`.
 
 ## Admin
 - Menu parent slug `ndv-reviews`; submenus include Reviews list, Rating Criteria, Design, Settings,

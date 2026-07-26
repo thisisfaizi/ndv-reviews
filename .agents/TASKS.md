@@ -50,10 +50,18 @@ Cross-plugin tasks are duplicated on the Pro board with the same id.
 |---|---|---|
 | T-ST | Elementor Style tabs for all review widgets. Free: new `WidgetStyleTrait` (color/typography helpers) used by Stars, SummaryWidget, ReviewsWidget, MarqueeWidget — each gains a Style tab (colors, typography, card bg/border/radius/shadow/padding). Pro: `PartBase` gains matching `add_color_control`/`add_typography_control`; `PhotosPart` + `HelpfulPart` get their first Style tab (Helpful includes normal/hover state tabs); `RecommendPart`/`CriteriaPart` normalized to match sibling depth. No render-method changes — pure Elementor `selectors` controls. | Stub-Elementor harness executed `register_controls()` on all 4 free widgets + all 11 Pro parts — 0 runtime errors, confirms untouched parts still work. `php -l` clean on all 10 changed files. |
 
+## Phase 3 — DONE (2026-07-26, free 0.12.0 / Pro 0.12.0)
+| id | title | evidence |
+|---|---|---|
+| T-R1 | Robustness: `ReviewQuery` bulk-fetches criteria+media per page (2 queries, not 2×N); windowed pagination in `review-list.php`; `Deactivator` unschedules the real Action Scheduler reminder job (was clearing a hook that was never scheduled); `uninstall.php` now also clears the unsubscribe option, per-IP rate-limit transients, pending AS jobs, and review comments+meta (opt-in, decision confirmed); new `question_votes` table (`NDVR_DB_VERSION` 1→2) for Pro's Q&A vote dedup | `php -l` clean on all changed files; see PRODUCTION-PLAN §B3/B4/B6 |
+| T-C6 (Pro) | Q&A vote dedup via new `question_votes` table (mirrors free `Reviews\Votes`); 9 Pro Settings secrets masked (value="" + placeholder, blank-preserves-existing on save); `AutoPoster` only marks `_ndvr_posted` when a channel actually succeeded or none is configured (was unconditional); `ManualReviews::ajax_search()` now nonce-checked and the manual insert path fires `ndv-reviews/review_created` (AI enrichment/webhooks/moderation alerts now cover admin-added reviews) | `php -l` clean; see PRODUCTION-PLAN §C6 |
+| T-C6e (Pro) | AI product summary (`Ai::render_summary()`/`shortcode_summary()`) now reads only the cache — a stale/missing summary is regenerated on Action Scheduler (`ndvr_ai_summary_regen`), never inline on a visitor's request | `php -l` clean; see PRODUCTION-PLAN §C6 |
+| T-C7 (Pro) | `load_plugin_textdomain('ndv-reviews-pro')` added on `init` + `/languages` dir created (Pro is not WP.org-hosted, so unlike free it gets no automatic translation loading) | `ndv-reviews-pro.php` |
+| T-C4 (Pro) | Dead automation settings (`automation_steps` JSON branch, `sms_template`/`wa_template`) stripped — kept the single working email-delay path; `[ndvr-google-badge]` de-dup resolved (removed from `Feeds\Badges`, kept in `External\ExternalReviews` which now also defaults its link to the `google_profile_url` setting); the on-site aggregate badge renamed `[ndvr-store-rating-badge]` (was `[ndvr-trustpilot-badge]` — never pulled real Trustpilot data) | `php -l` clean; see PRODUCTION-PLAN §C4 |
+
 ## Backlog — from PRODUCTION-PLAN.md (next)
 | id | title | owner | status | AC |
 |---|---|---|---|---|
 | T-M3b | Marquee remaining data gaps: category-source filter (currently no-op), min_rating-after-limit starvation, px/s speed normalization, double-row variant | free/@fe | todo | category filter works or removed; row never starved |
-| T-R1 | Robustness: N+1 batch in `to_view()`; fix Deactivator hook; complete `uninstall.php`; i18n loaders; dead-feature cleanup | both/@be | todo | see PRODUCTION-PLAN §B3/B4/C4/C7 |
 | T-A1 | Accessibility: photo lightbox; `aria-live` on AJAX list; pill `aria-pressed`/`aria-current` | free/@fe | todo | SR announces filter results; lightbox keyboard-dismiss |
 | T-L1 | Licensing system (key storage + activation UI + remote check + updater + tier→feature map) | pro/@be | todo | deferred; gate stays open until this ships |

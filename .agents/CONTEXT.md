@@ -31,8 +31,8 @@ re-proposes it.
 - A standalone "NDV Review Grid" Elementor widget — replaced by folding into the Review Section widget.
 
 ## Known open defects (tracked in PRODUCTION-PLAN.md)
-- **C1** unmetered/uncached public AI-translate endpoint (spend/DoS). **C2** Pro settings full-replace wipes
-  other screens' keys. **C3** free + Pro reminder senders double-message. **C5** Pro version header (1.7.4)
-  ≠ constant (1.9.0). **B1** rating-less reviews desync Woo aggregates. **B2** upload-before-validation +
-  success-only rate limiter. **B3** N+1 in `to_view()`. Deactivator clears the wrong cron hook;
-  `uninstall.php` incomplete.
+Phase 1 (C1–C5, B1–B2) and Phase 3 (B3/B4/B6 free; C4/C6/C7 Pro — N+1, Deactivator/uninstall, Q&A vote
+dedup, secrets masking, AutoPoster retry, ManualReviews nonce+hook, async AI summary, i18n loader, dead
+automation/badge cleanup) are all shipped — see TASKS.md. Remaining backlog: **T-M3b** marquee data gaps
+(category filter no-op, min-rating starvation). **T-A1** accessibility (photo lightbox, `aria-live`,
+pill `aria-pressed`/`aria-current`). **T-L1** licensing system (deferred by design).

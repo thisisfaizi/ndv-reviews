@@ -153,9 +153,16 @@ class ReviewQuery {
 		unset( $count_args['no_found_rows'] );
 		$total = (int) ( new \WP_Comment_Query() )->query( $count_args );
 
+		// Batch-fetch criteria + media for the whole page (2 queries) instead of
+		// per-review (2N queries) — avoids the N+1 that to_view() would otherwise
+		// cause when called in a loop.
+		$page_ids     = array_map( 'absint', wp_list_pluck( (array) $comments, 'comment_ID' ) );
+		$criteria_map = $this->criteria_scores_bulk( $page_ids );
+		$media_map    = $this->media_bulk( $page_ids );
+
 		$items = array();
 		foreach ( (array) $comments as $comment ) {
-			$items[] = $this->to_view( $comment );
+			$items[] = $this->to_view( $comment, $criteria_map, $media_map );
 		}
 
 		/**
@@ -177,10 +184,15 @@ class ReviewQuery {
 	/**
 	 * Build a display view-model from a comment.
 	 *
-	 * @param \WP_Comment $comment Comment.
+	 * @param \WP_Comment               $comment      Comment.
+	 * @param array<int,array>|null $criteria_map Pre-fetched `comment_id => criteria rows` map from
+	 *                                             criteria_scores_bulk() (avoids an N+1 query when
+	 *                                             called from paginate()). Null falls back to a
+	 *                                             per-comment query for standalone callers.
+	 * @param array<int,array>|null $media_map    Same, from media_bulk().
 	 * @return array<string,mixed>
 	 */
-	public function to_view( $comment ) {
+	public function to_view( $comment, ?array $criteria_map = null, ?array $media_map = null ) {
 		$id = (int) $comment->comment_ID;
 
 		/**
@@ -202,8 +214,8 @@ class ReviewQuery {
 			'recommend'  => (string) get_comment_meta( $id, '_ndvr_recommend', true ),
 			'verified'   => (bool) get_comment_meta( $id, '_ndvr_verified', true ),
 			'helpful_up' => (int) get_comment_meta( $id, '_ndvr_helpful_up', true ),
-			'criteria'   => $this->criteria_scores( $id ),
-			'media'      => $this->media( $id ),
+			'criteria'   => null !== $criteria_map ? ( $criteria_map[ $id ] ?? array() ) : $this->criteria_scores( $id ),
+			'media'      => null !== $media_map ? ( $media_map[ $id ] ?? array() ) : $this->media( $id ),
 		);
 	}
 
@@ -262,6 +274,87 @@ class ReviewQuery {
 			$thumb = $id ? wp_get_attachment_image_url( $id, 'thumbnail' ) : '';
 			$full  = $id ? wp_get_attachment_image_url( $id, 'large' ) : (string) $row->url;
 			$out[] = array(
+				'id'    => $id,
+				'url'   => $full ? $full : (string) $row->url,
+				'thumb' => $thumb ? $thumb : (string) $row->url,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Per-criterion scores for MULTIPLE reviews in one query (avoids N+1 in paginate()).
+	 *
+	 * @param int[] $comment_ids Comment ids.
+	 * @return array<int,array<int,array{name:string,rating:float}>> comment_id => criteria rows.
+	 */
+	public function criteria_scores_bulk( array $comment_ids ) {
+		$comment_ids = array_values( array_unique( array_map( 'absint', $comment_ids ) ) );
+		if ( empty( $comment_ids ) ) {
+			return array();
+		}
+
+		global $wpdb;
+		$rc       = Db::table( 'review_criteria' );
+		$criteria = Db::table( 'criteria' );
+
+		$placeholders = implode( ',', array_fill( 0, count( $comment_ids ), '%d' ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT rc.comment_id AS comment_id, cr.name AS name, rc.rating AS rating
+				FROM {$rc} rc
+				INNER JOIN {$criteria} cr ON cr.id = rc.criteria_id
+				WHERE rc.comment_id IN ({$placeholders})
+				ORDER BY rc.comment_id ASC, cr.position ASC",
+				$comment_ids
+			)
+		);
+
+		$out = array();
+		foreach ( (array) $rows as $row ) {
+			$out[ (int) $row->comment_id ][] = array(
+				'name'   => (string) $row->name,
+				'rating' => (float) $row->rating,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Approved media for MULTIPLE reviews in one query (avoids N+1 in paginate()).
+	 *
+	 * @param int[] $comment_ids Comment ids.
+	 * @return array<int,array<int,array{id:int,url:string,thumb:string}>> comment_id => media rows.
+	 */
+	public function media_bulk( array $comment_ids ) {
+		$comment_ids = array_values( array_unique( array_map( 'absint', $comment_ids ) ) );
+		if ( empty( $comment_ids ) ) {
+			return array();
+		}
+
+		global $wpdb;
+		$table = Db::table( 'review_media' );
+
+		$placeholders = implode( ',', array_fill( 0, count( $comment_ids ), '%d' ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT comment_id, attachment_id, url FROM `{$table}`
+				WHERE comment_id IN ({$placeholders}) AND status = 'approved'
+				ORDER BY comment_id ASC, position ASC",
+				$comment_ids
+			)
+		);
+
+		$out = array();
+		foreach ( (array) $rows as $row ) {
+			$id    = (int) $row->attachment_id;
+			$thumb = $id ? wp_get_attachment_image_url( $id, 'thumbnail' ) : '';
+			$full  = $id ? wp_get_attachment_image_url( $id, 'large' ) : (string) $row->url;
+			$out[ (int) $row->comment_id ][] = array(
 				'id'    => $id,
 				'url'   => $full ? $full : (string) $row->url,
 				'thumb' => $thumb ? $thumb : (string) $row->url,

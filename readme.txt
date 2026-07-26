@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.11.0
+Stable tag: 0.12.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,21 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.12.0 =
+* Performance: review list pages now batch-fetch criteria scores and photos
+  for the whole page in 2 queries instead of 2 per review (fixes an N+1 that
+  scaled with review count).
+* Pagination: the review list pager is now windowed (first/last + a small
+  run around the current page) instead of one button per page — matters on
+  products with many pages of reviews.
+* Deactivation/uninstall: deactivating now cancels pending review-reminder
+  jobs correctly (was targeting a hook that was never scheduled). Uninstall
+  (with the opt-in data-removal setting) now also clears the unsubscribe
+  list, per-IP rate-limit records, pending reminder jobs, and — new — the
+  review comments and their plugin metadata themselves.
+* New `question_votes` table (supports Q&A vote de-duplication; consumed by
+  the Pro add-on).
 
 = 0.11.0 =
 * Elementor: all 4 free widgets (Star Rating, Review Summary, Review Section,

@@ -218,7 +218,8 @@ class Blocks implements Registerable {
 				'product_id' => isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0,
 				'min_rating' => isset( $attr['min_rating'] ) ? (float) $attr['min_rating'] : 0,
 				'speed'      => isset( $attr['speed'] ) ? (int) $attr['speed'] : 40,
-				'direction'  => isset( $attr['direction'] ) && 'vertical' === $attr['direction'] ? 'vertical' : 'horizontal',
+				// Accepts left|right|up|down (preferred) or legacy horizontal|vertical.
+				'direction'  => isset( $attr['direction'] ) ? sanitize_key( $attr['direction'] ) : 'left',
 				'limit'      => isset( $attr['limit'] ) ? (int) $attr['limit'] : 20,
 				'verified'   => ! empty( $attr['verified'] ),
 			)

@@ -26,7 +26,7 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
 | `show_verified_badge` / `show_overall_stars` / `show_review_date` / `show_criteria` / `show_recommend` / `show_helpful_button` | f | `templates/review-item.php` — Pro CardDisplay toggles |
 | `stars_html` | f | `Display\Html::stars()` — Pro rating-style swap |
 | `criteria_name` | f | `Reviews\Criteria` — Pro multilingual |
-| `marquee_repeat` | f | `Display\Widgets::marquee()` |
+| `marquee_repeat` | f | `Display\Widgets::marquee()` — args `($repeat, $items)`; default scales with item count |
 | `per_page` | f | `Display\Renderer` |
 | `qa_shortcode_output` | f | `Integrations\Shortcodes` `[ndvr-qa]` — Pro renders Q&A |
 | `reviewable_post_types` | f | `Reviews\PostTypes` |
@@ -51,6 +51,8 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
 ## Shortcodes
 - Free: `[ndvr-reviews]` `[ndvr-summary]` `[ndvr-criteria-graph]` `[ndvr-stars]` `[ndvr-marquee]`
   `[ndvr-qa]` `[ndvr-testimonial]` `[ndvr-form]`
+  - `[ndvr-marquee]` `direction` accepts `left|right|up|down` (preferred) or legacy `horizontal|vertical`
+    (+ `reverse`). Same on the Gutenberg block + Elementor Marquee widget.
 - Pro: `[ndvr-carousel]` `[ndvr-gallery]` `[ndvr-wall]` `[ndvr-badge]` `[ndvr-video-carousel]`
   `[ndvr-avatar-carousel]` `[ndvr-auto-slider]` `[ndvr-inline]` `[ndvr-sidebar]` `[ndvr-popup]`
   `[ndvr-trust-badge]` `[ndvr-all-reviews]` `[ndvr-google-badge]`

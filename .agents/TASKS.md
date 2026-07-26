@@ -30,12 +30,17 @@ Cross-plugin tasks are duplicated on the Pro board with the same id.
 | T-C3 | New `ndv-reviews/should_send_reminder` filter; Pro `Automation\Engine::suppress_free_reminder()` returns false when automation/ESP/SMS/WA active | both plugins |
 | T-C5 | Pro version header 1.7.4 → 1.9.1 (matches constant) | `ndv-reviews-pro.php` |
 
-## Backlog — from PRODUCTION-PLAN.md (Phase 2 next)
+## Phase 2 — DONE (2026-07, free 0.10.0)
+| id | title | evidence |
+|---|---|---|
+| T-M1 | Marquee seamless loop — animation moved to each `.ndvr-marquee-group` (`translate -100% - gap`); repeat scales with item count to fill viewport | browser harness: motion + no blank gap; 0 console errors |
+| T-M2 | Direction left/right/up/down normalized in `Widgets::marquee()`; exposed on shortcode, Gutenberg block, Elementor (legacy horizontal/vertical/reverse still work) | php -l clean |
+| T-M3 | Initials avatar (fixes empty `get_avatar`), responsive `clamp()` card width, hover lift; Elementor gains gap/pause/with_media | screenshot: colored initials, styled cards |
+
+## Backlog — from PRODUCTION-PLAN.md (Phase 2.5 next)
 | id | title | owner | status | AC |
 |---|---|---|---|---|
-| T-M1 | Marquee: seamless infinite loop | free/@fe | todo | no visible jump; degrades to scroll under reduced-motion |
-| T-M2 | Marquee: left/right (+up/down) direction on Elementor/shortcode/block | free/@fe | todo | direction control on all 3 surfaces |
-| T-M3 | Marquee: polish (real avatar, responsive width, speed=px/s, double-row) + data gaps (category, min_rating order, Elementor parity) | free/@fe | todo | avatar shows; mobile-sized cards; category filter works or removed |
+| T-M3b | Marquee remaining data gaps: category-source filter (currently no-op), min_rating-after-limit starvation, px/s speed normalization, double-row variant | free/@fe | todo | category filter works or removed; row never starved |
 | T-ST | Elementor Style tabs for all review widgets (shared StyleControls helper) | both/@fe | todo | every widget has a Style tab; no render changes |
 | T-R1 | Robustness: N+1 batch in `to_view()`; fix Deactivator hook; complete `uninstall.php`; i18n loaders; dead-feature cleanup | both/@be | todo | see PRODUCTION-PLAN §B3/B4/C4/C7 |
 | T-A1 | Accessibility: photo lightbox; `aria-live` on AJAX list; pill `aria-pressed`/`aria-current` | free/@fe | todo | SR announces filter results; lightbox keyboard-dismiss |

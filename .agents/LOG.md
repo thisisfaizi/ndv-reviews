@@ -34,3 +34,16 @@ RUNTIME-AC HANDOFF TO USER: (1) submit a rating-less review → rejected; (2) ap
 average updates; (3) with an AI key, click Translate twice → 2nd is instant/cached, no 2nd API call;
 (4) save Pro Settings → External sync interval survives; (5) enable Pro automation → only one review
 request per order.
+
+## 2026-07 — Phase 2 marquee (T-M1/M2/M3) — @fe — free 0.10.0
+CHANGED: assets/css/marquee.css (animation moved to .ndvr-marquee-group, translate -100%-gap, responsive
+card + hover + initials avatar styles), templates/marquee.php (initials avatar helper, replaces empty
+get_avatar), Display/Widgets.php (direction normalizer left/right/up/down; repeat scales with item count),
+Integrations/Shortcodes.php + Blocks.php (pass direction through), Elementor/Widgets/MarqueeWidget.php
+(direction left/right/up/down + gap/pause/with_media), readme.txt, version → 0.10.0.
+OBSERVED (external): built an http harness with the real marquee.css; two screenshots one frame apart show
+the cards scrolled with the full width still filled — seamless, no blank band; colored initials avatars
+render; 0 console errors. php -l clean on all PHP, node --check clean.
+BLAST RADIUS: Pro reuses .ndvr-marquee-head/-name/-verified — all class names preserved (additive only);
+Pro not touched, no Pro bump.
+RESULT: pass. NEXT: Phase 2.5 Elementor Style tabs (T-ST), or T-M3b marquee data gaps.

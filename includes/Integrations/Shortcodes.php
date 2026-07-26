@@ -173,7 +173,8 @@ class Shortcodes implements Registerable {
 				'limit'      => (int) $atts['limit'],
 				'speed'      => (int) $atts['speed'],
 				'gap'        => (int) $atts['gap'],
-				'direction'  => 'vertical' === $atts['direction'] ? 'vertical' : 'horizontal',
+				// Accepts left|right|up|down (preferred) or legacy horizontal|vertical.
+				'direction'  => sanitize_key( $atts['direction'] ),
 				'reverse'    => (bool) (int) $atts['reverse'],
 				'pause'      => (bool) (int) $atts['pause'],
 			)

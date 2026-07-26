@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.9.9
+Stable tag: 0.10.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,18 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.10.0 =
+* Marquee overhaul: the reviews marquee now loops **seamlessly** (previously it
+  scrolled then jumped back). Fixed by animating each duplicated card group by
+  exactly one group width so the next copy slides into place with no gap.
+* New **direction** control — left / right / up / down — on the marquee shortcode,
+  Gutenberg block, and Elementor widget (the old horizontal/vertical + reverse
+  still work). The Elementor widget also gains gap, pause-on-hover, and
+  with-photos-only controls.
+* Marquee polish: clean initials avatar (deterministic colour from the reviewer
+  name) instead of the grey mystery-person, responsive card width, and a subtle
+  hover lift. Enough card copies now render to always fill the row on any width.
 
 = 0.9.9 =
 * Security/data integrity: reviews now require a star rating (client + server).

@@ -208,6 +208,16 @@ class Widgets {
 			)
 		);
 
+		// Normalize direction: accept left|right|up|down (new) plus the legacy
+		// horizontal|vertical + reverse. left/right = horizontal; up/down =
+		// vertical; right/down = reversed scroll.
+		$dir      = strtolower( (string) $args['direction'] );
+		$vertical = in_array( $dir, array( 'up', 'down', 'vertical' ), true );
+		$reverse  = in_array( $dir, array( 'right', 'down' ), true ) ? true : ! empty( $args['reverse'] );
+
+		$args['direction'] = $vertical ? 'vertical' : 'horizontal';
+		$args['reverse']   = $reverse;
+
 		$this->enqueue();
 
 		$items = $this->marquee_items( $args );
@@ -217,10 +227,14 @@ class Widgets {
 
 		/**
 		 * Filter how many times the marquee card set repeats for a seamless loop.
+		 * Default scales with the item count so the track always overflows the
+		 * viewport (few reviews → more copies) — otherwise an empty band shows.
 		 *
-		 * @param int $repeat Repeat count.
+		 * @param int                             $repeat Repeat count.
+		 * @param array<int,array<string,mixed>>  $items  Resolved review items.
 		 */
-		$repeat = (int) apply_filters( 'ndv-reviews/marquee_repeat', 2 );
+		$auto_repeat = (int) max( 2, min( 8, (int) ceil( 12 / max( 1, count( $items ) ) ) + 1 ) );
+		$repeat      = (int) apply_filters( 'ndv-reviews/marquee_repeat', $auto_repeat, $items );
 
 		return View::render(
 			'marquee.php',

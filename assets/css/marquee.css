@@ -1,5 +1,10 @@
 /**
  * NDV Reviews — reviews marquee (Magic UI-style), vanilla CSS. Theme-safe.
+ *
+ * Seamless loop: each .ndvr-marquee-group (an identical copy of the review set)
+ * animates by exactly one group width + gap, so the next copy slides into the
+ * previous copy's place with no visible jump. Enough copies are rendered to
+ * overflow the viewport (see marquee_items repeat calc).
  */
 
 .ndvr-marquee {
@@ -16,32 +21,35 @@
 	display: flex;
 	overflow: hidden;
 	gap: var(--ndvr-gap);
-	-webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
-	mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+	mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
 }
 .ndvr-marquee * { box-sizing: border-box; }
 
 .ndvr-marquee-track { display: flex; gap: var(--ndvr-gap); width: max-content; }
 .ndvr-marquee-group { display: flex; gap: var(--ndvr-gap); flex-shrink: 0; }
 
-.ndvr-marquee-horizontal .ndvr-marquee-track { animation: ndvr-scroll-x var(--ndvr-duration) linear infinite; }
-.ndvr-marquee-horizontal.ndvr-marquee-reverse .ndvr-marquee-track { animation-direction: reverse; }
+/* Animate each group by one group width (+ the inter-group gap) for a seamless
+   loop. All groups move in lockstep; identical content makes the reset invisible. */
+.ndvr-marquee-horizontal .ndvr-marquee-group { animation: ndvr-scroll-x var(--ndvr-duration) linear infinite; }
+.ndvr-marquee-horizontal.ndvr-marquee-reverse .ndvr-marquee-group { animation-direction: reverse; }
 
 .ndvr-marquee-vertical {
 	flex-direction: column;
 	max-height: 480px;
-	-webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
-	mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
+	-webkit-mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+	mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
 }
-.ndvr-marquee-vertical .ndvr-marquee-track { flex-direction: column; width: auto; animation: ndvr-scroll-y var(--ndvr-duration) linear infinite; }
-.ndvr-marquee-vertical .ndvr-marquee-group { flex-direction: column; }
-.ndvr-marquee-vertical.ndvr-marquee-reverse .ndvr-marquee-track { animation-direction: reverse; }
+.ndvr-marquee-vertical .ndvr-marquee-track { flex-direction: column; width: auto; }
+.ndvr-marquee-vertical .ndvr-marquee-group { flex-direction: column; animation: ndvr-scroll-y var(--ndvr-duration) linear infinite; }
+.ndvr-marquee-vertical.ndvr-marquee-reverse .ndvr-marquee-group { animation-direction: reverse; }
 
-.ndvr-marquee-pause:hover .ndvr-marquee-track { animation-play-state: paused; }
+/* Pause on hover / keyboard focus (JS toggles focus). */
+.ndvr-marquee-pause:hover .ndvr-marquee-group { animation-play-state: paused; }
 
 .ndvr-marquee-card {
 	box-sizing: border-box;
-	width: 300px;
+	width: clamp(240px, 78vw, 320px);
 	flex-shrink: 0;
 	background: var(--ndvr-paper);
 	border: 1px solid var(--ndvr-line);
@@ -49,9 +57,31 @@
 	padding: 20px;
 	margin: 0;
 	box-shadow: 0 1px 2px rgba(20,22,28,.04), 0 14px 30px -22px rgba(20,22,28,.3);
+	transition: transform .18s ease, box-shadow .18s ease;
+}
+.ndvr-marquee-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 2px 4px rgba(20,22,28,.05), 0 22px 40px -20px rgba(20,22,28,.38);
 }
 .ndvr-marquee-head { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
 .ndvr-marquee-head img { border-radius: 50%; width: 36px; height: 36px; }
+
+/* Initials avatar (used when there's no Gravatar/email — nicer than the grey
+   mystery-person default). Colour is set inline per card from the author name. */
+.ndvr-marquee-avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	color: #fff;
+	font-weight: 700;
+	font-size: 15px;
+	line-height: 1;
+	text-transform: uppercase;
+}
 .ndvr-marquee-name { font-weight: 700; font-size: 14px; color: var(--ndvr-ink); }
 .ndvr-marquee-verified { color: var(--ndvr-verdant); margin-left: 4px; font-weight: 800; }
 .ndvr-marquee-stars { margin-bottom: 10px; }
@@ -69,6 +99,6 @@
 		mask-image: none;
 		overflow-x: auto;
 	}
-	.ndvr-marquee-track { animation: none !important; }
+	.ndvr-marquee-group { animation: none !important; }
 	.ndvr-marquee-vertical { max-height: none; }
 }

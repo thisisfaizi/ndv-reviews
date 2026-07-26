@@ -4,6 +4,9 @@ Append durable decisions here (with the reason). If an approach was tried and re
 re-proposes it.
 
 ## Standing decisions
+- **Nothing is published yet** (not free on WP.org, not Pro). All versions are internal/pre-release —
+  reserve **1.0.0** for first public launch, don't inflate. Pro was realigned 1.9.1 → 0.9.9 (2026-07) to
+  pair with free; both march to a shared 1.0.0. Next feature bump: prefer `0.9.9 → 0.10.0` over `0.9.10`.
 - **`ndvr_`/`ndv_reviews_`/`ndv-reviews/` prefixes are frozen.** The rebrand deliberately did not rename
   the internal prefix — options, tables, meta, nonces, hooks, CSS classes and Pro all key off it. Renaming
   = data loss + Pro breakage. Not a cleanup.

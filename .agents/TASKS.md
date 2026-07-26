@@ -37,6 +37,14 @@ Cross-plugin tasks are duplicated on the Pro board with the same id.
 | T-M2 | Direction left/right/up/down normalized in `Widgets::marquee()`; exposed on shortcode, Gutenberg block, Elementor (legacy horizontal/vertical/reverse still work) | php -l clean |
 | T-M3 | Initials avatar (fixes empty `get_avatar`), responsive `clamp()` card width, hover lift; Elementor gains gap/pause/with_media | screenshot: colored initials, styled cards |
 
+## Page-speed pass — DONE (2026-07, free 0.10.1 / Pro 0.10.0)
+| id | title | evidence |
+|---|---|---|
+| PS-1 | Pro `RatingStyles`: glyph CSS moved off the global `wp_enqueue_scripts` onto the lazy `stars_html` path — loads only where stars render | browser: home page loads 0 ndvr assets |
+| PS-2 | Minification: `bin/minify-assets.mjs` (esbuild) + `npm run build:assets`; ships `assets/**/*.min.*` (CSS −15-27%, JS −37-52%) | build output; product page serves `*.min.*` |
+| PS-3 | `Support\Assets` loader-src filter swaps any `ndvr-*` handle to `.min` in production (off under SCRIPT_DEBUG); one filter covers free + Pro | browser: `display.min.css`, Pro `qanda.min.css` served, 0 console errors |
+| PS-4 | Codified "assets load conditionally" invariant in AGENTS.md/CLAUDE.md (both) | — |
+
 ## Backlog — from PRODUCTION-PLAN.md (Phase 2.5 next)
 | id | title | owner | status | AC |
 |---|---|---|---|---|

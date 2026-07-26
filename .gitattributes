@@ -26,6 +26,7 @@
 /phpcs.xml.dist     export-ignore
 /composer.json      export-ignore
 /package.json       export-ignore
+/package-lock.json  export-ignore
 /.distignore        export-ignore
 /.editorconfig      export-ignore
 /.gitattributes     export-ignore

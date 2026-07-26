@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.10.0
+Stable tag: 0.10.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,12 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.10.1 =
+* Performance: the plugin now serves **minified** CSS/JS in production (source
+  files stay bundled for transparency; minified versions are swapped in
+  automatically unless SCRIPT_DEBUG is on). Confirmed that no plugin CSS/JS
+  loads on pages that don't use a reviews feature.
 
 = 0.10.0 =
 * Marquee overhaul: the reviews marquee now loops **seamlessly** (previously it

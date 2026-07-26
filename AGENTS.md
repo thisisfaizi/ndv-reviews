@@ -58,6 +58,11 @@ of done.
 >   PHP` / `WC requires at least` / `WC tested up to` stay truthful and in sync with `readme.txt`.
 > - **Version is one value in two places**: the plugin-header `Version:` and `NDVR_VERSION` must match. A
 >   mismatch ships broken cache-busting (this bit Pro — header 1.7.4 vs constant 1.9.0, C5).
+> - **Assets load conditionally.** Register handles on load if needed, but only `wp_enqueue_*` inside a
+>   render path (shortcode/block/widget/Elementor) or behind a feature-context guard (`is_product()`, an
+>   empty-data early return). **Never enqueue on `wp_enqueue_scripts` without a guard** — nothing loads on
+>   a page that doesn't use the feature. Production serves `assets/**/*.min.*` (built via
+>   `npm run build:assets`, swapped in by `Support\Assets`); source stays alongside.
 
 Hard rules:
 - **A working system already exists.** Breaking something that *works* is worse than shipping slowly.

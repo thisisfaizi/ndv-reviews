@@ -7,6 +7,7 @@
 	"private": true,
 	"scripts": {
 		"build": "wp-scripts build",
+		"build:assets": "node bin/minify-assets.mjs",
 		"start": "wp-scripts start",
 		"lint:js": "wp-scripts lint-js",
 		"lint:css": "wp-scripts lint-style",
@@ -14,6 +15,7 @@
 		"makepot": "wp i18n make-pot . languages/ndv-reviews.pot --slug=ndv-reviews"
 	},
 	"devDependencies": {
-		"@wordpress/scripts": "^30.0.0"
+		"@wordpress/scripts": "^30.0.0",
+		"esbuild": "^0.27.7"
 	}
 }

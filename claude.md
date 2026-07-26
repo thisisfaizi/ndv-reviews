@@ -66,6 +66,12 @@ in `/.agents/CONTRACTS.md` — **that file is canonical.**
   event` — the `Deactivator` currently clears the wrong hook (open defect).
 - Woo-compat duplicate meta is intentional: `rating`/`verified` alongside `_ndvr_overall_rating`/
   `_ndvr_verified`. Don't "dedupe" them.
+- **Assets load conditionally (page-speed).** Register handles on load if needed, but only `wp_enqueue_*`
+  inside a render path (shortcode/block/classic-widget/Elementor callback) or behind a feature-context
+  guard (`is_product()`, an empty-data early return). **Never `wp_enqueue_*` on `wp_enqueue_scripts`
+  without a guard** — nothing should load on a page where the feature isn't used. Production serves the
+  built `assets/**/*.min.*` via `Support\Assets` (loader-src filter, off under `SCRIPT_DEBUG`); the source
+  files stay alongside. Run `npm run build:assets` after editing any CSS/JS.
 
 ## 5. Conventions
 - `ndvr_` table prefix via `Db::table()`; PSR-4 `NdvReviews\`; DI container for services; `Registerable`

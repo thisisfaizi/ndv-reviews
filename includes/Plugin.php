@@ -435,6 +435,7 @@ final class Plugin {
 		 * @var array<int,Registerable> $services
 		 */
 		$services = array(
+			new \NdvReviews\Support\Assets(), // Serve .min assets in production (free + Pro handles).
 			$this->container->get( 'review_form' ),
 			$this->container->get( 'admin_criteria_page' ),
 			$this->container->get( 'admin_assets' ),

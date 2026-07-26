@@ -47,3 +47,17 @@ render; 0 console errors. php -l clean on all PHP, node --check clean.
 BLAST RADIUS: Pro reuses .ndvr-marquee-head/-name/-verified — all class names preserved (additive only);
 Pro not touched, no Pro bump.
 RESULT: pass. NEXT: Phase 2.5 Elementor Style tabs (T-ST), or T-M3b marquee data gaps.
+
+## 2026-07 — page-speed pass (PS-1..4) — @be/@fe — free 0.10.1 / Pro 0.10.0
+CHANGED (free): includes/Support/Assets.php (NEW loader-src min filter), includes/Plugin.php (register it),
+bin/minify-assets.mjs (NEW), package.json (build:assets + esbuild), assets/**/*.min.* (built),
+AGENTS.md + claude.md (conditional-loading invariant), readme.txt, version → 0.10.1.
+CHANGED (pro): includes/Display/RatingStyles.php (glyph CSS now lazy via stars_html, no global enqueue),
+bin/minify-assets.mjs + package.json (NEW), assets/**/*.min.* (built), CLAUDE.md, .gitattributes
+(export-ignore bin/package), version → 0.10.0.
+OBSERVED (browser, cleared buffer): product page serves display.min.css/js, reviews.min.*, marquee.min.*,
+and Pro qanda.min.css / elementor.min.css — all 200, one free filter covers both plugins; 0 console errors.
+Home page (?nocache) loads ZERO ndvr-* assets — no CSS/JS, no RatingStyles inline style. Audit had already
+confirmed free = 100% conditional; RatingStyles was the only Pro violation, now fixed.
+RESULT: pass. Both plugins: nothing loads on pages without a reviews feature; served assets are minified.
+NEXT: Phase 2.5 Elementor Style tabs (T-ST) or Phase 3 robustness.

@@ -31,10 +31,9 @@ re-proposes it.
 - A standalone "NDV Review Grid" Elementor widget — replaced by folding into the Review Section widget.
 
 ## Known open defects (tracked in PRODUCTION-PLAN.md)
-Phase 1 (C1–C5, B1–B2), Phase 3 (B3/B4/B6 free; C4/C6/C7 Pro), and Phase 4 (T-A1 accessibility; T-UI1 UI
-polish — shared front-end tokens.css, admin shadow token, Pro Analytics + Settings reskin) are all
-shipped — see TASKS.md. Remaining backlog: **T-M3b** marquee data gaps (category filter no-op, min-rating
-starvation). **T-UI2** remaining UI polish (free CriteriaPage/RequestsPage/ToolsPage still un-migrated to
-`.ndvr-card`; Pro QandA Moderation hardcoded hex colors; the orphaned `external_target_post` setting has
-no input field anywhere — pre-existing, not introduced by T-UI1). **T-L1** licensing system (deferred by
-design).
+Phase 1 (C1–C5, B1–B2), Phase 3 (B3/B4/B6 free; C4/C6/C7 Pro), Phase 4 (T-A1 accessibility; T-UI1 UI
+polish), and Phase 5 (T-M3b marquee data gaps — category filter, min-rating starvation, speed
+normalization, double-row variant; T-UI2 remaining UI polish — CriteriaPage/RequestsPage/ToolsPage card
+migration, Pro QandA Moderation hex colors, the `external_target_post` setting given a real field) are all
+shipped — see TASKS.md. Remaining backlog: **T-L1** licensing system only (deferred by design — per the
+original brief, do not implement until the rest of the build is complete).

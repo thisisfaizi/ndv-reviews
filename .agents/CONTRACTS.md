@@ -52,7 +52,9 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
 - Free: `[ndvr-reviews]` `[ndvr-summary]` `[ndvr-criteria-graph]` `[ndvr-stars]` `[ndvr-marquee]`
   `[ndvr-qa]` `[ndvr-testimonial]` `[ndvr-form]`
   - `[ndvr-marquee]` `direction` accepts `left|right|up|down` (preferred) or legacy `horizontal|vertical`
-    (+ `reverse`). Same on the Gutenberg block + Elementor Marquee widget.
+    (+ `reverse`). `category` (slug or term id, requires `source="category"`) and `rows` (1|2 — `rows="2"`
+    renders two independent crisscrossing tracks) added Phase 5 (T-M3b). Same on the Gutenberg block +
+    Elementor Marquee widget.
 - Pro: `[ndvr-carousel]` `[ndvr-gallery]` `[ndvr-wall]` `[ndvr-badge]` `[ndvr-video-carousel]`
   `[ndvr-avatar-carousel]` `[ndvr-auto-slider]` `[ndvr-inline]` `[ndvr-sidebar]` `[ndvr-popup]`
   `[ndvr-trust-badge]` `[ndvr-all-reviews]` `[ndvr-google-badge]` (real synced Google rating; `link`

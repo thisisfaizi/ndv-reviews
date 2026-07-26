@@ -21,8 +21,13 @@ class ReviewQuery {
 	 * Paginate reviews for a product with filters and sorting.
 	 *
 	 * @param array<string,mixed> $args {
-	 *     @type int    $product_id Required.
+	 *     @type int    $product_id Required unless $category is set.
+	 *     @type int|string $category  Product category (term_id or slug) — restricts to reviews for
+	 *                                  products in this category. Ignored if $product_id is set.
 	 *     @type int    $star       Filter by exact star (1-5), 0 for all.
+	 *     @type float  $min_rating Filter by star >= this value (0 = no minimum). Takes effect at the
+	 *                              DB level, before $per_page is applied, so a low-yield filter never
+	 *                              starves a limited result set the way an in-PHP post-filter would.
 	 *     @type bool   $verified   Only verified-buyer reviews.
 	 *     @type bool   $with_media Only reviews with photos.
 	 *     @type string $orderby    recent|helpful|highest|lowest.
@@ -36,7 +41,9 @@ class ReviewQuery {
 			$args,
 			array(
 				'product_id' => 0,
+				'category'   => 0,
 				'star'       => 0,
+				'min_rating' => 0,
 				'verified'   => false,
 				'with_media' => false,
 				'orderby'    => 'recent',
@@ -59,6 +66,21 @@ class ReviewQuery {
 			'meta_query' => array(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 			'no_found_rows' => false,
 		);
+
+		// Category filter: restrict to reviews on products in this product_cat term
+		// (only meaningful when no single product_id is already set).
+		if ( ! $product_id && ! empty( $args['category'] ) ) {
+			$cat_product_ids = $this->product_ids_for_category( $args['category'] );
+			if ( empty( $cat_product_ids ) ) {
+				return array(
+					'items' => array(),
+					'total' => 0,
+					'pages' => 0,
+					'page'  => $page,
+				);
+			}
+			$query_args['post__in'] = $cat_product_ids;
+		}
 
 		// Topic/tag filter (S4): restrict to comments carrying a review tag term.
 		if ( ! empty( $args['tag'] ) ) {
@@ -84,6 +106,21 @@ class ReviewQuery {
 				'value'   => $star,
 				'compare' => '=',
 				'type'    => 'NUMERIC',
+			);
+		}
+
+		// Minimum-rating filter — applied in the DB query (meta_query), not as an
+		// in-PHP post-filter, so it narrows the result set BEFORE $per_page cuts it
+		// off. A post-filter would silently under-fill (or empty out) a small
+		// $per_page window whenever the most-recent rows happened to fall short of
+		// $min_rating, even though enough qualifying reviews existed further back.
+		$min_rating = (float) $args['min_rating'];
+		if ( $min_rating > 0 ) {
+			$query_args['meta_query'][] = array(
+				'key'     => '_ndvr_overall_rating',
+				'value'   => $min_rating,
+				'compare' => '>=',
+				'type'    => 'DECIMAL(3,2)',
 			);
 		}
 
@@ -362,6 +399,36 @@ class ReviewQuery {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Resolve a product_cat term (by id or slug) to its published product ids.
+	 *
+	 * @param int|string $category Term id or slug.
+	 * @return int[]
+	 */
+	private function product_ids_for_category( $category ) {
+		if ( ! taxonomy_exists( 'product_cat' ) ) {
+			return array();
+		}
+
+		$ids = get_posts(
+			array(
+				'post_type'      => 'product',
+				'post_status'    => 'publish',
+				'posts_per_page' => 200,
+				'fields'         => 'ids',
+				'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+					array(
+						'taxonomy' => 'product_cat',
+						'field'    => is_numeric( $category ) ? 'term_id' : 'slug',
+						'terms'    => is_numeric( $category ) ? absint( $category ) : sanitize_title( $category ),
+					),
+				),
+			)
+		);
+
+		return array_map( 'absint', (array) $ids );
 	}
 
 	/**

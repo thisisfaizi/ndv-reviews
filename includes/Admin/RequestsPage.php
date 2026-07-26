@@ -188,97 +188,100 @@ class RequestsPage implements Registerable {
 				<div class="notice notice-<?php echo 'error' === $notice['type'] ? 'error' : 'success'; ?> is-dismissible"><p><?php echo esc_html( $notice['message'] ); ?></p></div>
 			<?php endforeach; ?>
 
-			<form method="post">
-				<?php wp_nonce_field( self::NONCE ); ?>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row"><?php esc_html_e( 'Enable reminders', 'ndv-reviews' ); ?></th>
-						<td><label><input type="checkbox" name="reminder_enabled" value="1" <?php checked( (bool) $s->get( 'reminder_enabled' ) ); ?> /> <?php esc_html_e( 'Send a review-request email after an order reaches the chosen status.', 'ndv-reviews' ); ?></label></td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="reminder_status"><?php esc_html_e( 'Trigger status', 'ndv-reviews' ); ?></label></th>
-						<td>
-							<select name="reminder_status" id="reminder_status">
-								<?php foreach ( $statuses as $key => $label ) : ?>
-									<?php $slug = str_replace( 'wc-', '', $key ); ?>
-									<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $s->get( 'reminder_status' ), $slug ); ?>><?php echo esc_html( $label ); ?></option>
-								<?php endforeach; ?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="reminder_delay_days"><?php esc_html_e( 'Delay (days)', 'ndv-reviews' ); ?></label></th>
-						<td><input type="number" min="0" name="reminder_delay_days" id="reminder_delay_days" value="<?php echo esc_attr( $s->get( 'reminder_delay_days' ) ); ?>" class="small-text" /> <?php esc_html_e( 'days after the trigger status.', 'ndv-reviews' ); ?></td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="reminder_subject"><?php esc_html_e( 'Email subject', 'ndv-reviews' ); ?></label></th>
-						<td>
-							<input type="text" name="reminder_subject" id="reminder_subject" class="regular-text" value="<?php echo esc_attr( $s->get( 'reminder_subject' ) ); ?>" placeholder="<?php esc_attr_e( 'How was your order?', 'ndv-reviews' ); ?>" />
-							<p class="description"><?php esc_html_e( 'Placeholders: {customer_name}, {store_name}, {review_link}.', 'ndv-reviews' ); ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?php esc_html_e( 'From', 'ndv-reviews' ); ?></th>
-						<td>
-							<input type="text" name="from_name" value="<?php echo esc_attr( $s->get( 'from_name' ) ); ?>" placeholder="<?php esc_attr_e( 'From name', 'ndv-reviews' ); ?>" />
-							<input type="email" name="from_email" value="<?php echo esc_attr( $s->get( 'from_email' ) ); ?>" placeholder="<?php esc_attr_e( 'from@example.com', 'ndv-reviews' ); ?>" />
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="token_expiry_days"><?php esc_html_e( 'Link expiry (days)', 'ndv-reviews' ); ?></label></th>
-						<td><input type="number" min="0" name="token_expiry_days" id="token_expiry_days" value="<?php echo esc_attr( $s->get( 'token_expiry_days' ) ); ?>" class="small-text" /></td>
-					</tr>
-				</table>
-				<p><button type="submit" name="ndvr_requests_do" value="save" class="button button-primary"><?php esc_html_e( 'Save settings', 'ndv-reviews' ); ?></button></p>
-			</form>
-
-			<hr />
-
-			<h2><?php esc_html_e( 'Send a test', 'ndv-reviews' ); ?></h2>
-			<form method="post">
-				<?php wp_nonce_field( self::NONCE ); ?>
-				<input type="email" name="test_email" value="<?php echo esc_attr( $admin ); ?>" class="regular-text" />
-				<button type="submit" name="ndvr_requests_do" value="test" class="button"><?php esc_html_e( 'Send test email', 'ndv-reviews' ); ?></button>
-			</form>
-
-			<hr />
-
-			<h2><?php esc_html_e( 'Request log', 'ndv-reviews' ); ?></h2>
-			<table class="widefat striped">
-				<thead>
-					<tr>
-						<th><?php esc_html_e( 'ID', 'ndv-reviews' ); ?></th>
-						<th><?php esc_html_e( 'Order', 'ndv-reviews' ); ?></th>
-						<th><?php esc_html_e( 'Email', 'ndv-reviews' ); ?></th>
-						<th><?php esc_html_e( 'Status', 'ndv-reviews' ); ?></th>
-						<th><?php esc_html_e( 'Scheduled', 'ndv-reviews' ); ?></th>
-						<th><?php esc_html_e( 'Sent', 'ndv-reviews' ); ?></th>
-						<th><?php esc_html_e( 'Error', 'ndv-reviews' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'ndv-reviews' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php if ( empty( $log['items'] ) ) : ?>
-						<tr><td colspan="8"><?php esc_html_e( 'No review requests yet.', 'ndv-reviews' ); ?></td></tr>
-					<?php endif; ?>
-					<?php foreach ( $log['items'] as $row ) : ?>
+			<div class="ndvr-card">
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Reminder settings', 'ndv-reviews' ); ?></h2></div>
+				<form method="post">
+					<?php wp_nonce_field( self::NONCE ); ?>
+					<table class="form-table" role="presentation">
 						<tr>
-							<td><?php echo esc_html( $row->id ); ?></td>
-							<td><a href="<?php echo esc_url( get_edit_post_link( $row->order_id ) ); ?>">#<?php echo esc_html( $row->order_id ); ?></a></td>
-							<td><?php echo esc_html( $row->email ); ?></td>
-							<td><span class="ndvr-status ndvr-status-<?php echo esc_attr( $row->status ); ?>"><?php echo esc_html( $row->status ); ?></span></td>
-							<td><?php echo esc_html( $row->scheduled_at ); ?></td>
-							<td><?php echo esc_html( $row->sent_at ? $row->sent_at : '—' ); ?></td>
-							<td><?php echo esc_html( $row->error ? $row->error : '' ); ?></td>
+							<th scope="row"><?php esc_html_e( 'Enable reminders', 'ndv-reviews' ); ?></th>
+							<td><label><input type="checkbox" name="reminder_enabled" value="1" <?php checked( (bool) $s->get( 'reminder_enabled' ) ); ?> /> <?php esc_html_e( 'Send a review-request email after an order reaches the chosen status.', 'ndv-reviews' ); ?></label></td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="reminder_status"><?php esc_html_e( 'Trigger status', 'ndv-reviews' ); ?></label></th>
 							<td>
-								<?php if ( 'failed' === $row->status || 'scheduled' === $row->status ) : ?>
-									<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'ndvr_retry' => $row->id ), admin_url( 'admin.php' ) ), self::NONCE ) ); ?>"><?php esc_html_e( 'Retry', 'ndv-reviews' ); ?></a>
-								<?php endif; ?>
+								<select name="reminder_status" id="reminder_status">
+									<?php foreach ( $statuses as $key => $label ) : ?>
+										<?php $slug = str_replace( 'wc-', '', $key ); ?>
+										<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $s->get( 'reminder_status' ), $slug ); ?>><?php echo esc_html( $label ); ?></option>
+									<?php endforeach; ?>
+								</select>
 							</td>
 						</tr>
-					<?php endforeach; ?>
-				</tbody>
-			</table>
+						<tr>
+							<th scope="row"><label for="reminder_delay_days"><?php esc_html_e( 'Delay (days)', 'ndv-reviews' ); ?></label></th>
+							<td><input type="number" min="0" name="reminder_delay_days" id="reminder_delay_days" value="<?php echo esc_attr( $s->get( 'reminder_delay_days' ) ); ?>" class="small-text" /> <?php esc_html_e( 'days after the trigger status.', 'ndv-reviews' ); ?></td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="reminder_subject"><?php esc_html_e( 'Email subject', 'ndv-reviews' ); ?></label></th>
+							<td>
+								<input type="text" name="reminder_subject" id="reminder_subject" class="regular-text" value="<?php echo esc_attr( $s->get( 'reminder_subject' ) ); ?>" placeholder="<?php esc_attr_e( 'How was your order?', 'ndv-reviews' ); ?>" />
+								<p class="description"><?php esc_html_e( 'Placeholders: {customer_name}, {store_name}, {review_link}.', 'ndv-reviews' ); ?></p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'From', 'ndv-reviews' ); ?></th>
+							<td>
+								<input type="text" name="from_name" value="<?php echo esc_attr( $s->get( 'from_name' ) ); ?>" placeholder="<?php esc_attr_e( 'From name', 'ndv-reviews' ); ?>" />
+								<input type="email" name="from_email" value="<?php echo esc_attr( $s->get( 'from_email' ) ); ?>" placeholder="<?php esc_attr_e( 'from@example.com', 'ndv-reviews' ); ?>" />
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="token_expiry_days"><?php esc_html_e( 'Link expiry (days)', 'ndv-reviews' ); ?></label></th>
+							<td><input type="number" min="0" name="token_expiry_days" id="token_expiry_days" value="<?php echo esc_attr( $s->get( 'token_expiry_days' ) ); ?>" class="small-text" /></td>
+						</tr>
+					</table>
+					<p><button type="submit" name="ndvr_requests_do" value="save" class="button button-primary"><?php esc_html_e( 'Save settings', 'ndv-reviews' ); ?></button></p>
+				</form>
+			</div>
+
+			<div class="ndvr-card">
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Send a test', 'ndv-reviews' ); ?></h2></div>
+				<form method="post">
+					<?php wp_nonce_field( self::NONCE ); ?>
+					<input type="email" name="test_email" value="<?php echo esc_attr( $admin ); ?>" class="regular-text" />
+					<button type="submit" name="ndvr_requests_do" value="test" class="button"><?php esc_html_e( 'Send test email', 'ndv-reviews' ); ?></button>
+				</form>
+			</div>
+
+			<div class="ndvr-card">
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Request log', 'ndv-reviews' ); ?></h2></div>
+				<table class="widefat striped">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'ID', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Order', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Email', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Status', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Scheduled', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Sent', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Error', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Actions', 'ndv-reviews' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php if ( empty( $log['items'] ) ) : ?>
+							<tr><td colspan="8"><?php esc_html_e( 'No review requests yet.', 'ndv-reviews' ); ?></td></tr>
+						<?php endif; ?>
+						<?php foreach ( $log['items'] as $row ) : ?>
+							<tr>
+								<td><?php echo esc_html( $row->id ); ?></td>
+								<td><a href="<?php echo esc_url( get_edit_post_link( $row->order_id ) ); ?>">#<?php echo esc_html( $row->order_id ); ?></a></td>
+								<td><?php echo esc_html( $row->email ); ?></td>
+								<td><span class="ndvr-status ndvr-status-<?php echo esc_attr( $row->status ); ?>"><?php echo esc_html( $row->status ); ?></span></td>
+								<td><?php echo esc_html( $row->scheduled_at ); ?></td>
+								<td><?php echo esc_html( $row->sent_at ? $row->sent_at : '—' ); ?></td>
+								<td><?php echo esc_html( $row->error ? $row->error : '' ); ?></td>
+								<td>
+									<?php if ( 'failed' === $row->status || 'scheduled' === $row->status ) : ?>
+										<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'ndvr_retry' => $row->id ), admin_url( 'admin.php' ) ), self::NONCE ) ); ?>"><?php esc_html_e( 'Retry', 'ndv-reviews' ); ?></a>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
 		</div>
 		<?php
 	}

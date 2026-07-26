@@ -8,6 +8,11 @@
  */
 
 /* Design tokens: see tokens.css (:root, shared front-end source). */
+
+/* rows=2 variant: two independent .ndvr-marquee tracks stacked with a gap
+   between them (each row is otherwise a complete, unmodified .ndvr-marquee). */
+.ndvr-marquee-rows { display: flex; flex-direction: column; gap: 14px; }
+
 .ndvr-marquee {
 	--ndvr-duration: 40s;
 	--ndvr-gap: 18px;

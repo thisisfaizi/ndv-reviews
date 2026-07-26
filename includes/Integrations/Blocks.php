@@ -131,6 +131,10 @@ class Blocks implements Registerable {
 						'type'    => 'number',
 						'default' => 0,
 					),
+					'category'   => array(
+						'type'    => 'string',
+						'default' => '',
+					),
 					'min_rating' => array(
 						'type'    => 'number',
 						'default' => 0,
@@ -150,6 +154,10 @@ class Blocks implements Registerable {
 					'verified'   => array(
 						'type'    => 'boolean',
 						'default' => false,
+					),
+					'rows'       => array(
+						'type'    => 'number',
+						'default' => 1,
 					),
 				),
 				'render_callback' => array( $this, 'render_marquee' ),
@@ -212,16 +220,21 @@ class Blocks implements Registerable {
 	 * @return string
 	 */
 	public function render_marquee( $attr ) {
+		$category = isset( $attr['category'] ) ? (string) $attr['category'] : '';
+		$category = is_numeric( $category ) ? (int) $category : sanitize_title( $category );
+
 		return $this->widgets->marquee(
 			array(
 				'source'     => isset( $attr['source'] ) ? sanitize_key( $attr['source'] ) : 'all',
 				'product_id' => isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0,
+				'category'   => $category,
 				'min_rating' => isset( $attr['min_rating'] ) ? (float) $attr['min_rating'] : 0,
 				'speed'      => isset( $attr['speed'] ) ? (int) $attr['speed'] : 40,
 				// Accepts left|right|up|down (preferred) or legacy horizontal|vertical.
 				'direction'  => isset( $attr['direction'] ) ? sanitize_key( $attr['direction'] ) : 'left',
 				'limit'      => isset( $attr['limit'] ) ? (int) $attr['limit'] : 20,
 				'verified'   => ! empty( $attr['verified'] ),
+				'rows'       => isset( $attr['rows'] ) ? (int) $attr['rows'] : 1,
 			)
 		);
 	}

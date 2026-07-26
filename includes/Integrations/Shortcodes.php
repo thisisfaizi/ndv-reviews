@@ -137,7 +137,9 @@ class Shortcodes implements Registerable {
 	}
 
 	/**
-	 * [ndvr-marquee source="all" min_rating="0" speed="40" ...]
+	 * [ndvr-marquee source="all" category="" min_rating="0" speed="40" rows="1" ...]
+	 * `source="category"` + `category="<slug-or-id>"` restricts to products in that
+	 * product_cat term. `rows="2"` renders two independent tracks (crisscross).
 	 *
 	 * @param array<string,mixed>|string $atts Attributes.
 	 * @return string
@@ -157,16 +159,20 @@ class Shortcodes implements Registerable {
 				'direction'  => 'horizontal',
 				'reverse'    => 0,
 				'pause'      => 1,
+				'rows'       => 1,
 			),
 			$atts,
 			'ndvr-marquee'
 		);
 
+		// Category accepts a term id or a slug (e.g. category="24" or category="skincare").
+		$category = is_numeric( $atts['category'] ) ? (int) $atts['category'] : sanitize_title( $atts['category'] );
+
 		return $this->widgets->marquee(
 			array(
 				'source'     => sanitize_key( $atts['source'] ),
 				'product_id' => (int) $atts['product_id'],
-				'category'   => (int) $atts['category'],
+				'category'   => $category,
 				'min_rating' => (float) $atts['min_rating'],
 				'with_media' => (bool) (int) $atts['with_media'],
 				'verified'   => (bool) (int) $atts['verified'],
@@ -177,6 +183,7 @@ class Shortcodes implements Registerable {
 				'direction'  => sanitize_key( $atts['direction'] ),
 				'reverse'    => (bool) (int) $atts['reverse'],
 				'pause'      => (bool) (int) $atts['pause'],
+				'rows'       => (int) $atts['rows'],
 			)
 		);
 	}

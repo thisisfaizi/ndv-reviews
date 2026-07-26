@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.13.0
+Stable tag: 0.14.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,19 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.14.0 =
+* Marquee: fixed the category filter (was accepted but silently ignored),
+  fixed a bug where a minimum-rating filter combined with a small review
+  limit could under-fill or empty the marquee even when enough qualifying
+  reviews existed (the filter now runs in the database query, not after the
+  limit was already applied), normalized scroll speed so marquees with
+  different review counts move at a consistent visual pace, and added an
+  optional two-row "crisscross" layout. All exposed via the shortcode,
+  Gutenberg block, and Elementor widget.
+* Admin UI: migrated the Rating Criteria, Review Reminders, and Import/Export
+  screens to the same card-based design used elsewhere in the plugin
+  (previously a mix of raw tables and form-tables).
 
 = 0.13.0 =
 * Accessibility: review photos now open in a keyboard-operable lightbox

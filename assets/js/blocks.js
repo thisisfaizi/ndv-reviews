@@ -129,11 +129,13 @@
 		attributes: {
 			source: { type: 'string', default: 'all' },
 			product_id: { type: 'number', default: 0 },
+			category: { type: 'string', default: '' },
 			min_rating: { type: 'number', default: 0 },
 			speed: { type: 'number', default: 40 },
 			direction: { type: 'string', default: 'horizontal' },
 			limit: { type: 'number', default: 20 },
-			verified: { type: 'boolean', default: false }
+			verified: { type: 'boolean', default: false },
+			rows: { type: 'number', default: 1 }
 		},
 		edit: function ( props ) {
 			return [
@@ -144,11 +146,17 @@
 							value: props.attributes.source,
 							options: [
 								{ label: __( 'All products', 'ndv-reviews' ), value: 'all' },
-								{ label: __( 'Specific product', 'ndv-reviews' ), value: 'product' }
+								{ label: __( 'Specific product', 'ndv-reviews' ), value: 'product' },
+								{ label: __( 'Category', 'ndv-reviews' ), value: 'category' }
 							],
 							onChange: function ( v ) { props.setAttributes( { source: v } ); }
 						} ),
 						numberControl( __( 'Product ID', 'ndv-reviews' ), props.attributes, props.setAttributes, 'product_id' ),
+						el( TextControl, {
+							label: __( 'Category (slug or ID)', 'ndv-reviews' ),
+							value: props.attributes.category,
+							onChange: function ( v ) { props.setAttributes( { category: v } ); }
+						} ),
 						el( RangeControl, {
 							label: __( 'Minimum rating', 'ndv-reviews' ),
 							value: props.attributes.min_rating,
@@ -169,6 +177,15 @@
 								{ label: __( 'Vertical', 'ndv-reviews' ), value: 'vertical' }
 							],
 							onChange: function ( v ) { props.setAttributes( { direction: v } ); }
+						} ),
+						el( SelectControl, {
+							label: __( 'Rows', 'ndv-reviews' ),
+							value: String( props.attributes.rows ),
+							options: [
+								{ label: __( 'Single row', 'ndv-reviews' ), value: '1' },
+								{ label: __( 'Two rows (crisscross)', 'ndv-reviews' ), value: '2' }
+							],
+							onChange: function ( v ) { props.setAttributes( { rows: parseInt( v, 10 ) || 1 } ); }
 						} ),
 						el( ToggleControl, {
 							label: __( 'Verified buyers only', 'ndv-reviews' ),

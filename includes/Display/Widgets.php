@@ -205,6 +205,7 @@ class Widgets {
 				'direction'  => 'horizontal',
 				'reverse'    => false,
 				'pause'      => true,
+				'rows'       => 1,
 			)
 		);
 
@@ -225,6 +226,41 @@ class Widgets {
 			return '';
 		}
 
+		$rows = max( 1, min( 2, (int) $args['rows'] ) );
+		if ( 1 === $rows ) {
+			return $this->render_marquee_row( $items, $args );
+		}
+
+		// Double row: split the set across two independent tracks. Too few items
+		// to split meaningfully (< 4) — reuse the full set for both rows rather
+		// than starving the second one. The second row reverses direction by
+		// default for the classic crisscross "wall of love" look.
+		if ( count( $items ) >= 4 ) {
+			$mid        = (int) ceil( count( $items ) / 2 );
+			$row1_items = array_slice( $items, 0, $mid );
+			$row2_items = array_slice( $items, $mid );
+		} else {
+			$row1_items = $items;
+			$row2_items = $items;
+		}
+
+		$row2_args             = $args;
+		$row2_args['reverse']  = ! $args['reverse'];
+
+		return '<div class="ndvr-marquee-rows">'
+			. $this->render_marquee_row( $row1_items, $args )
+			. $this->render_marquee_row( $row2_items, $row2_args )
+			. '</div>';
+	}
+
+	/**
+	 * Render one marquee track (the `rows=2` variant calls this twice).
+	 *
+	 * @param array<int,array<string,mixed>> $items Resolved review items for this row.
+	 * @param array<string,mixed>            $args  Display args (direction/reverse/etc already normalized).
+	 * @return string
+	 */
+	private function render_marquee_row( array $items, array $args ) {
 		/**
 		 * Filter how many times the marquee card set repeats for a seamless loop.
 		 * Default scales with the item count so the track always overflows the
@@ -259,29 +295,22 @@ class Widgets {
 			'orderby'    => 'recent',
 			'verified'   => ! empty( $args['verified'] ),
 			'with_media' => ! empty( $args['with_media'] ),
+			// Server-side (DB) filter, not a post-fetch PHP filter — narrows the
+			// result set BEFORE per_page/limit cuts it off, so a few recent
+			// reviews below min_rating can never starve the marquee when enough
+			// qualifying reviews exist further back.
+			'min_rating' => (float) $args['min_rating'],
 		);
 
 		if ( 'product' === $args['source'] && $args['product_id'] ) {
 			$query_args['product_id'] = $this->resolve_id( $args['product_id'] );
+		} elseif ( 'category' === $args['source'] && ! empty( $args['category'] ) ) {
+			$query_args['category'] = $args['category'];
 		}
 
 		$result = $this->query->paginate( $query_args );
-		$items  = $result['items'];
 
-		$min = (float) $args['min_rating'];
-		if ( $min > 0 ) {
-			$items = array_values(
-				array_filter(
-					$items,
-					static function ( $r ) use ( $min ) {
-						$rating = $r['overall'] ? $r['overall'] : $r['rating'];
-						return $rating >= $min;
-					}
-				)
-			);
-		}
-
-		return $items;
+		return $result['items'];
 	}
 
 	/**

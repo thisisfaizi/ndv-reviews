@@ -179,3 +179,56 @@ photo reviews (open/close/arrow-keys/focus-return); the still-owed Phase 3 live-
 T-M3b (marquee data gaps), T-UI2 (remaining UI polish: free CriteriaPage/RequestsPage/ToolsPage, Pro QandA
 Moderation hex colors, the orphaned `external_target_post` setting), or T-L1 (licensing, deferred by
 design) from the backlog.
+
+## 2026-07-27 — Phase 5: marquee data gaps (T-M3b) + remaining UI polish (T-UI2) — @fe/@be — free 0.14.0 / Pro 0.14.0
+CHANGED (free): includes/Reviews/ReviewQuery.php (`paginate()` gains `category` — new private
+`product_ids_for_category()` resolves a `product_cat` term id/slug to product ids via `get_posts()` +
+`tax_query`, applied as `post__in` on the `WP_Comment_Query` — and `min_rating`, a server-side `>=`
+`meta_query` clause on `_ndvr_overall_rating` mirroring the existing exact-match `star` block), includes/
+Display/Widgets.php (`marquee_items()` now passes `category`/`min_rating` into the query instead of
+fetching `limit` rows then post-filtering in PHP — the actual cause of the reported starvation, since the
+old `array_filter` ran AFTER the DB had already cut the result set to `limit`; `marquee()` gains a `rows`
+arg — `rows=2` splits the resolved items across two independent single-row renders via a new
+`render_marquee_row()` helper, reusing the existing template unchanged, wrapped in a new
+`.ndvr-marquee-rows` div; second row's direction defaults to reversed for a crisscross look), assets/js/
+marquee.js (new speed-normalization pass — measures each `.ndvr-marquee-group`'s real rendered width/
+height and scales `--ndvr-duration` against a 1200px reference so instances with different review counts
+scroll at consistent px/s instead of a flat number of seconds regardless of content width; re-runs
+debounced on window resize), assets/css/marquee.css (`.ndvr-marquee-rows` wrapper style),
+includes/Integrations/Shortcodes.php (`[ndvr-marquee]` category now accepts a slug OR numeric id, adds
+`rows`), includes/Integrations/Blocks.php + assets/js/blocks.js (marquee block gains `category`/`rows`
+attributes + editor controls), includes/Integrations/Elementor/Widgets/MarqueeWidget.php (adds Source/
+Category/Rows controls), includes/Admin/CriteriaPage.php, includes/Admin/RequestsPage.php,
+includes/Admin/ToolsPage.php (all three migrated from raw `.widefat`/`form-table` sections into
+`.ndvr-card`-wrapped groups, matching the pattern already used by Design/Settings/ManualReviews/
+ExternalReviews — no field names/nonces changed), assets/css/admin.css (new `.ndvr-qr-box` class
+replacing ToolsPage's hardcoded `#fff`/`#e6e9ef` QR-code box; new `.ndvr-qa-manual-box`/
+`.ndvr-qa-mod-answer`/`.ndvr-qa-mod-answer-label`/`.ndvr-qa-mod-author` classes for Pro's QandA
+Moderation), readme.txt + version → 0.14.0.
+CHANGED (pro): includes/QandA/Moderation.php (wrapped the manual-add `<details>` box and the questions
+table in `.ndvr-card`s; replaced 6 hardcoded hex values — `#f6f7f9`/`#e2e5ea` disclosure background/
+border, `#888` muted author, `#f0faf5`/`#0f7d5b` answer-highlight background/border,
+`#0f7d5b` label color — with the new admin.css classes), includes/External/ExternalReviews.php (new
+"Sync destination (product ID)" field on the Google tab, next to the existing sync-interval control;
+saved via a new `save_target_post()` helper using the same get_option/update_option read-modify-write
+pattern as `save_sync_interval()` — this finally gives the long-orphaned `external_target_post` setting a
+real UI), includes/Admin/SettingsPage.php (removed `external_target_post` from the `handle_save()`
+sanitizer whitelist — it never rendered a field there, so every Pro Settings save was silently zeroing the
+option via the unconditional `absint('')` default; a latent bug this task's fix would have turned from
+invisible-because-always-zero into actively harmful now that External Reviews sets a real value), version
+→ 0.14.0.
+OBSERVED: `php -l`/`node --check` clean on every changed file, both repos. Live-verified in a real browser
+(Local site, `?localwp_auto_login=1`): product-page marquee still renders and animates correctly post
+speed-normalization, 0 console errors, no visual regression from the earlier phase's screenshot. Rating
+Criteria, Review Reminders, and Import/Export screens (free) all now show proper cards — screenshotted and
+compared against the pre-change raw-table appearance. Q&A Moderation (Pro) card-wrapped correctly. External
+Reviews' new "Sync destination" field renders with the correct placeholder and sits naturally next to the
+existing sync-interval control. Did not runtime-test the category filter against real product-category
+data (this dev site's only reviewed products aren't organized into categories) or the double-row variant
+in a live shortcode/widget (no test page currently embeds `rows="2"`) — both are code-reviewed and
+`php -l`-clean but not exercised end-to-end; flagged as this task's main open risk alongside the
+already-noted Phase 3/4 live-runtime checks still owed.
+RESULT: pass (static + partial live verification). NEXT: exercise the category filter against seeded
+product-category data, the double-row marquee variant, and the still-owed Phase 3/4 live-runtime checks
+(lightbox click-through, DB/AJAX/uninstall dry-run) — then T-L1 (licensing, deferred by design) is the
+only item left in the backlog.

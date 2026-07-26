@@ -175,57 +175,59 @@ class ToolsPage implements Registerable {
 				<div class="notice notice-<?php echo 'error' === $n['type'] ? 'error' : 'success'; ?> is-dismissible"><p><?php echo esc_html( $n['message'] ); ?></p></div>
 			<?php endforeach; ?>
 
-			<h2><?php esc_html_e( 'Import native WooCommerce reviews', 'ndv-reviews' ); ?></h2>
-			<p><?php esc_html_e( 'Enrich existing WooCommerce reviews with NDV Reviews data (verified status, helpful counter, aggregates). Safe to run more than once.', 'ndv-reviews' ); ?></p>
-			<form method="post">
-				<?php wp_nonce_field( self::NONCE ); ?>
-				<button class="button button-primary" name="ndvr_tools_do" value="woo_backfill"><?php esc_html_e( 'Import / refresh native reviews', 'ndv-reviews' ); ?></button>
-			</form>
+			<div class="ndvr-card">
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Import native WooCommerce reviews', 'ndv-reviews' ); ?></h2></div>
+				<p class="description"><?php esc_html_e( 'Enrich existing WooCommerce reviews with NDV Reviews data (verified status, helpful counter, aggregates). Safe to run more than once.', 'ndv-reviews' ); ?></p>
+				<form method="post">
+					<?php wp_nonce_field( self::NONCE ); ?>
+					<button class="button button-primary" name="ndvr_tools_do" value="woo_backfill"><?php esc_html_e( 'Import / refresh native reviews', 'ndv-reviews' ); ?></button>
+				</form>
+			</div>
 
-			<hr />
+			<div class="ndvr-card">
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Import from CSV', 'ndv-reviews' ); ?></h2></div>
+				<p class="description"><?php esc_html_e( 'Columns: product_id, author, email, rating, title, content, date, recommend, verified.', 'ndv-reviews' ); ?></p>
+				<form method="post" enctype="multipart/form-data">
+					<?php wp_nonce_field( self::NONCE ); ?>
+					<input type="file" name="ndvr_csv" accept=".csv" />
+					<button class="button" name="ndvr_tools_do" value="csv_import"><?php esc_html_e( 'Import CSV', 'ndv-reviews' ); ?></button>
+				</form>
+			</div>
 
-			<h2><?php esc_html_e( 'Import from CSV', 'ndv-reviews' ); ?></h2>
-			<p><?php esc_html_e( 'Columns: product_id, author, email, rating, title, content, date, recommend, verified.', 'ndv-reviews' ); ?></p>
-			<form method="post" enctype="multipart/form-data">
-				<?php wp_nonce_field( self::NONCE ); ?>
-				<input type="file" name="ndvr_csv" accept=".csv" />
-				<button class="button" name="ndvr_tools_do" value="csv_import"><?php esc_html_e( 'Import CSV', 'ndv-reviews' ); ?></button>
-			</form>
+			<div class="ndvr-card">
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Export', 'ndv-reviews' ); ?></h2></div>
+				<form method="post" style="display:inline;">
+					<?php wp_nonce_field( self::NONCE ); ?>
+					<button class="button" name="ndvr_tools_do" value="export_csv"><?php esc_html_e( 'Export CSV', 'ndv-reviews' ); ?></button>
+				</form>
+				<form method="post" style="display:inline;">
+					<?php wp_nonce_field( self::NONCE ); ?>
+					<button class="button" name="ndvr_tools_do" value="export_json"><?php esc_html_e( 'Export JSON', 'ndv-reviews' ); ?></button>
+				</form>
+			</div>
 
-			<hr />
-
-			<h2><?php esc_html_e( 'Export', 'ndv-reviews' ); ?></h2>
-			<form method="post" style="display:inline;">
-				<?php wp_nonce_field( self::NONCE ); ?>
-				<button class="button" name="ndvr_tools_do" value="export_csv"><?php esc_html_e( 'Export CSV', 'ndv-reviews' ); ?></button>
-			</form>
-			<form method="post" style="display:inline;">
-				<?php wp_nonce_field( self::NONCE ); ?>
-				<button class="button" name="ndvr_tools_do" value="export_json"><?php esc_html_e( 'Export JSON', 'ndv-reviews' ); ?></button>
-			</form>
-
-			<hr />
-
-			<h2><?php esc_html_e( 'QR code & shareable review link', 'ndv-reviews' ); ?></h2>
-			<p><?php esc_html_e( 'Print a QR on packaging or receipts so customers can scan it and review the product. Enter a product ID to generate its link + QR.', 'ndv-reviews' ); ?></p>
-			<form method="get">
-				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
-				<input type="number" name="qr_product" value="<?php echo isset( $_GET['qr_product'] ) ? esc_attr( absint( wp_unslash( $_GET['qr_product'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>" placeholder="<?php esc_attr_e( 'Product ID', 'ndv-reviews' ); ?>" />
-				<button class="button"><?php esc_html_e( 'Generate', 'ndv-reviews' ); ?></button>
-			</form>
-			<?php
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$qr_product = isset( $_GET['qr_product'] ) ? absint( wp_unslash( $_GET['qr_product'] ) ) : 0;
-			if ( $qr_product && 'product' === get_post_type( $qr_product ) ) {
-				$link = add_query_arg( 'ndvr_review', 1, get_permalink( $qr_product ) ) . '#reviews';
-				echo '<p style="margin-top:14px;"><strong>' . esc_html__( 'Review link:', 'ndv-reviews' ) . '</strong> <a href="' . esc_url( $link ) . '" target="_blank" rel="noopener">' . esc_html( $link ) . '</a></p>';
-				echo '<div style="background:#fff;display:inline-block;padding:14px;border:1px solid #e6e9ef;border-radius:14px;">';
-				echo \NdvReviews\Display\Qr::svg( $link, 200 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				echo '</div>';
-			} elseif ( $qr_product ) {
-				echo '<p><em>' . esc_html__( 'That product was not found.', 'ndv-reviews' ) . '</em></p>';
-			}
-			?>
+			<div class="ndvr-card">
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'QR code & shareable review link', 'ndv-reviews' ); ?></h2></div>
+				<p class="description"><?php esc_html_e( 'Print a QR on packaging or receipts so customers can scan it and review the product. Enter a product ID to generate its link + QR.', 'ndv-reviews' ); ?></p>
+				<form method="get">
+					<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
+					<input type="number" name="qr_product" value="<?php echo isset( $_GET['qr_product'] ) ? esc_attr( absint( wp_unslash( $_GET['qr_product'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>" placeholder="<?php esc_attr_e( 'Product ID', 'ndv-reviews' ); ?>" />
+					<button class="button"><?php esc_html_e( 'Generate', 'ndv-reviews' ); ?></button>
+				</form>
+				<?php
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$qr_product = isset( $_GET['qr_product'] ) ? absint( wp_unslash( $_GET['qr_product'] ) ) : 0;
+				if ( $qr_product && 'product' === get_post_type( $qr_product ) ) {
+					$link = add_query_arg( 'ndvr_review', 1, get_permalink( $qr_product ) ) . '#reviews';
+					echo '<p style="margin-top:14px;"><strong>' . esc_html__( 'Review link:', 'ndv-reviews' ) . '</strong> <a href="' . esc_url( $link ) . '" target="_blank" rel="noopener">' . esc_html( $link ) . '</a></p>';
+					echo '<div class="ndvr-qr-box">';
+					echo \NdvReviews\Display\Qr::svg( $link, 200 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					echo '</div>';
+				} elseif ( $qr_product ) {
+					echo '<p><em>' . esc_html__( 'That product was not found.', 'ndv-reviews' ) . '</em></p>';
+				}
+				?>
+			</div>
 		</div>
 		<?php
 	}

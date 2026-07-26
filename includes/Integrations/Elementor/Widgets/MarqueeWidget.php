@@ -62,6 +62,38 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 	protected function register_controls() {
 		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'ndv-reviews' ) ) );
 		$this->add_control(
+			'source',
+			array(
+				'label'   => __( 'Source', 'ndv-reviews' ),
+				'type'    => \Elementor\Controls_Manager::SELECT,
+				'default' => 'all',
+				'options' => array(
+					'all'      => __( 'All products', 'ndv-reviews' ),
+					'category' => __( 'Category', 'ndv-reviews' ),
+				),
+			)
+		);
+		$this->add_control(
+			'category',
+			array(
+				'label'     => __( 'Category (slug or ID)', 'ndv-reviews' ),
+				'type'      => \Elementor\Controls_Manager::TEXT,
+				'condition' => array( 'source' => 'category' ),
+			)
+		);
+		$this->add_control(
+			'rows',
+			array(
+				'label'   => __( 'Rows', 'ndv-reviews' ),
+				'type'    => \Elementor\Controls_Manager::SELECT,
+				'default' => '1',
+				'options' => array(
+					'1' => __( 'Single row', 'ndv-reviews' ),
+					'2' => __( 'Two rows (crisscross)', 'ndv-reviews' ),
+				),
+			)
+		);
+		$this->add_control(
 			'min_rating',
 			array(
 				'label'   => __( 'Minimum rating', 'ndv-reviews' ),
@@ -213,10 +245,14 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$settings = $this->get_settings_for_display();
 		$allowed_dir = array( 'left', 'right', 'up', 'down' );
 		$direction   = in_array( $settings['direction'] ?? 'left', $allowed_dir, true ) ? $settings['direction'] : 'left';
+		$source      = 'category' === ( $settings['source'] ?? 'all' ) ? 'category' : 'all';
+		$category    = isset( $settings['category'] ) ? (string) $settings['category'] : '';
+		$category    = is_numeric( $category ) ? (int) $category : sanitize_title( $category );
 
 		echo Plugin::instance()->container()->get( 'widgets' )->marquee( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			array(
-				'source'     => 'all',
+				'source'     => $source,
+				'category'   => $category,
 				'min_rating' => isset( $settings['min_rating'] ) ? (float) $settings['min_rating'] : 0,
 				'limit'      => isset( $settings['limit'] ) ? (int) $settings['limit'] : 20,
 				'speed'      => isset( $settings['speed'] ) ? (int) $settings['speed'] : 40,
@@ -225,6 +261,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 				'pause'      => 'yes' === ( $settings['pause'] ?? 'yes' ),
 				'verified'   => ! empty( $settings['verified'] ),
 				'with_media' => ! empty( $settings['with_media'] ),
+				'rows'       => isset( $settings['rows'] ) ? (int) $settings['rows'] : 1,
 			)
 		);
 	}

@@ -92,3 +92,4 @@ of pass that's supposed to catch what static review can't.
 |---|---|---|---|---|
 | T-L1 | Licensing system (key storage + activation UI + remote check + updater + tier→feature map) | pro/@be | todo | deferred; gate stays open until this ships |
 | T-QA2b | Run the full opt-in uninstall flow on a disposable install (not this shared staging site) | @qa | todo | uninstall dry-run confirmed: tables/options/transients/AS jobs/review comments all removed on opt-in, left intact otherwise |
+| T-IMP1 | Pro: CSV import from other review platforms — extend `ProImporter.php`'s column-mapping/product-matching to handle raw-WordPress/ReviewX-style exports (no SKU, title-only matching), add a manual-resolution step for unmatched rows, real de-dup, batching for large files, and sub-criteria mapping. Full research + phased design in `PRODUCTION-PLAN.md` Part E — plan only, not yet built | pro/@spec | todo | see PRODUCTION-PLAN.md Part E acceptance criteria per sub-phase (E1–E5) |

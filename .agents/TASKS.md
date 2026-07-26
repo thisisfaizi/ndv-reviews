@@ -45,11 +45,15 @@ Cross-plugin tasks are duplicated on the Pro board with the same id.
 | PS-3 | `Support\Assets` loader-src filter swaps any `ndvr-*` handle to `.min` in production (off under SCRIPT_DEBUG); one filter covers free + Pro | browser: `display.min.css`, Pro `qanda.min.css` served, 0 console errors |
 | PS-4 | Codified "assets load conditionally" invariant in AGENTS.md/CLAUDE.md (both) | — |
 
-## Backlog — from PRODUCTION-PLAN.md (Phase 2.5 next)
+## Phase 2.5 — DONE (2026-07, free 0.11.0 / Pro 0.11.0)
+| id | title | evidence |
+|---|---|---|
+| T-ST | Elementor Style tabs for all review widgets. Free: new `WidgetStyleTrait` (color/typography helpers) used by Stars, SummaryWidget, ReviewsWidget, MarqueeWidget — each gains a Style tab (colors, typography, card bg/border/radius/shadow/padding). Pro: `PartBase` gains matching `add_color_control`/`add_typography_control`; `PhotosPart` + `HelpfulPart` get their first Style tab (Helpful includes normal/hover state tabs); `RecommendPart`/`CriteriaPart` normalized to match sibling depth. No render-method changes — pure Elementor `selectors` controls. | Stub-Elementor harness executed `register_controls()` on all 4 free widgets + all 11 Pro parts — 0 runtime errors, confirms untouched parts still work. `php -l` clean on all 10 changed files. |
+
+## Backlog — from PRODUCTION-PLAN.md (next)
 | id | title | owner | status | AC |
 |---|---|---|---|---|
 | T-M3b | Marquee remaining data gaps: category-source filter (currently no-op), min_rating-after-limit starvation, px/s speed normalization, double-row variant | free/@fe | todo | category filter works or removed; row never starved |
-| T-ST | Elementor Style tabs for all review widgets (shared StyleControls helper) | both/@fe | todo | every widget has a Style tab; no render changes |
 | T-R1 | Robustness: N+1 batch in `to_view()`; fix Deactivator hook; complete `uninstall.php`; i18n loaders; dead-feature cleanup | both/@be | todo | see PRODUCTION-PLAN §B3/B4/C4/C7 |
 | T-A1 | Accessibility: photo lightbox; `aria-live` on AJAX list; pill `aria-pressed`/`aria-current` | free/@fe | todo | SR announces filter results; lightbox keyboard-dismiss |
 | T-L1 | Licensing system (key storage + activation UI + remote check + updater + tier→feature map) | pro/@be | todo | deferred; gate stays open until this ships |

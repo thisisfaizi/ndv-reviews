@@ -61,3 +61,21 @@ Home page (?nocache) loads ZERO ndvr-* assets — no CSS/JS, no RatingStyles inl
 confirmed free = 100% conditional; RatingStyles was the only Pro violation, now fixed.
 RESULT: pass. Both plugins: nothing loads on pages without a reviews feature; served assets are minified.
 NEXT: Phase 2.5 Elementor Style tabs (T-ST) or Phase 3 robustness.
+
+## 2026-07 — Phase 2.5 Elementor Style tabs (T-ST) — @fe — free 0.11.0 / Pro 0.11.0
+CHANGED (free): NEW includes/Integrations/Elementor/Widgets/WidgetStyleTrait.php (add_color_control
+supports one selector or an array of selectors sharing a control; add_typography_control wraps
+Group_Control_Typography); Widgets/{Stars,SummaryWidget,ReviewsWidget,MarqueeWidget}.php each gain a
+Style-tab section using the trait + Elementor's own Group_Control_Background/Border/Box_Shadow for
+card-like elements. readme.txt, version → 0.11.0.
+CHANGED (pro): includes/Elementor/Widgets/Parts/PartBase.php gains add_color_control/
+add_typography_control (same array-selector support as the free trait); PhotosPart.php + HelpfulPart.php
+get their first Style tab (Helpful uses start_controls_tabs for Normal/Hover states); RecommendPart.php
+gains yes/no color controls; CriteriaPart.php gains label typography + star size/color. Version → 0.11.0.
+OBSERVED: built a stub Elementor API (Widget_Base/Controls_Manager/Group_Control_* stand-ins) and executed
+register_controls() via reflection on all 4 free widgets + all 11 Pro parts (including the 7 NOT touched
+this task, to confirm the PartBase change didn't break them) — 0 runtime errors, control-call counts
+logged per widget. php -l clean on all 10 changed files.
+RESULT: pass (stub-verified; real Elementor editor verification still needs a live login — handed to
+user). No CONTRACTS.md change (Elementor stores control values in its own post data, not our schema).
+NEXT: T-M3b (marquee data gaps) or T-R1 (robustness).

@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.10.1
+Stable tag: 0.11.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,12 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.11.0 =
+* Elementor: all 4 free widgets (Star Rating, Review Summary, Review Section,
+  Reviews Marquee) now have a **Style tab** — colors, typography, card
+  background/border/radius/shadow/padding — matching normal Elementor widget
+  expectations. No changes to existing Content controls or output markup.
 
 = 0.10.1 =
 * Performance: the plugin now serves **minified** CSS/JS in production (source

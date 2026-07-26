@@ -18,6 +18,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class ReviewsWidget extends \Elementor\Widget_Base {
 
+	use WidgetStyleTrait;
+
 	/**
 	 * Widget name.
 	 *
@@ -85,6 +87,78 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 				'default'      => 'yes',
 			)
 		);
+		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'style_card',
+			array(
+				'label' => __( 'Card', 'ndv-reviews' ),
+				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+		$this->add_group_control(
+			\Elementor\Group_Control_Background::get_type(),
+			array(
+				'name'     => 'card_background',
+				'types'    => array( 'classic', 'gradient' ),
+				'selector' => '{{WRAPPER}} .ndvr-review',
+			)
+		);
+		$this->add_group_control(
+			\Elementor\Group_Control_Border::get_type(),
+			array(
+				'name'     => 'card_border',
+				'selector' => '{{WRAPPER}} .ndvr-review',
+			)
+		);
+		$this->add_control(
+			'card_radius',
+			array(
+				'label'      => __( 'Border radius', 'ndv-reviews' ),
+				'type'       => \Elementor\Controls_Manager::SLIDER,
+				'size_units' => array( 'px' ),
+				'range'      => array( 'px' => array( 'min' => 0, 'max' => 40 ) ),
+				'selectors'  => array( '{{WRAPPER}} .ndvr-review' => 'border-radius: {{SIZE}}{{UNIT}}; overflow: hidden;' ),
+			)
+		);
+		$this->add_responsive_control(
+			'card_padding',
+			array(
+				'label'      => __( 'Padding', 'ndv-reviews' ),
+				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => array( 'px', 'em', '%' ),
+				'selectors'  => array( '{{WRAPPER}} .ndvr-review' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};' ),
+			)
+		);
+		$this->add_group_control(
+			\Elementor\Group_Control_Box_Shadow::get_type(),
+			array(
+				'name'     => 'card_shadow',
+				'selector' => '{{WRAPPER}} .ndvr-review',
+			)
+		);
+		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'style_content',
+			array(
+				'label' => __( 'Text & Badges', 'ndv-reviews' ),
+				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+		$this->add_color_control( 'author_color', __( 'Author name color', 'ndv-reviews' ), '.ndvr-review-name' );
+		$this->add_typography_control( 'author_typography', '.ndvr-review-name' );
+		$this->add_color_control( 'verified_color', __( 'Verified badge color', 'ndv-reviews' ), '.ndvr-verified-badge' );
+		$this->add_color_control( 'stars_color', __( 'Stars color', 'ndv-reviews' ), array( '.ndvr-review-meta .ndvr-star-full', '.ndvr-review-meta .ndvr-star-half::after' ) );
+		$this->add_color_control( 'date_color', __( 'Date color', 'ndv-reviews' ), '.ndvr-review-date' );
+		$this->add_typography_control( 'date_typography', '.ndvr-review-date' );
+		$this->add_color_control( 'title_color', __( 'Review title color', 'ndv-reviews' ), '.ndvr-review-title' );
+		$this->add_typography_control( 'title_typography', '.ndvr-review-title' );
+		$this->add_color_control( 'body_color', __( 'Review text color', 'ndv-reviews' ), '.ndvr-review-body' );
+		$this->add_typography_control( 'body_typography', '.ndvr-review-body' );
+		$this->add_color_control( 'helpful_color', __( 'Helpful button color', 'ndv-reviews' ), '.ndvr-helpful' );
+		$this->add_color_control( 'recommend_yes_color', __( 'Recommends color', 'ndv-reviews' ), '.ndvr-recommend-yes' );
+		$this->add_color_control( 'recommend_no_color', __( 'Does-not-recommend color', 'ndv-reviews' ), '.ndvr-recommend-no' );
 		$this->end_controls_section();
 	}
 

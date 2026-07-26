@@ -16,6 +16,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class MarqueeWidget extends \Elementor\Widget_Base {
 
+	use WidgetStyleTrait;
+
 	/**
 	 * Widget name.
 	 *
@@ -133,6 +135,72 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 				'default' => '',
 			)
 		);
+		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'style',
+			array(
+				'label' => __( 'Style', 'ndv-reviews' ),
+				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+		$this->add_group_control(
+			\Elementor\Group_Control_Background::get_type(),
+			array(
+				'name'     => 'card_background',
+				'types'    => array( 'classic', 'gradient' ),
+				'selector' => '{{WRAPPER}} .ndvr-marquee-card',
+			)
+		);
+		$this->add_group_control(
+			\Elementor\Group_Control_Border::get_type(),
+			array(
+				'name'     => 'card_border',
+				'selector' => '{{WRAPPER}} .ndvr-marquee-card',
+			)
+		);
+		$this->add_control(
+			'card_radius',
+			array(
+				'label'      => __( 'Card border radius', 'ndv-reviews' ),
+				'type'       => \Elementor\Controls_Manager::SLIDER,
+				'size_units' => array( 'px' ),
+				'range'      => array( 'px' => array( 'min' => 0, 'max' => 40 ) ),
+				'selectors'  => array( '{{WRAPPER}} .ndvr-marquee-card' => 'border-radius: {{SIZE}}{{UNIT}};' ),
+			)
+		);
+		$this->add_control(
+			'card_padding',
+			array(
+				'label'      => __( 'Card padding', 'ndv-reviews' ),
+				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
+				'size_units' => array( 'px', 'em', '%' ),
+				'selectors'  => array( '{{WRAPPER}} .ndvr-marquee-card' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};' ),
+			)
+		);
+		$this->add_group_control(
+			\Elementor\Group_Control_Box_Shadow::get_type(),
+			array(
+				'name'     => 'card_shadow',
+				'selector' => '{{WRAPPER}} .ndvr-marquee-card',
+			)
+		);
+		$this->add_control(
+			'card_width',
+			array(
+				'label'      => __( 'Card width', 'ndv-reviews' ),
+				'type'       => \Elementor\Controls_Manager::SLIDER,
+				'size_units' => array( 'px' ),
+				'range'      => array( 'px' => array( 'min' => 180, 'max' => 480 ) ),
+				'selectors'  => array( '{{WRAPPER}} .ndvr-marquee-card' => 'width: {{SIZE}}{{UNIT}};' ),
+			)
+		);
+		$this->add_color_control( 'name_color', __( 'Reviewer name color', 'ndv-reviews' ), '.ndvr-marquee-name' );
+		$this->add_typography_control( 'name_typography', '.ndvr-marquee-name' );
+		$this->add_color_control( 'verified_color', __( 'Verified badge color', 'ndv-reviews' ), '.ndvr-marquee-verified' );
+		$this->add_color_control( 'stars_color', __( 'Stars color', 'ndv-reviews' ), array( '.ndvr-marquee-stars .ndvr-star-full', '.ndvr-marquee-stars .ndvr-star-half::after' ) );
+		$this->add_color_control( 'body_color', __( 'Review text color', 'ndv-reviews' ), '.ndvr-marquee-body' );
+		$this->add_typography_control( 'body_typography', '.ndvr-marquee-body' );
 		$this->end_controls_section();
 	}
 

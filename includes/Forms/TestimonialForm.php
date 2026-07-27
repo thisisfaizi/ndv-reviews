@@ -204,11 +204,33 @@ class TestimonialForm implements Registerable {
 
 		$product_id = isset( $input['product_id'] ) ? absint( $input['product_id'] ) : 0;
 
+		// This form is intentionally open (no login/purchase requirement — see
+		// class docblock), but it must still respect a product being unpublished
+		// or having reviews explicitly closed; `PostTypes::is_reviewable()`
+		// (checked later inside `create()`) only validates post *type*, not status.
+		if ( 'publish' !== get_post_status( $product_id ) || ! comments_open( $product_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'ndv-reviews' ) ), 403 );
+		}
+
 		$criteria = array();
 		if ( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ) {
 			foreach ( $input['ndvr_criteria'] as $cid => $val ) {
 				$criteria[ absint( $cid ) ] = (float) $val;
 			}
+		}
+
+		// Require at least one star rating — same rule as ReviewForm, for the
+		// same reason: a rating-less review displays but is silently excluded
+		// from the WooCommerce product average.
+		$has_rating = false;
+		foreach ( $criteria as $criterion_rating ) {
+			if ( (float) $criterion_rating > 0 ) {
+				$has_rating = true;
+				break;
+			}
+		}
+		if ( ! $has_rating ) {
+			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
 		}
 
 		$media = array();

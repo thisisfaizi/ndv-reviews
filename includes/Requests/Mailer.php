@@ -68,6 +68,20 @@ class Mailer {
 			return new \WP_Error( 'ndvr_no_order', __( 'Order not found.', 'ndv-reviews' ) );
 		}
 
+		// The send is scheduled `reminder_delay_days` ahead of the qualifying
+		// status change and fires later via Action Scheduler — the order can
+		// legitimately move to cancelled/refunded/failed in that window (a
+		// customer requesting a refund is the common case). Re-check the
+		// *current* status at send time rather than trusting the status that
+		// was true when this was originally scheduled.
+		$ineligible_statuses = (array) apply_filters(
+			'ndv-reviews/reminder_ineligible_order_statuses',
+			array( 'cancelled', 'refunded', 'failed', 'trash' )
+		);
+		if ( in_array( $order->get_status(), $ineligible_statuses, true ) ) {
+			return new \WP_Error( 'ndvr_order_ineligible', __( 'Order is no longer eligible for a review request.', 'ndv-reviews' ) );
+		}
+
 		$email = $order->get_billing_email();
 		if ( ! is_email( $email ) ) {
 			return new \WP_Error( 'ndvr_no_email', __( 'Order has no valid email.', 'ndv-reviews' ) );

@@ -156,8 +156,16 @@ class JsonLd implements Registerable {
 		 */
 		$data = apply_filters( 'ndv-reviews/json_ld', $data, $product_id );
 
+		// JSON_HEX_TAG (+ the accompanying HEX flags) escape </script>-breakout
+		// sequences at the JSON layer itself — defense in depth alongside the
+		// sanitization already applied to author/content at save and render
+		// time, rather than depending entirely on it holding for every field
+		// forever (e.g. $product->get_name() below gets no treatment at all).
 		echo "\n<script type=\"application/ld+json\">" .
-			wp_json_encode( $data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) .
+			wp_json_encode(
+				$data,
+				JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+			) .
 			"</script>\n";
 	}
 

@@ -4,7 +4,7 @@ Tags: reviews, woocommerce, ratings, testimonials, photo reviews
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.15.2
+Stable tag: 0.16.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,6 +54,23 @@ Yes. NDV Reviews declares compatibility with High-Performance Order Storage and 
 7. Settings → Design: accent color, layout, and rating icon selector.
 
 == Changelog ==
+
+= 0.16.0 =
+* Security: closed a gap where a direct request could submit a review bypassing the "verified purchase
+  required" setting or a closed reviews policy.
+* Security: the "Verified buyer" badge could previously be earned by anyone submitting with a real
+  customer's email address; verification is now tied to the submitter's own account only.
+* Security: the GDPR data eraser now also deletes a customer's uploaded review photos, not just the
+  database record pointing to them.
+* Fixed: importing a CSV of star-rated reviews (no per-criteria breakdown) could leave the product's
+  displayed average/count stale until an unrelated review changed later.
+* Fixed: submitting a review with no star rating through the testimonial form or an email-collected
+  review link is now blocked, matching the existing on-page form behavior.
+* Fixed: a rare race condition on multi-product review-request links that could allow a duplicate
+  submission.
+* Fixed: a review request could still be sent for an order that was refunded/cancelled in the days
+  between the order and the scheduled send.
+* UI: the review summary panel and filter/pagination controls got a small visual refresh.
 
 = 0.15.1 =
 * Fixed: on sites running Elementor, the review-photo lightbox could open behind Elementor's own global

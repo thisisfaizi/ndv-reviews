@@ -80,7 +80,7 @@ class Votes implements Registerable {
 				$comment_id,
 				$user_id,
 				null === $ip_hash ? '' : $ip_hash,
-				current_time( 'mysql' )
+				current_time( 'mysql', true )
 			)
 		);
 

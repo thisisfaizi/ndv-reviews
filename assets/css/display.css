@@ -41,6 +41,8 @@
    Trust Panel (summary)
    ========================================================= */
 .ndvr-summary {
+	position: relative;
+	overflow: hidden;
 	font-family: var(--ndvr-font);
 	color: var(--ndvr-ink);
 	display: grid;
@@ -52,6 +54,15 @@
 	border-radius: var(--ndvr-r);
 	box-shadow: var(--ndvr-shadow);
 	margin: 0 0 26px;
+}
+.ndvr-summary::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: linear-gradient(90deg, var(--ndvr-gold), var(--ndvr-verdant));
 }
 .ndvr-summary-eyebrow { grid-column: 1 / -1; margin: 0; }
 
@@ -159,10 +170,11 @@
 	font-size: 13px;
 	font-weight: 600;
 	font-family: var(--ndvr-font);
-	transition: border-color 0.15s, background 0.15s, color 0.15s;
+	transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
 }
-.ndvr-topic:hover { border-color: var(--ndvr-ink); }
+.ndvr-topic:hover { border-color: var(--ndvr-ink); transform: translateY(-1px); }
 .ndvr-topic.is-current { background: var(--ndvr-accent, var(--ndvr-ink)); color: #fff; border-color: var(--ndvr-accent, var(--ndvr-ink)); }
+.ndvr-topic.is-current:hover { transform: none; }
 .ndvr-topic-count { color: var(--ndvr-faint); font-weight: 400; }
 .ndvr-topic.is-current .ndvr-topic-count { color: rgba(255,255,255,.7); }
 
@@ -189,10 +201,11 @@
 	font-weight: 600;
 	line-height: 1.4;
 	font-family: inherit;
-	transition: border-color 0.15s, color 0.15s, background 0.15s;
+	transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.15s;
 }
-.ndvr-filter:hover { border-color: var(--ndvr-ink); }
+.ndvr-filter:hover { border-color: var(--ndvr-ink); transform: translateY(-1px); }
 .ndvr-filter.is-current { background: var(--ndvr-accent, var(--ndvr-ink)); color: #fff; border-color: var(--ndvr-accent, var(--ndvr-ink)); }
+.ndvr-filter.is-current:hover { transform: none; }
 .ndvr-filter-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ndvr-slate); cursor: pointer; }
 .ndvr-filter-toggle input { accent-color: var(--ndvr-verdant); }
 .ndvr-sort { margin-left: auto; }
@@ -373,10 +386,11 @@
 	font-size: 13px;
 	font-weight: 600;
 	font-family: var(--ndvr-font);
-	transition: border-color 0.15s;
+	transition: border-color 0.15s, transform 0.15s;
 }
-.ndvr-page:hover { border-color: var(--ndvr-ink); }
+.ndvr-page:hover { border-color: var(--ndvr-ink); transform: translateY(-1px); }
 .ndvr-page.is-current { background: var(--ndvr-accent, var(--ndvr-ink)); color: #fff; border-color: var(--ndvr-accent, var(--ndvr-ink)); }
+.ndvr-page.is-current:hover { transform: none; }
 
 /* =========================================================
    Design variants (driven by the Design settings screen)
@@ -435,10 +449,14 @@
 
 .ndvr-review-form-wrap { margin-top: 30px; }
 
-/* Pro share buttons + top-reviewer badge (base styles) */
-.ndvr-share { display: inline-flex; gap: 8px; margin-top: 4px; }
-.ndvr-share a { font-size: 12px; color: var(--ndvr-slate); text-decoration: none; border: 1px solid var(--ndvr-line); border-radius: 999px; padding: 4px 11px; transition: border-color 0.15s, color 0.15s; }
-.ndvr-share a:hover { border-color: var(--ndvr-verdant); color: var(--ndvr-verdant); }
+/* Pro's Social\ShareButtons owns its own complete styling in Pro's widgets.css
+   (.ndvr-share-trigger/.ndvr-share-menu/.ndvr-share-link) — this plugin no
+   longer provides a base style for it. (Previously this rule's descendant
+   selector `.ndvr-share a` had higher specificity than Pro's `.ndvr-share-link`
+   class alone, silently overriding Pro's icon sizing/border — removed rather
+   than patched, since duplicating one component's style across two plugins'
+   stylesheets is exactly how that drift happens again.) */
+.ndvr-share { margin-top: 4px; }
 .ndvr-top-reviewer { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #b8860b; background: rgba(246,169,59,.14); padding: 3px 9px; border-radius: 999px; margin-left: 6px; }
 
 /* =========================================================
@@ -454,4 +472,5 @@
 @media (prefers-reduced-motion: reduce) {
 	.ndvr-bar-fill { animation: none; }
 	.ndvr-review-photo img { transition: none; }
+	.ndvr-topic:hover, .ndvr-filter:hover, .ndvr-page:hover { transform: none; }
 }

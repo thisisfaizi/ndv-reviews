@@ -7,6 +7,8 @@
 
 namespace NdvReviews\Importers;
 
+use NdvReviews\Reviews\Pool;
+use NdvReviews\Reviews\RatingCache;
 use NdvReviews\Reviews\ReviewRepository;
 
 defined( 'ABSPATH' ) || exit;
@@ -26,12 +28,21 @@ class Csv {
 	private $reviews;
 
 	/**
+	 * Rating cache helper.
+	 *
+	 * @var RatingCache
+	 */
+	private $ratings;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ReviewRepository $reviews Review repository.
+	 * @param RatingCache      $ratings Rating cache helper.
 	 */
-	public function __construct( ReviewRepository $reviews ) {
+	public function __construct( ReviewRepository $reviews, RatingCache $ratings ) {
 		$this->reviews = $reviews;
+		$this->ratings = $ratings;
 	}
 
 	/**
@@ -116,6 +127,15 @@ class Csv {
 					)
 				);
 			}
+
+			// ReviewRepository::create() already recalculated the product aggregate,
+			// but the `rating` meta above hadn't been written yet at that point (a
+			// star-only import with no criteria columns has nothing else to
+			// average) — recalc again now so the product's displayed average/count
+			// actually includes this review immediately, not just after some
+			// unrelated future review changes.
+			$this->ratings->recalc_review( $created );
+			$this->ratings->recalc_product( Pool::resolve_id( $product_id ) );
 
 			++$result['imported'];
 		}

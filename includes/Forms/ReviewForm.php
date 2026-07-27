@@ -324,6 +324,20 @@ class ReviewForm implements Registerable {
 			$product_id = absint( $input['comment_post_ID'] );
 		}
 
+		// The nonce alone only proves this request came from our form — it does
+		// not prove the visitor is allowed to submit here. render_form() enforces
+		// "publish only" + comments-open + verified-purchase-required in the UI,
+		// but a direct POST to this handler bypassed all three (the handler only
+		// re-derives the SAME rule render_form() already computes, so a store
+		// that requires verified purchases can't be bypassed by skipping the UI).
+		if ( 'publish' !== get_post_status( $product_id ) || ! comments_open( $product_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'ndv-reviews' ) ), 403 );
+		}
+		$verification_required = 'yes' === get_option( 'woocommerce_review_rating_verification_required' );
+		if ( $verification_required && ! ( is_user_logged_in() && wc_customer_bought_product( '', get_current_user_id(), $product_id ) ) ) {
+			wp_send_json_error( array( 'message' => __( 'Only logged in customers who have purchased this product may leave a review.', 'ndv-reviews' ) ), 403 );
+		}
+
 		if ( empty( $input['ndvr_consent'] ) ) {
 			wp_send_json_error( array( 'message' => __( 'Please confirm consent to submit your review.', 'ndv-reviews' ) ), 400 );
 		}

@@ -392,7 +392,7 @@ final class Plugin {
 		$c->set(
 			'csv_importer',
 			static function ( $c ) {
-				return new \NdvReviews\Importers\Csv( $c->get( 'reviews' ) );
+				return new \NdvReviews\Importers\Csv( $c->get( 'reviews' ), $c->get( 'rating_cache' ) );
 			}
 		);
 

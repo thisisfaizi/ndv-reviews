@@ -356,3 +356,97 @@ provided as its default value will change` at `includes/Importers/Csv.php:61`. S
 found and fixed this session in Pro's `ProImporter.php`; mirrored the identical fix here (both `fgetcsv()`
 calls now pass the full 5-argument form). `php -l` clean. No functional behavior change, no version-bump-
 worthy risk, but bumping patch anyway per policy (any shipped code change gets a version bump).
+
+## Phase 9 — Overnight security + correctness pass (2026-07-27, free 0.16.0)
+CONTEXT: user's closing instruction before going to sleep: "find all bugs and research web for WordPress
+security vulnerabilities and make this plugin both free and pro production ready. the UI and frontend
+widget should not give any kind of AI generic look." A large, multi-part, unsupervised directive — routed
+as 4 parallel research/audit agents BEFORE touching any code, each with a specific brief: (1) external
+WebSearch research on current WP/WooCommerce plugin vulnerability classes relevant to this plugin's shape
+(AJAX endpoints, file upload, CSV import, third-party API integrations, comment-based CPT), (2) a from-
+scratch security audit of the free plugin's own code, (3) the same for Pro, (4) a general (non-security)
+bug hunt across both, explicitly told to skip anything already covered by this session's prior fix history.
+All 4 returned real, actionable findings — nothing was invented or assumed; every fix below traces to a
+specific finding with a file:line citation from one of those passes.
+FIXED (free plugin; see Pro's own LOG.md for its share of the same pass):
+1. **[HIGH] Missing purchase/comments-open enforcement in `ReviewForm::handle_submit()`** — the AJAX
+   handler that actually creates reviews never checked WooCommerce's verified-purchase-required setting,
+   `comments_open()`, or `post_status`; only the UI-rendering code (`Renderer::render_form()`) did. A direct
+   POST with a harvested nonce (nonces are handed to every visitor on any product page with reviews
+   enabled — they don't imply authorization, only that the request came from the site) could create
+   reviews on products where reviews are explicitly closed, or bypass verified-purchase-only entirely.
+   Added the same 3 checks straight into the handler. `TestimonialForm` had the narrower gap (it's an
+   intentionally open/no-login form, so only comments-open/post-status were added, not verified-purchase).
+2. **[HIGH] 0-rating validation gap.** The "require ≥1 star, else the review is silently excluded from the
+   Woo average" fix (an already-known, already-fixed issue per this project's history) only actually
+   existed in `ReviewForm`. `TestimonialForm` and `Collection\Landing` (magic-link) render the identical
+   criteria-star UI but had no equivalent server-side check — a customer submitting either without picking
+   any stars produced a published, rating-less review with the exact defect the original fix was meant to
+   close. Added the same gate to both. Also added `Landing.php`'s missing orphaned-photo cleanup on a
+   failed `create()` (ReviewForm/TestimonialForm already had this).
+3. **[MEDIUM] Verified-buyer badge spoofing.** `VerifiedBuyer::is_verified()` passed the reviewer's
+   free-text email straight to `wc_customer_bought_product()` for `onsite`/`form` submissions — anyone who
+   knew a real customer's order email (leaked, guessed, or simply a public figure) could submit a review
+   claiming that email and get a "Verified buyer" badge with zero purchase of their own. Fixed: for those
+   two sources, an anonymous (not-logged-in) submitter can never be verified at all, and a logged-in
+   submitter is checked purely against **their own account's** order history — the free-text email field
+   is never trusted for verification purposes on these paths anymore. Magic-link/admin/import sources are
+   unaffected (their email genuinely came from an order record, not client-typed text).
+4. **[MEDIUM] GDPR eraser left photos behind.** `Privacy::erase()` deleted the `review_media` table rows
+   but never called `wp_delete_attachment()` on the actual attachment ids — an erased customer's uploaded
+   photos (which can carry EXIF/geolocation) stayed live in the media library at their original public URL
+   after a completed erasure request. Fixed to collect the attachment ids before deleting the rows and
+   actually delete the files; also now clears `_ndvr_title`/`_ndvr_order_id` meta the eraser missed.
+5. **[Data integrity] CSV-import rating cache never invalidated.** Both CSV importers set the flat
+   `rating`/`_ndvr_overall_rating` meta *after* `ReviewRepository::create()` already ran the product
+   aggregate recalculation — so a star-only import (no criteria columns, the normal case for third-party
+   exports) never actually updated the product's displayed average/count until some unrelated later
+   review happened to trigger a recalc. Fixed by recalculating again once the meta is actually set.
+   Injected `RatingCache` into `Importers\Csv` via the DI container (new constructor param, registered in
+   `Plugin.php`). **Verified empirically, not just by reasoning**: created a disposable test product,
+   imported one CSV row through the real container-constructed importer, confirmed `_wc_average_rating`/
+   `_wc_review_count` were correct *immediately* after import (5.00 / 1), not stale.
+6. **[Data integrity, race condition] `TokenRepository::mark_product()`** was read-JSON→mutate→write-JSON
+   with no concurrency guard on a token that can cover multiple products, each with its own independent
+   submit form on the same magic-link landing page — two near-simultaneous submissions against the same
+   token could race, and whichever write landed last would silently revert the other product back to
+   "pending," risking a duplicate submission the flow is specifically designed to prevent. Fixed with an
+   optimistic-concurrency UPDATE (only commits if `products` still matches what was just read; retries up
+   to 5× on conflict, matching the standard CAS-retry pattern for this class of bug). Functional-smoke-
+   tested sequentially (two products on one token correctly reach `status=used`); true concurrent-request
+   racing wasn't reproduced live (would need a multi-process harness), but the fix's correctness under the
+   documented race is verifiable from the SQL alone (`WHERE id=%d AND products=%s` — a stale read can never
+   win the write).
+7. **[Data integrity] Reminder sends had no order-status re-check.** Scheduled `reminder_delay_days` ahead
+   of time and fired later via Action Scheduler — nothing re-verified the order's *current* status, so a
+   refunded/cancelled/failed order in that window still got a "how was your order?" send. Added a re-check
+   in `Requests\Mailer::send_for_order()` via a new filter, `ndv-reviews/reminder_ineligible_order_statuses`
+   (default `cancelled/refunded/failed/trash`) — paired identically in Pro's `Automation\Engine::run_step()`.
+8. **[LOW, defense-in-depth] `Schema\JsonLd.php`** — added `JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|
+   JSON_HEX_QUOT` to the `wp_json_encode()` call. Not currently exploitable (confirmed: existing sanitizers
+   already strip `</script`-breakout sequences from every field that reaches this output today), but the
+   code was relying entirely on that continuing to hold for every field forever, and `$product->get_name()`
+   specifically gets no treatment at this exact call site — hardened rather than left fragile.
+9. **[LOW, latent] `Reviews\Votes::vote()`** stored `created_at` in site-local time while every other
+   timestamp column in both plugins (including its structurally-identical Pro sibling, `question_votes`)
+   uses GMT — a schema drift with no current visible symptom, fixed for consistency before any future
+   reporting feature reads/compares these columns cross-table.
+NOT FIXED — documented as an accepted limitation, not silently dropped: `Forms\AntiSpam.php`'s per-IP rate
+limiter (get-transient → compare → set-transient) is a non-atomic read-then-write; concurrent parallel
+requests from the same IP could exceed the configured hourly ceiling. This is an explicitly soft anti-spam
+limit (not a data-integrity or security guarantee), and a robust fix needs a dedicated atomic-counter table
+(a real schema change) — disproportionate effort for a low-severity, low-likelihood gap at 3am. Tracked as
+backlog T-SEC6 rather than rushed.
+UI: added a subtle gold→verdant gradient accent bar to the Trust Panel summary panel (previously a plain
+bordered box, visually interchangeable with any generic templated "modern SaaS" card) and a small hover
+lift (`translateY(-1px)`) to topic/filter/pagination pills, replacing their flat color-only hover swap —
+consistent with the lift treatment the marquee cards and the (also-redesigned-this-session) share-icon
+tooltip already use. Deliberately did NOT attempt a larger visual overhaul: without live user feedback on
+subjective design direction, a bigger redesign risks wasted effort or landing somewhere the user likes
+less than the current, actually-fairly-considered design system (custom tokens, uppercase eyebrow labels,
+tabular-nums, seamless marquee animation) — scoped this to concrete, low-risk, defensible improvements only.
+RESULT: pass — 9 real fixes shipped (2 High, 2 Medium, 5 Low/data-integrity), all `php -l` clean, several
+empirically verified rather than reasoned about. One item (AntiSpam race) deliberately deferred with
+reasoning recorded rather than rushed. See Pro's own LOG.md for the matching Pro-plugin fixes from the
+same pass (SSRF in GoogleLinkFetch, ManualReviews criteria storage, ndvr_translate lang allowlist, Q&A
+N+1, share-icon redesign already shipped earlier this session).

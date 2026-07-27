@@ -213,6 +213,20 @@ class Landing implements Registerable {
 			}
 		}
 
+		// Require at least one star rating — same rule as ReviewForm/TestimonialForm,
+		// for the same reason: a rating-less review displays but is silently
+		// excluded from the WooCommerce product average.
+		$has_rating = false;
+		foreach ( $criteria as $criterion_rating ) {
+			if ( (float) $criterion_rating > 0 ) {
+				$has_rating = true;
+				break;
+			}
+		}
+		if ( ! $has_rating ) {
+			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
+		}
+
 		$media = array();
 		if ( $this->settings->get( 'photo_uploads' ) ) {
 			$uploaded = $this->upload->handle( 'ndvr_photos', $product_id );
@@ -243,6 +257,11 @@ class Landing implements Registerable {
 		);
 
 		if ( is_wp_error( $result ) ) {
+			// Delete orphaned uploads when body validation fails (no media flood),
+			// matching ReviewForm/TestimonialForm's existing behavior.
+			foreach ( $media as $orphan_id ) {
+				wp_delete_attachment( (int) $orphan_id, true );
+			}
 			wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 );
 		}
 

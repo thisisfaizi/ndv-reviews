@@ -177,7 +177,7 @@ class ReviewRepository {
 			update_comment_meta( $comment_id, '_ndvr_order_id', absint( $data['order_id'] ) );
 		}
 
-		$is_verified = $this->verified->is_verified( $email, $user_id, $product_id );
+		$is_verified = $this->verified->is_verified( $email, $user_id, $product_id, $source );
 		update_comment_meta( $comment_id, '_ndvr_verified', $is_verified ? 1 : 0 );
 		if ( $is_verified ) {
 			update_comment_meta( $comment_id, 'verified', 1 );

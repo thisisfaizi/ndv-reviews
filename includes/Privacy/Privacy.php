@@ -144,10 +144,21 @@ class Privacy implements Registerable {
 				)
 			);
 
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$attachment_ids = $wpdb->get_col( $wpdb->prepare( "SELECT attachment_id FROM `" . Db::table( 'review_media' ) . "` WHERE comment_id = %d", $id ) );
+			foreach ( $attachment_ids as $attachment_id ) {
+				// Erasure must remove the photo itself (may carry EXIF/geolocation),
+				// not just the row that pointed to it.
+				wp_delete_attachment( (int) $attachment_id, true );
+			}
+
 			$wpdb->delete( Db::table( 'review_media' ), array( 'comment_id' => $id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->delete( Db::table( 'review_votes' ), array( 'comment_id' => $id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			delete_comment_meta( $id, '_ndvr_country' );
 			delete_comment_meta( $id, '_ndvr_consent' );
+			delete_comment_meta( $id, '_ndvr_title' );
+			delete_comment_meta( $id, '_ndvr_order_id' );
+			update_comment_meta( $id, '_ndvr_source', 'erased' );
 
 			$removed = true;
 		}

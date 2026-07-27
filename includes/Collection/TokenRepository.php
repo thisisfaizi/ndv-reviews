@@ -125,46 +125,68 @@ class TokenRepository {
 	/**
 	 * Update the recorded review status for a product within a token.
 	 *
-	 * @param int $token_id   Token row id.
-	 * @param int $product_id Product id.
-	 * @param string $status  pending|reviewed.
+	 * A magic-link token can cover several products, each with its own
+	 * independent submission form on the landing page (see Collection\Landing) —
+	 * a customer can plausibly submit two of them within milliseconds of each
+	 * other. Read-mutate-write on the `products` JSON blob would otherwise be a
+	 * lost-update race: two concurrent calls could both read the same "before"
+	 * state and whichever writes last silently reverts the other product back
+	 * to "pending", potentially never flipping the token to `used` and allowing
+	 * a re-submission for a product that was, from the customer's perspective,
+	 * already reviewed. Fixed with optimistic-concurrency: the UPDATE only
+	 * commits if `products` still matches what we just read; on conflict, retry.
+	 *
+	 * @param int    $token_id   Token row id.
+	 * @param int    $product_id Product id.
+	 * @param string $status     pending|reviewed.
 	 * @return void
 	 */
 	public function mark_product( $token_id, $product_id, $status = 'reviewed' ) {
 		global $wpdb;
 
-		$table = Db::table( 'review_tokens' );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$row = $wpdb->get_row( $wpdb->prepare( "SELECT id, products FROM `{$table}` WHERE id = %d", absint( $token_id ) ) );
-		if ( ! $row ) {
-			return;
-		}
+		$table    = Db::table( 'review_tokens' );
+		$token_id = absint( $token_id );
 
-		$products = json_decode( (string) $row->products, true );
-		$products = is_array( $products ) ? $products : array();
-		$all_done = true;
-
-		foreach ( $products as &$p ) {
-			if ( (int) $p['id'] === absint( $product_id ) ) {
-				$p['status'] = ( 'reviewed' === $status ) ? 'reviewed' : 'pending';
+		for ( $attempt = 0; $attempt < 5; $attempt++ ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$row = $wpdb->get_row( $wpdb->prepare( "SELECT id, products FROM `{$table}` WHERE id = %d", $token_id ) );
+			if ( ! $row ) {
+				return;
 			}
-			if ( 'reviewed' !== $p['status'] ) {
-				$all_done = false;
-			}
-		}
-		unset( $p );
 
-		$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$table,
-			array(
-				'products' => wp_json_encode( $products ),
-				'status'   => $all_done ? 'used' : 'active',
-				'used_at'  => $all_done ? current_time( 'mysql', true ) : null,
-			),
-			array( 'id' => absint( $token_id ) ),
-			array( '%s', '%s', '%s' ),
-			array( '%d' )
-		);
+			$before_json = (string) $row->products;
+			$products    = json_decode( $before_json, true );
+			$products    = is_array( $products ) ? $products : array();
+			$all_done    = true;
+
+			foreach ( $products as &$p ) {
+				if ( (int) $p['id'] === absint( $product_id ) ) {
+					$p['status'] = ( 'reviewed' === $status ) ? 'reviewed' : 'pending';
+				}
+				if ( 'reviewed' !== $p['status'] ) {
+					$all_done = false;
+				}
+			}
+			unset( $p );
+
+			$used_at_sql = $all_done ? $wpdb->prepare( '%s', current_time( 'mysql', true ) ) : 'NULL';
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
+			$updated = $wpdb->query(
+				$wpdb->prepare(
+					"UPDATE `{$table}` SET products = %s, status = %s, used_at = {$used_at_sql} WHERE id = %d AND products = %s",
+					wp_json_encode( $products ),
+					$all_done ? 'used' : 'active',
+					$token_id,
+					$before_json
+				)
+			);
+
+			if ( $updated ) {
+				return;
+			}
+			// products changed under us between the SELECT and UPDATE — re-read and retry.
+		}
 	}
 
 	/**

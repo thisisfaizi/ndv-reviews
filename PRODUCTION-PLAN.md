@@ -262,6 +262,14 @@ slug, no title fallback), no mapping-preview, no match-confirmation step, and no
 docblock's claim of being "idempotent on (product + email + content)".
 
 ### E0 — Confirmed baseline: the sample file imports **zero rows** today, for two independent reasons
+Confirmed two ways: by reading the code, and empirically — invoked the real `ProImporter::import()` private
+method (via reflection, no code changes) against a 20-row CSV-safe slice of the actual sample file, bootstrapped
+against this site's real WordPress/DB. Result: **`imported: 0, skipped: 20`** — every row skipped, no
+partial success, confirmed nothing was written to `wp_comments` afterward. (Bonus finding from that run:
+PHP 8.4 emits deprecation notices on the plain `fgetcsv( $handle )` calls in `import()`/`map_columns()` —
+current PHP is fine, but a future PHP major may turn this into a hard error. A 3-argument call
+(`fgetcsv( $handle, 0, ',' )` or similar) is a trivial one-line fix worth folding into E1 since it touches
+the same function.)
 1. **Product resolution fails.** None of the sample's headers (`comment_post_ID`, `ID`, `post_title`,
    `post_name`) match any alias in `resolve_product()`'s chain (id/SKU/slug) or its column-alias list.
 2. **Content extraction *also* fails, independently.** The `content` alias list doesn't include

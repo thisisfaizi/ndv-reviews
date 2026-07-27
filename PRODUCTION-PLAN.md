@@ -244,9 +244,11 @@ disclosure).
 **Phase 5 — Licensing + competitive features:** C8 (license system + updater + tiers), C9/B7 (AI
 analytics surfacing, conversion tracking, flag-review, undo vote).
 
-## Part E — Pro: CSV import from other review platforms (research + plan, no code yet)
+## Part E — Pro: CSV import from other review platforms
 
-**Status: PLAN ONLY.** Requested alongside a real-world sample export: `docs/import and export
+**Status: E1 (aliases)/E2 (title fallback, automatic tier only)/E3 (de-dup)/E5 (sub-criteria mapping)
+SHIPPED (Pro 0.16.0). E1's mapping-preview UI, E2's manual-picker for unmatched rows, and E4 (batching for
+large files) remain unbuilt — see the per-section status below.** Requested alongside a real-world sample export: `docs/import and export
 compatibility/reviews1783856454.csv` (untracked, contains real names/emails — never commit it; it's
 excluded from both plugins' `.gitignore`-equivalent handling by simply never `git add`-ing that directory).
 That file is a raw `wp_comments`+`wp_posts` JOIN export from a site running the **ReviewX** plugin (tell:
@@ -254,91 +256,78 @@ That file is a raw `wp_comments`+`wp_posts` JOIN export from a site running the 
 **no SKU column**; product identity is only recoverable via `post_title`/`post_name` (slug), since
 `comment_post_ID`/`ID` are the *source* site's internal WP post ids and are meaningless here.
 
-**Existing code:** `ndv-reviews-pro/includes/Importers/ProImporter.php` already does third-party CSV import
+**Existing code:** `ndv-reviews-pro/includes/Importers/ProImporter.php` already did third-party CSV import
 (positioned for Judge.me/Loox/Yotpo/Stamped), reusing free's `ReviewRepository::create()` via the DI
-container — the right reuse pattern, extend it rather than build a parallel path. Today it has: an
-alias-based column mapper (single guess per field, no UI), a 3-tier product resolver (literal id → SKU →
-slug, no title fallback), no mapping-preview, no match-confirmation step, and no de-dup despite its
-docblock's claim of being "idempotent on (product + email + content)".
+container — the right reuse pattern, extended rather than replaced. Before this pass it had: an alias-based
+column mapper with no format-independent fallback, a 3-tier product resolver (literal id → SKU → slug, no
+title fallback), no mapping-preview UI, no manual-resolution UI, and no de-dup despite its docblock's claim
+of being "idempotent on (product + email + content)" — see E1-E5 below for what changed.
 
-### E0 — Confirmed baseline: the sample file imports **zero rows** today, for two independent reasons
+### E0 — Confirmed baseline: the sample file imported **zero rows** before this fix
 Confirmed two ways: by reading the code, and empirically — invoked the real `ProImporter::import()` private
-method (via reflection, no code changes) against a 20-row CSV-safe slice of the actual sample file, bootstrapped
-against this site's real WordPress/DB. Result: **`imported: 0, skipped: 20`** — every row skipped, no
-partial success, confirmed nothing was written to `wp_comments` afterward. (Bonus finding from that run:
-PHP 8.4 emits deprecation notices on the plain `fgetcsv( $handle )` calls in `import()`/`map_columns()` —
-current PHP is fine, but a future PHP major may turn this into a hard error. A 3-argument call
-(`fgetcsv( $handle, 0, ',' )` or similar) is a trivial one-line fix worth folding into E1 since it touches
-the same function.)
-1. **Product resolution fails.** None of the sample's headers (`comment_post_ID`, `ID`, `post_title`,
-   `post_name`) match any alias in `resolve_product()`'s chain (id/SKU/slug) or its column-alias list.
-2. **Content extraction *also* fails, independently.** The `content` alias list doesn't include
-   `comment_content` — so even a row with a perfectly-resolved product would still be skipped (`import()`
-   skips any row where `$get('content')` is empty). **Fixing product matching alone would not be enough**
-   — this is why E1 below extends the whole alias map, not just the product-id branch.
+method (via reflection) against a 20-row CSV-safe slice of the actual sample file, bootstrapped against
+this site's real WordPress/DB. Result: **`imported: 0, skipped: 20`** — every row skipped, confirmed
+nothing was written to `wp_comments`. Two independent causes, both now fixed (see E1/E2 below):
+1. **Product resolution failed.** None of the sample's headers (`comment_post_ID`, `ID`, `post_title`,
+   `post_name`) matched any alias in `resolve_product()`'s chain (id/SKU/slug).
+2. **Content extraction *also* failed, independently.** The `content` alias list didn't include
+   `comment_content` — so even a row with a resolved product would still have been skipped.
 
-### E1 🟠 Column mapping: extend aliases + add a mapping-preview step
-- Extend `$aliases` in `ProImporter.php` to cover raw-WordPress/ReviewX-style headers alongside the
-  existing Judge.me/Loox/Yotpo/Stamped names: `comment_author`→author, `comment_author_email`→email,
-  `comment_content`→content, `comment_date`/`comment_date_gmt`→date, `post_title`/`post_name`→a new
-  product-title-fallback field (see E2).
-- Aliases alone will never cover every export format a merchant brings in. Add a **mapping-preview step**
-  (mirrors WooCommerce core's own product CSV importer, the strongest prior art found): Upload → show the
-  detected header row with each column's auto-guessed target field in a `<select>` (defaulting to "Do not
-  import" for anything unrecognized) → merchant confirms/corrects → then the row-by-row import runs against
-  the *confirmed* mapping, not a blind guess. This alone fixes the common case of a format the alias list
-  doesn't yet know, without needing a code change per third-party plugin.
+### E1 🟢 SHIPPED (automatic mapping only) — Column mapping: extended aliases
+- `$aliases` in `ProImporter.php` now covers raw-WordPress/ReviewX-style headers alongside the existing
+  Judge.me/Loox/Yotpo/Stamped names: `comment_author`→author, `comment_author_email`→email,
+  `comment_content`→content, `comment_date`/`comment_date_gmt`→date, `post_title`→a new `product_title`
+  field (feeds E2's fallback tier), `reviewx_rating`→a new `criteria` field (feeds E5).
+- **Not built:** the mapping-preview UI (upload → per-column `<select>` → confirm). Aliases alone won't
+  cover every third-party format a merchant brings in; anything not on the alias list is still silently
+  unmapped rather than surfaced for manual correction. Remains future work.
 
-### E2 🟠 Product matching: add a title-fallback tier + mandatory manual resolution for the rest
-- Add a 4th tier to `resolve_product()`: literal id → SKU → slug → **fuzzy title match** (e.g.
-  `WP_Query` on `post_title` via a `LIKE`/relevance search, surfaced with a confidence indicator) — never
-  auto-apply a low-confidence fuzzy match silently (industry-standard practice: fuzzy matches always need
-  human confirmation, per the WooCommerce-importer and Judge.me/Yotpo-style tools researched).
-- **Decision (confirmed with the user): rows that still don't resolve — or resolve only at low confidence —
-  go to a manual-picker screen**, not a silent skip. List each unresolved row (its raw product text +
-  a snippet of the review) with a product-search box to assign it, or a "Skip this row" action. Reuse the
-  existing `ndvr_search_products` AJAX endpoint (`ManualReviews.php`) that already powers "+ Add Review"'s
-  product picker — same nonce/capability pattern, no new endpoint needed for the search itself (only a new
-  action to persist the merchant's row-by-row assignment).
+### E2 🟢 SHIPPED (automatic tier only) — Product matching: title-fallback tier added
+- `resolve_product()` gained a 4th tier: literal id → SKU → slug → **exact product-title match** (a direct
+  `WP_Query` on `post_title`, exact match only — no fuzzy/partial matching, so nothing is silently
+  auto-applied at low confidence). Live-verified: created a disposable test product titled "Super Grow"
+  (a title that appears 69× in the real sample file, more than any other), ran the real importer against
+  those rows — all 5 tested rows resolved and imported correctly (content, rating, date, criteria all
+  correct; cleaned up the test product/reviews after).
+- **Not built:** the manual-picker screen for rows that still don't resolve (no id/SKU/slug/exact-title
+  hit — the fuzzy-match-with-confidence tier and the human-resolution UI are both still future work,
+  confirmed with the user as the target design). Today those rows are still silently skipped, same as
+  before — this fix raises the automatic match rate, it doesn't add a resolution path for the rest.
 
-### E3 🔴 De-dup is now load-bearing, not optional
-- The manual-picker flow means **re-uploading the same file is the expected workflow** (a merchant fixes a
-  few unmatched rows, or comes back to assign more, and re-runs the import). `ProImporter`'s docblock
-  already claims "idempotent on (product + email + content)" — no such check exists today, so a re-upload
-  would **duplicate every already-imported row**. This must be implemented as part of this feature, not
-  deferred: before calling `$reviews->create()`, check for an existing review with the same
-  `(product_id, normalized email, sha1(content))` — e.g. a `_ndvr_import_hash` comment meta set on create,
-  checked via a `WP_Comment_Query` meta lookup — and skip with a "duplicate" reason in the row report if
-  found.
+### E3 🟢 SHIPPED — De-dup
+- `dedupe_hash( $product_id, $email, $content )` (md5 of the three, matching the docblock's original claim)
+  is checked via `is_duplicate()` before every `create()` call, and stamped as `_ndvr_import_hash` comment
+  meta on success. **Live-verified a real bug in the first implementation attempt**: `get_comments()` with
+  a bare `meta_key`/`meta_value` silently returned 0 even with a matching row present, because WooCommerce
+  globally filters `get_comments()` to exclude every comment on a `product` post unless the query explicitly
+  opts back in — the exact same trap this codebase already documents and works around elsewhere
+  (`Collection\Reviewable::has_reviewed()`). Fixed by adding `'type__in' => ['review','comment'], 'status'
+  => 'all'`, matching that established pattern. Re-verified: running the same 5-row file twice in one
+  process now correctly reports `3 imported/2 skipped` (two rows in the sample share identical content+
+  fallback-email) then `0 imported/5 skipped` on the second pass — both within-batch and re-upload de-dup
+  confirmed working.
 
-### E4 🟠 Batching: ~10,458 rows will not survive one synchronous `admin_init` request
-- The sample file alone is over 10k rows. A single-request `fopen()`/`fgetcsv()` loop (today's
-  implementation) risks PHP max-execution-time/memory limits on a file this size, and the manual-picker
-  step (E2) requires the parsed-but-uncommitted row set to **persist between page loads** regardless of
-  file size. Both point to the same fix: **parse once, persist, process in chunks.**
-  - On upload: parse the whole file, resolve everything the automatic tiers can (E1+E2), and persist the
-    full row set (raw + resolved-or-not) to a transient/custom table keyed by an import-job id — not
-    re-parsed on every request.
-  - Show the mapping-preview (E1) and match-report/manual-picker (E2) against that persisted job.
-  - On confirm: commit rows in batches via Action Scheduler (mirrors the existing `ndv-reviews` AS group
-    pattern already used for reminders), with a simple progress indicator (X of N committed), rather than
-    one long-running blocking request.
+### E4 ⬜ NOT BUILT — Batching for large files
+- Still a single synchronous `admin_init` request end to end. The real sample file is ~10,458 rows; nothing
+  about today's fix changes that risk. Untouched — a persisted job + Action Scheduler batching design was
+  already scoped (parse once → persist → mapping-preview/manual-picker against the persisted job → commit
+  in chunks) but not implemented. Needed before E1's preview UI or E2's manual-picker can be built safely
+  for a file this size.
 
-### E5 🟡 Sub-criteria import (decision confirmed with the user: attempt it, not v1-skip)
-- ReviewX's `reviewx_rating` column is a **serialized PHP array** of per-criterion scores (e.g.
-  `a:3:{i:0;s:1:"5";i:1;s:1:"5";i:2;s:1:"5";}`). `ReviewRepository::create()` already accepts a
-  `criteria => array(criteria_id => rating)` param (validated against `CriteriaRepository::get_active()`,
-  written to the `ndvr_review_criteria` table) — this is the exact integration point, no new storage
-  mechanism needed.
-- **Security:** this column is untrusted, attacker-influenced CSV content. Never call bare `unserialize()`
-  on it. Use `unserialize( $value, [ 'allowed_classes' => false ] )` and reject (skip sub-criteria for that
-  row, keep the overall rating) anything that isn't a flat array of numeric-like scalars — the sample data
-  is plain scalars, so this loses no real data while closing the PHP-object-injection vector.
-- The source plugin's criteria (e.g. ReviewX's own labels) won't line up with this site's active criteria
-  automatically. Add a small **criteria-mapping step** in the same mapping-preview screen (E1): once the
-  merchant identifies a column as "per-criteria ratings," show the source indices found in a sample row and
-  let them map each to one of this site's active criteria (or "don't import"). Rows with unmapped indices
-  simply don't get that criterion's score — never guess a mapping automatically.
+### E5 🟢 SHIPPED — Sub-criteria import
+- `map_criteria()` safely decodes the serialized `reviewx_rating`-style column with
+  `unserialize( $value, [ 'allowed_classes' => false ] )`, rejects (returns empty — keeps the overall
+  rating, drops only the sub-scores) anything that isn't a flat array of numeric scalars, then maps
+  positionally onto this site's `CriteriaRepository::get_active()` list (source index 0 → first active
+  criterion, etc.) and passes the result through `ReviewRepository::create()`'s existing `criteria` param
+  — no new storage mechanism needed, this was already the correct integration point.
+- Live-verified against real sample rows (3-value `reviewx_rating` arrays) on a site with 4 active criteria
+  (Quality/Value/Service/Comfort): mapped correctly to criteria ids 1/2/3 in the `ndvr_review_criteria`
+  table, id 4 (Comfort) correctly left unmapped rather than guessed.
+- **Not built:** the criteria-mapping *UI* (letting a merchant see the source plugin's criteria labels and
+  explicitly choose which of their own criteria each maps to, instead of positional order). Positional
+  mapping is a reasonable automatic default but assumes the source and destination criteria are listed in
+  the same conceptual order — not guaranteed in general, only confirmed correct for the sample file tested.
 
 ### E6 — Where this lives
 - **Pro only**, extending the existing `Importers/ProImporter.php` + its admin screen
@@ -347,14 +336,13 @@ the same function.)
   `Importers/Csv.php` (fixed 9-column round-trip format for free's own `Exporter.php`) is unrelated and
   untouched by this plan.
 
-### Suggested phased breakdown (once this moves from plan to build)
-1. **E1** mapping-preview UI + extended aliases (fixes the "zero rows" baseline on its own for well-formed
-   files with SKUs).
-2. **E2 + E3** title-fallback + manual-picker + de-dup (the sample file specifically needs these — no SKU
-   at all).
-3. **E4** persisted job + Action Scheduler batching (needed before E2's manual-picker can work safely on a
-   file this size regardless of match rate).
-4. **E5** sub-criteria mapping (independent of the above; can ship after or alongside).
+### Remaining work (not yet built)
+1. **E1's mapping-preview UI** — per-column confirm/override screen instead of blind alias auto-mapping.
+2. **E2's manual-picker screen** — human resolution for rows with no id/SKU/slug/exact-title hit (today:
+   still silently skipped, same as before this fix — only the automatic hit rate improved).
+3. **E4's batching** — needed before either UI above can work safely on a file the size of the real sample
+   (~10,458 rows) without risking a PHP timeout on a single synchronous request.
+4. **E5's criteria-mapping UI** — letting a merchant confirm/override the positional sub-criteria mapping.
 
 ### Non-goals for v1 (explicitly out of scope, not forgotten)
 - Importing admin replies, helpful-vote counts, or video attachments from third-party exports.

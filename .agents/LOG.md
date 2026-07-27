@@ -349,3 +349,10 @@ the new "QA Retest" review from the RatingCache re-test in place, same precedent
 RESULT: pass — 1 new real bug found and fixed (Elementor lightbox conflict), 3 of T-QA1's 4 owed items
 closed with actual live verification. Only the uninstall dry-run remains, and only because it requires an
 environment this session doesn't have (a disposable install) rather than any remaining doubt about the fix.
+
+## Phase 8 — T-IMP3 (2026-07-27, free 0.15.2)
+User hit a live PHP 8.4 deprecation notice testing a CSV import: `fgetcsv(): the $escape parameter must be
+provided as its default value will change` at `includes/Importers/Csv.php:61`. Same class of issue already
+found and fixed this session in Pro's `ProImporter.php`; mirrored the identical fix here (both `fgetcsv()`
+calls now pass the full 5-argument form). `php -l` clean. No functional behavior change, no version-bump-
+worthy risk, but bumping patch anyway per policy (any shipped code change gets a version bump).

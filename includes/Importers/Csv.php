@@ -58,7 +58,7 @@ class Csv {
 			return $result;
 		}
 
-		$header = fgetcsv( $handle );
+		$header = fgetcsv( $handle, 0, ',', '"', '\\' );
 		if ( ! $header ) {
 			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			$result['errors'][] = __( 'CSV has no header row.', 'ndv-reviews' );
@@ -66,7 +66,7 @@ class Csv {
 		}
 		$map = array_flip( array_map( 'trim', $header ) );
 
-		while ( ( $row = fgetcsv( $handle ) ) !== false ) { // phpcs:ignore WordPress.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition
+		while ( ( $row = fgetcsv( $handle, 0, ',', '"', '\\' ) ) !== false ) { // phpcs:ignore WordPress.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition
 			$get = static function ( $key ) use ( $row, $map ) {
 				return isset( $map[ $key ], $row[ $map[ $key ] ] ) ? trim( $row[ $map[ $key ] ] ) : '';
 			};

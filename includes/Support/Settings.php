@@ -30,12 +30,9 @@ class Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'schema_version'      => 1,
 			'enable_reviews'      => true,
 			'reviewable_post_types' => array(), // extra post types beyond product.
-			'criteria_mode'       => 'mean',   // mean | primary.
 			'allow_guest_reviews' => true,
-			'require_verified'    => false,
 			'photo_uploads'       => true,
 			'max_photos'          => 5,
 			// Design (storefront appearance — see the Design screen).
@@ -58,6 +55,8 @@ class Settings {
 			'from_name'           => '',
 			'from_email'          => '',
 			'token_expiry_days'   => 60,
+			'admin_notify'        => 'pending', // off | all | pending.
+			'admin_notify_email'  => '',        // empty = site admin email.
 			'remove_data_on_uninstall' => false,
 		);
 	}

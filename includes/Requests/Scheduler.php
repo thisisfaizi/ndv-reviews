@@ -133,14 +133,18 @@ class Scheduler implements Registerable {
 	 */
 	public function process( $request_id ) {
 		$request = $this->requests->find( $request_id );
-		if ( ! $request || 'sent' === $request->status ) {
+		if ( ! $request || in_array( $request->status, array( 'sent', 'cancelled', 'converted' ), true ) ) {
 			return;
 		}
 
 		$result = $this->mailer->send_for_order( (int) $request->order_id );
 
 		if ( is_wp_error( $result ) ) {
-			$this->requests->set_status( $request_id, 'failed', $result->get_error_message() );
+			// Deliberate skips (refunded/cancelled order, unsubscribed, nothing
+			// left to review) are not delivery failures: retrying cannot help.
+			$skips  = array( 'ndvr_no_order', 'ndvr_order_ineligible', 'ndvr_unsubscribed', 'ndvr_nothing_to_review' );
+			$status = in_array( $result->get_error_code(), $skips, true ) ? 'cancelled' : 'failed';
+			$this->requests->set_status( $request_id, $status, $result->get_error_message() );
 			return;
 		}
 
@@ -151,10 +155,17 @@ class Scheduler implements Registerable {
 	 * Retry a failed request immediately.
 	 *
 	 * @param int $request_id Request id.
-	 * @return void
+	 * @return bool False when the request does not exist or has not failed.
 	 */
 	public function retry( $request_id ) {
+		$request = $this->requests->find( $request_id );
+		if ( ! $request || 'failed' !== $request->status ) {
+			return false;
+		}
+
 		$this->requests->set_status( $request_id, 'scheduled' );
 		$this->process( $request_id );
+
+		return true;
 	}
 }

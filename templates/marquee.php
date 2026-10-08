@@ -15,19 +15,6 @@ use NdvReviews\Display\Html;
 
 defined( 'ABSPATH' ) || exit;
 
-/**
- * A deterministic, pleasant background colour for an initials avatar, derived
- * from the author name (no Gravatar/email needed — avoids the grey mystery
- * person and never makes an external request).
- */
-if ( ! function_exists( 'ndvr_marquee_avatar_color' ) ) {
-	function ndvr_marquee_avatar_color( $name ) {
-		$palette = array( '#0f7d5b', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#0891b2', '#4f46e5', '#b45309' );
-		$idx     = abs( crc32( (string) $name ) ) % count( $palette );
-		return $palette[ $idx ];
-	}
-}
-
 $ndvr_vertical = ( 'vertical' === $args['direction'] );
 $ndvr_classes  = array( 'ndvr-marquee' );
 $ndvr_classes[] = $ndvr_vertical ? 'ndvr-marquee-vertical' : 'ndvr-marquee-horizontal';
@@ -51,15 +38,11 @@ $ndvr_style = sprintf(
 				<?php foreach ( $items as $ndvr_review ) : ?>
 					<figure class="ndvr-marquee-card">
 						<figcaption class="ndvr-marquee-head">
-							<?php
-							$ndvr_author  = (string) $ndvr_review['author'];
-							$ndvr_initial = '' !== $ndvr_author ? mb_substr( $ndvr_author, 0, 1 ) : '?';
-							?>
-							<span class="ndvr-marquee-avatar" aria-hidden="true" style="background:<?php echo esc_attr( ndvr_marquee_avatar_color( $ndvr_author ) ); ?>;"><?php echo esc_html( $ndvr_initial ); ?></span>
+							<?php echo Html::avatar( $ndvr_review['author'], 'ndvr-marquee-avatar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Html::avatar(). ?>
 							<span class="ndvr-marquee-name">
 								<?php echo esc_html( $ndvr_review['author'] ); ?>
 								<?php if ( ! empty( $ndvr_review['verified'] ) ) : ?>
-									<span class="ndvr-marquee-verified" title="<?php esc_attr_e( 'Verified buyer', 'ndv-reviews' ); ?>">&#10003;</span>
+									<span class="ndvr-marquee-verified" title="<?php esc_attr_e( 'Verified buyer', 'ndv-reviews' ); ?>"><span aria-hidden="true">&#10003;</span><span class="screen-reader-text"><?php esc_html_e( 'Verified buyer', 'ndv-reviews' ); ?></span></span>
 								<?php endif; ?>
 							</span>
 						</figcaption>

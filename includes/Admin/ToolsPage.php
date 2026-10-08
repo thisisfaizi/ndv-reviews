@@ -7,6 +7,7 @@
 
 namespace NdvReviews\Admin;
 
+use NdvReviews\Support\Caps;
 use NdvReviews\Support\Registerable;
 use NdvReviews\Importers\WooNative;
 use NdvReviews\Importers\Csv;
@@ -19,7 +20,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class ToolsPage implements Registerable {
 
-	const CAPABILITY = 'manage_woocommerce';
 	const PARENT     = 'ndv-reviews';
 	const PAGE_SLUG  = 'ndv-reviews-tools';
 	const NONCE      = 'ndvr_tools';
@@ -73,6 +73,21 @@ class ToolsPage implements Registerable {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'register_menu' ), 13 );
 		add_action( 'admin_init', array( $this, 'handle_actions' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+	}
+
+	/**
+	 * WooCommerce's product search box for the QR picker, on this screen only.
+	 *
+	 * @param string $hook_suffix Current admin page hook.
+	 * @return void
+	 */
+	public function enqueue( $hook_suffix ) {
+		if ( false === strpos( (string) $hook_suffix, self::PAGE_SLUG ) ) {
+			return;
+		}
+		wp_enqueue_script( 'wc-enhanced-select' );
+		wp_enqueue_style( 'woocommerce_admin_styles' );
 	}
 
 	/**
@@ -85,7 +100,7 @@ class ToolsPage implements Registerable {
 			self::PARENT,
 			__( 'Import / Export', 'ndv-reviews' ),
 			__( 'Import / Export', 'ndv-reviews' ),
-			self::CAPABILITY,
+			Caps::manage( 'tools' ),
 			self::PAGE_SLUG,
 			array( $this, 'render' )
 		);
@@ -100,10 +115,10 @@ class ToolsPage implements Registerable {
 		if ( ! isset( $_POST['ndvr_tools_do'] ) ) {
 			return;
 		}
-		if ( ! current_user_can( self::CAPABILITY ) ) {
+		check_admin_referer( self::NONCE );
+		if ( ! current_user_can( Caps::manage( 'tools' ) ) ) {
 			return;
 		}
-		check_admin_referer( self::NONCE );
 
 		$do = sanitize_key( wp_unslash( $_POST['ndvr_tools_do'] ) );
 
@@ -151,10 +166,30 @@ class ToolsPage implements Registerable {
 		$tmp = $_FILES['ndvr_csv']['tmp_name']; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 		$res = $this->csv->import( $tmp );
 
+		if ( ! empty( $res['errors'] ) && 0 === $res['imported'] && 0 === $res['skipped'] ) {
+			// The file itself could not be read.
+			$this->notices[] = array(
+				'type'    => 'error',
+				'message' => implode( ' ', $res['errors'] ),
+			);
+			return;
+		}
+
+		/* translators: 1: imported, 2: skipped. */
+		$message = sprintf( __( 'Imported %1$d reviews; skipped %2$d.', 'ndv-reviews' ), $res['imported'], $res['skipped'] );
+		if ( ! empty( $res['reasons'] ) ) {
+			$parts = array();
+			foreach ( $res['reasons'] as $reason => $count ) {
+				/* translators: 1: number of rows, 2: reason. */
+				$parts[] = sprintf( __( '%1$d %2$s', 'ndv-reviews' ), $count, $reason );
+			}
+			/* translators: %s: list of skip reasons with counts. */
+			$message .= ' ' . sprintf( __( 'Skipped rows: %s.', 'ndv-reviews' ), implode( '; ', $parts ) );
+		}
+
 		$this->notices[] = array(
-			'type'    => empty( $res['errors'] ) ? 'success' : 'error',
-			/* translators: 1: imported, 2: skipped. */
-			'message' => sprintf( __( 'Imported %1$d reviews; skipped %2$d.', 'ndv-reviews' ), $res['imported'], $res['skipped'] ),
+			'type'    => 0 === $res['imported'] && $res['skipped'] > 0 ? 'error' : 'success',
+			'message' => $message,
 		);
 	}
 
@@ -164,7 +199,7 @@ class ToolsPage implements Registerable {
 	 * @return void
 	 */
 	public function render() {
-		if ( ! current_user_can( self::CAPABILITY ) ) {
+		if ( ! current_user_can( Caps::manage( 'tools' ) ) ) {
 			return;
 		}
 		?>
@@ -186,7 +221,7 @@ class ToolsPage implements Registerable {
 
 			<div class="ndvr-card">
 				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Import from CSV', 'ndv-reviews' ); ?></h2></div>
-				<p class="description"><?php esc_html_e( 'Columns: product_id, author, email, rating, title, content, date, recommend, verified.', 'ndv-reviews' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Columns: product_id, author, email, rating (1-5), title, content, date, recommend (yes/no/neutral), verified (1/0), status (approved/pending, optional). Rows already imported are skipped, so the same file can be imported again safely.', 'ndv-reviews' ); ?></p>
 				<form method="post" enctype="multipart/form-data">
 					<?php wp_nonce_field( self::NONCE ); ?>
 					<input type="file" name="ndvr_csv" accept=".csv" />
@@ -196,6 +231,7 @@ class ToolsPage implements Registerable {
 
 			<div class="ndvr-card">
 				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Export', 'ndv-reviews' ); ?></h2></div>
+				<p class="description"><?php esc_html_e( 'Approved and pending reviews with criteria scores and photo URLs. The CSV can be imported again with the importer above.', 'ndv-reviews' ); ?></p>
 				<form method="post" style="display:inline;">
 					<?php wp_nonce_field( self::NONCE ); ?>
 					<button class="button" name="ndvr_tools_do" value="export_csv"><?php esc_html_e( 'Export CSV', 'ndv-reviews' ); ?></button>
@@ -208,23 +244,44 @@ class ToolsPage implements Registerable {
 
 			<div class="ndvr-card">
 				<div class="ndvr-card-header"><h2><?php esc_html_e( 'QR code & shareable review link', 'ndv-reviews' ); ?></h2></div>
-				<p class="description"><?php esc_html_e( 'Print a QR on packaging or receipts so customers can scan it and review the product. Enter a product ID to generate its link + QR.', 'ndv-reviews' ); ?></p>
-				<form method="get">
-					<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
-					<input type="number" name="qr_product" value="<?php echo isset( $_GET['qr_product'] ) ? esc_attr( absint( wp_unslash( $_GET['qr_product'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>" placeholder="<?php esc_attr_e( 'Product ID', 'ndv-reviews' ); ?>" />
-					<button class="button"><?php esc_html_e( 'Generate', 'ndv-reviews' ); ?></button>
-				</form>
+				<p class="description"><?php esc_html_e( 'Print a QR code on packaging or receipts. Scanning it opens the product page with the review form in view.', 'ndv-reviews' ); ?></p>
 				<?php
 				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 				$qr_product = isset( $_GET['qr_product'] ) ? absint( wp_unslash( $_GET['qr_product'] ) ) : 0;
-				if ( $qr_product && 'product' === get_post_type( $qr_product ) ) {
+				$qr_valid   = $qr_product && 'product' === get_post_type( $qr_product ) && 'publish' === get_post_status( $qr_product );
+				?>
+				<form method="get">
+					<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
+					<label class="screen-reader-text" for="ndvr-qr-product"><?php esc_html_e( 'Product', 'ndv-reviews' ); ?></label>
+					<select id="ndvr-qr-product" name="qr_product" class="wc-product-search" style="min-width:320px;" data-placeholder="<?php esc_attr_e( 'Search for a product…', 'ndv-reviews' ); ?>" data-action="woocommerce_json_search_products" data-allow_clear="true">
+						<?php if ( $qr_valid ) : ?>
+							<option value="<?php echo esc_attr( $qr_product ); ?>" selected="selected"><?php echo esc_html( wp_strip_all_tags( get_the_title( $qr_product ) ) ); ?></option>
+						<?php endif; ?>
+					</select>
+					<button class="button"><?php esc_html_e( 'Generate', 'ndv-reviews' ); ?></button>
+				</form>
+				<?php
+				if ( $qr_valid ) {
 					$link = add_query_arg( 'ndvr_review', 1, get_permalink( $qr_product ) ) . '#reviews';
+					$svg  = \NdvReviews\Display\Qr::svg( $link, 200 );
 					echo '<p style="margin-top:14px;"><strong>' . esc_html__( 'Review link:', 'ndv-reviews' ) . '</strong> <a href="' . esc_url( $link ) . '" target="_blank" rel="noopener">' . esc_html( $link ) . '</a></p>';
-					echo '<div class="ndvr-qr-box">';
-					echo \NdvReviews\Display\Qr::svg( $link, 200 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					echo '</div>';
+					if ( '' === $svg ) {
+						echo '<p class="ndvr-qr-error"><em>' . esc_html(
+							sprintf(
+								/* translators: %d: number of characters. */
+								__( 'This link is too long to fit in a QR code (%d characters). Use a shorter product permalink, or share the link directly.', 'ndv-reviews' ),
+								strlen( $link )
+							)
+						) . '</em></p>';
+					} else {
+						echo '<div class="ndvr-qr-box">';
+						echo $svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by Qr::svg() from numeric rects; label escaped there.
+						echo '</div>';
+						$download = 'data:image/svg+xml;base64,' . base64_encode( $svg ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- data: URI for the download link.
+						echo '<p><a class="button" download="' . esc_attr( 'review-qr-' . $qr_product . '.svg' ) . '" href="' . esc_url( $download, array( 'data' ) ) . '">' . esc_html__( 'Download SVG', 'ndv-reviews' ) . '</a></p>';
+					}
 				} elseif ( $qr_product ) {
-					echo '<p><em>' . esc_html__( 'That product was not found.', 'ndv-reviews' ) . '</em></p>';
+					echo '<p><em>' . esc_html__( 'That product was not found or is not published.', 'ndv-reviews' ) . '</em></p>';
 				}
 				?>
 			</div>

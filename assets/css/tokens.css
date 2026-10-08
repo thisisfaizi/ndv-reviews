@@ -16,15 +16,23 @@
 :root {
 	--ndvr-ink: #181a1f;
 	--ndvr-slate: #626b7a;
-	--ndvr-faint: #9aa3b2;
+	--ndvr-faint: #687180; /* 4.5:1 on --ndvr-haze, 4.9:1 on white */
 	--ndvr-paper: #ffffff;
 	--ndvr-haze: #f5f6f8;
 	--ndvr-line: #e8eaef;
-	--ndvr-gold: #f6a93b;
+	--ndvr-gold: #d97706; /* filled stars: 3.2:1 on white (non-text minimum 3:1) */
+	--ndvr-star-empty: #c5cad3;
+	--ndvr-heart: #d6334f;
 	--ndvr-gold-soft: #fbe7c6;
 	--ndvr-verdant: #0f7d5b;
 	--ndvr-verdant-soft: #e7f3ee;
 	--ndvr-rose: #c0392b;
+	/* Accent defaults; Display\Design::inline_css() overrides both from the
+	   Design screen (accent-ink = readable text colour on the accent). */
+	--ndvr-accent: #181a1f;
+	--ndvr-accent-ink: #ffffff;
+	/* Base text size every review surface scales from (Design > Text size). */
+	--ndvr-text: 15px;
 	--ndvr-r: 16px;
 	--ndvr-r-sm: 10px;
 	--ndvr-shadow: 0 1px 2px rgba(20,22,28,.05), 0 14px 30px -20px rgba(20,22,28,.25);

@@ -89,13 +89,44 @@ class RequestRepository {
 		if ( 'sent' === $status ) {
 			$fields['sent_at'] = current_time( 'mysql', true );
 			$format[]          = '%s';
-		}
-		if ( '' !== $error ) {
+			// A retried request that now went out should not keep the old error.
+			$fields['error'] = '';
+			$format[]        = '%s';
+		} elseif ( '' !== $error ) {
 			$fields['error'] = sanitize_text_field( $error );
 			$format[]        = '%s';
 		}
 
 		$wpdb->update( Db::table( 'requests' ), $fields, array( 'id' => absint( $id ) ), $format, array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	}
+
+	/**
+	 * Request rows sent to an email address (privacy export).
+	 *
+	 * @param string $email Email.
+	 * @return array<int,object>
+	 */
+	public function for_email( $email ) {
+		global $wpdb;
+
+		$table = Db::table( 'requests' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM `{$table}` WHERE LOWER(email) = %s ORDER BY id ASC", strtolower( trim( $email ) ) ) );
+	}
+
+	/**
+	 * Remove an email address from the log (privacy erasure). Rows are kept,
+	 * without the address, so delivery statistics stay correct.
+	 *
+	 * @param string $email Email.
+	 * @return int Rows changed.
+	 */
+	public function anonymize_email( $email ) {
+		global $wpdb;
+
+		$table = Db::table( 'requests' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->query( $wpdb->prepare( "UPDATE `{$table}` SET email = NULL WHERE LOWER(email) = %s", strtolower( trim( $email ) ) ) );
 	}
 
 	/**

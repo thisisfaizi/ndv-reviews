@@ -67,17 +67,18 @@ class Upload {
 		$files    = $this->normalize_files( $field );
 		$max      = max( 0, (int) $this->settings->get( 'max_photos', 5 ) );
 		$max_size = (int) apply_filters( 'ndv-reviews/max_photo_bytes', 5 * MB_IN_BYTES );
-		$ids      = array();
+		$accepted = array();
 
-		foreach ( $files as $i => $file ) {
-			if ( count( $ids ) >= $max ) {
+		// Validate every file (type and size) before storing any, so a bad file
+		// later in the batch can't leave earlier ones in the media library.
+		foreach ( $files as $file ) {
+			if ( count( $accepted ) >= $max ) {
 				break;
 			}
 			if ( empty( $file['name'] ) || UPLOAD_ERR_OK !== (int) $file['error'] ) {
 				continue;
 			}
 
-			// Validate type and size before handing to WordPress.
 			$check = wp_check_filetype_and_ext( $file['tmp_name'], $file['name'], $this->allowed );
 			if ( empty( $check['ext'] ) || ! in_array( $check['type'], $this->allowed, true ) ) {
 				return new \WP_Error( 'ndvr_upload_type', __( 'Only JPG, PNG, GIF, or WebP images are allowed.', 'ndv-reviews' ) );
@@ -86,6 +87,12 @@ class Upload {
 				return new \WP_Error( 'ndvr_upload_size', __( 'One of your images is too large.', 'ndv-reviews' ) );
 			}
 
+			$accepted[] = $file;
+		}
+
+		$ids = array();
+
+		foreach ( $accepted as $file ) {
 			// Import the genuine HTTP upload via media_handle_upload(), which uses
 			// move_uploaded_file() and passes the is_uploaded_file() test. We expose
 			// the single file under a temporary $_FILES key it can read. test_form is
@@ -103,6 +110,10 @@ class Upload {
 			unset( $_FILES['ndvr_photo_tmp'] );
 
 			if ( is_wp_error( $attachment_id ) ) {
+				// Roll back the files already stored in this batch.
+				foreach ( $ids as $stored_id ) {
+					wp_delete_attachment( $stored_id, true );
+				}
 				return $attachment_id;
 			}
 

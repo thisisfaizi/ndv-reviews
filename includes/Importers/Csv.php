@@ -7,6 +7,7 @@
 
 namespace NdvReviews\Importers;
 
+use NdvReviews\Reviews\CriteriaRepository;
 use NdvReviews\Reviews\Pool;
 use NdvReviews\Reviews\RatingCache;
 use NdvReviews\Reviews\ReviewRepository;
@@ -15,10 +16,17 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Imports reviews from a CSV with columns:
- * product_id, author, email, rating, title, content, date, recommend, verified.
- * Idempotent on (product_id + email + content) to avoid duplicates on re-run.
+ * product_id, author, email, rating, title, content, date, recommend, verified
+ * (plus optional status = approved|pending, as written by the exporter).
+ *
+ * Re-importing the same file does not duplicate reviews: each imported review
+ * stores a hash of product + email + content in `_ndvr_import_hash`, and rows
+ * matching an existing hash (or, for reviews imported before the hash existed,
+ * the same product, email and text) are skipped.
  */
 class Csv {
+
+	const HASH_META = '_ndvr_import_hash';
 
 	/**
 	 * Review repository.
@@ -28,34 +36,37 @@ class Csv {
 	private $reviews;
 
 	/**
-	 * Rating cache helper.
+	 * Criteria repository (optional for backward compatibility).
 	 *
-	 * @var RatingCache
+	 * @var CriteriaRepository|null
 	 */
-	private $ratings;
+	private $criteria;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param ReviewRepository $reviews Review repository.
-	 * @param RatingCache      $ratings Rating cache helper.
+	 * @param ReviewRepository        $reviews  Review repository.
+	 * @param RatingCache             $ratings  Unused; kept so existing callers keep working.
+	 * @param CriteriaRepository|null $criteria Criteria repository.
 	 */
-	public function __construct( ReviewRepository $reviews, RatingCache $ratings ) {
-		$this->reviews = $reviews;
-		$this->ratings = $ratings;
+	public function __construct( ReviewRepository $reviews, RatingCache $ratings, ?CriteriaRepository $criteria = null ) {
+		unset( $ratings );
+		$this->reviews  = $reviews;
+		$this->criteria = $criteria ? $criteria : new CriteriaRepository();
 	}
 
 	/**
 	 * Import from an uploaded CSV file path.
 	 *
 	 * @param string $file Absolute path to the CSV.
-	 * @return array{imported:int,skipped:int,errors:string[]}
+	 * @return array{imported:int,skipped:int,errors:string[],reasons:array<string,int>}
 	 */
 	public function import( $file ) {
 		$result = array(
 			'imported' => 0,
 			'skipped'  => 0,
 			'errors'   => array(),
+			'reasons'  => array(),
 		);
 
 		if ( ! is_readable( $file ) ) {
@@ -75,67 +86,89 @@ class Csv {
 			$result['errors'][] = __( 'CSV has no header row.', 'ndv-reviews' );
 			return $result;
 		}
-		$map = array_flip( array_map( 'trim', $header ) );
+		// Spreadsheet apps often save a UTF-8 byte-order mark before the first column name.
+		$header[0] = preg_replace( '/^\xEF\xBB\xBF/', '', (string) $header[0] );
+		$map       = array_flip( array_map( 'strtolower', array_map( 'trim', $header ) ) );
+
+		// A single overall rating is applied to every active criterion, so the
+		// review's overall score equals the CSV rating.
+		$criteria_ids = array();
+		foreach ( $this->criteria->get_active() as $criterion ) {
+			$criteria_ids[] = (int) $criterion->id;
+		}
 
 		while ( ( $row = fgetcsv( $handle, 0, ',', '"', '\\' ) ) !== false ) { // phpcs:ignore WordPress.CodeAnalysis.AssignmentInCondition.FoundInWhileCondition
+			if ( array( null ) === $row ) {
+				continue; // Blank line.
+			}
+
 			$get = static function ( $key ) use ( $row, $map ) {
-				return isset( $map[ $key ], $row[ $map[ $key ] ] ) ? trim( $row[ $map[ $key ] ] ) : '';
+				$value = isset( $map[ $key ], $row[ $map[ $key ] ] ) ? trim( (string) $row[ $map[ $key ] ] ) : '';
+				// Undo the exporter's spreadsheet-formula guard ('=..., '+..., ...).
+				return preg_match( "/^'[=+\-@\t\r]/", $value ) ? substr( $value, 1 ) : $value;
 			};
 
 			$product_id = absint( $get( 'product_id' ) );
 			$content    = $get( 'content' );
-			$email      = $get( 'email' );
+			$email      = sanitize_email( $get( 'email' ) );
+			$email      = is_email( $email ) ? $email : 'import@example.com';
+			$rating_raw = $get( 'rating' );
 
 			if ( ! $product_id || '' === $content ) {
-				++$result['skipped'];
+				$this->skip( $result, __( 'missing product_id or content', 'ndv-reviews' ) );
+				continue;
+			}
+			if ( ! is_numeric( $rating_raw ) || (float) $rating_raw < 1 || (float) $rating_raw > 5 ) {
+				$this->skip( $result, __( 'rating not between 1 and 5', 'ndv-reviews' ) );
+				continue;
+			}
+			if ( empty( $criteria_ids ) ) {
+				$this->skip( $result, __( 'no active rating criteria', 'ndv-reviews' ) );
 				continue;
 			}
 
-			$rating   = (float) $get( 'rating' );
-			$criteria = array();
-			// Map a single overall rating onto each active criterion if no criteria columns exist.
+			$pool_id = Pool::resolve_id( $product_id );
+			$hash    = $this->hash( $pool_id, $email, $content );
+			if ( $this->exists( $pool_id, $email, $content, $hash ) ) {
+				$this->skip( $result, __( 'already imported', 'ndv-reviews' ) );
+				continue;
+			}
+
+			$rating   = round( (float) $rating_raw, 2 );
+			$criteria = array_fill_keys( $criteria_ids, $rating );
+			$status   = strtolower( $get( 'status' ) );
+
 			$created = $this->reviews->create(
 				array(
 					'product_id' => $product_id,
 					'author'     => $get( 'author' ) ? $get( 'author' ) : __( 'Anonymous', 'ndv-reviews' ),
-					'email'      => $email ? $email : 'import@example.com',
+					'email'      => $email,
 					'content'    => $content,
 					'title'      => $get( 'title' ),
 					'recommend'  => in_array( $get( 'recommend' ), array( 'yes', 'no', 'neutral' ), true ) ? $get( 'recommend' ) : 'neutral',
 					'criteria'   => $criteria,
 					'source'     => 'import',
-					'approved'   => 1,
+					'approved'   => in_array( $status, array( 'pending', 'hold' ), true ) ? 0 : 1,
 				)
 			);
 
 			if ( is_wp_error( $created ) ) {
-				++$result['skipped'];
-				$result['errors'][] = $created->get_error_message();
+				$this->skip( $result, $created->get_error_message() );
 				continue;
 			}
 
-			// Set the native rating directly when no criteria drove the overall.
-			if ( $rating >= 1 && $rating <= 5 ) {
-				update_comment_meta( $created, 'rating', (int) round( $rating ) );
-				update_comment_meta( $created, '_ndvr_overall_rating', round( $rating, 2 ) );
-			}
-			if ( '' !== $get( 'date' ) ) {
-				wp_update_comment(
-					array(
-						'comment_ID'   => $created,
-						'comment_date' => gmdate( 'Y-m-d H:i:s', strtotime( $get( 'date' ) ) ),
-					)
-				);
+			update_comment_meta( $created, self::HASH_META, $hash );
+
+			$verified = strtolower( $get( 'verified' ) );
+			if ( in_array( $verified, array( '1', 'yes', 'true' ), true ) ) {
+				update_comment_meta( $created, '_ndvr_verified', 1 );
+				update_comment_meta( $created, 'verified', 1 );
+			} elseif ( in_array( $verified, array( '0', 'no', 'false' ), true ) ) {
+				update_comment_meta( $created, '_ndvr_verified', 0 );
+				delete_comment_meta( $created, 'verified' );
 			}
 
-			// ReviewRepository::create() already recalculated the product aggregate,
-			// but the `rating` meta above hadn't been written yet at that point (a
-			// star-only import with no criteria columns has nothing else to
-			// average) — recalc again now so the product's displayed average/count
-			// actually includes this review immediately, not just after some
-			// unrelated future review changes.
-			$this->ratings->recalc_review( $created );
-			$this->ratings->recalc_product( Pool::resolve_id( $product_id ) );
+			$this->set_date( $created, $get( 'date' ) );
 
 			++$result['imported'];
 		}
@@ -143,5 +176,109 @@ class Csv {
 		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 
 		return $result;
+	}
+
+	/**
+	 * Count a skipped row under its reason.
+	 *
+	 * @param array<string,mixed> $result Result accumulator.
+	 * @param string              $reason Reason.
+	 * @return void
+	 */
+	private function skip( array &$result, $reason ) {
+		++$result['skipped'];
+		$result['reasons'][ $reason ] = isset( $result['reasons'][ $reason ] ) ? $result['reasons'][ $reason ] + 1 : 1;
+	}
+
+	/**
+	 * Dedupe hash for an imported review.
+	 *
+	 * @param int    $pool_id Post the review attaches to.
+	 * @param string $email   Reviewer email.
+	 * @param string $content Review text.
+	 * @return string
+	 */
+	private function hash( $pool_id, $email, $content ) {
+		$text = strtolower( trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $content ) ) ) );
+
+		return sha1( (int) $pool_id . '|' . strtolower( $email ) . '|' . $text );
+	}
+
+	/**
+	 * Whether this review is already on the post.
+	 *
+	 * @param int    $pool_id Post the review attaches to.
+	 * @param string $email   Reviewer email.
+	 * @param string $content Review text.
+	 * @param string $hash    Dedupe hash.
+	 * @return bool
+	 */
+	private function exists( $pool_id, $email, $content, $hash ) {
+		$by_hash = get_comments(
+			array(
+				'post_id'    => $pool_id,
+				'status'     => 'all',
+				'count'      => true,
+				'meta_key'   => self::HASH_META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_query_meta_key
+				'meta_value' => $hash, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_query_meta_value
+			)
+		);
+		if ( (int) $by_hash > 0 ) {
+			return true;
+		}
+
+		global $wpdb;
+
+		// Reviews already on the post without the hash (imported before it
+		// existed, or exported from this site). Rows without an email match
+		// reviews with no address or the importer's placeholder.
+		$emails = 'import@example.com' === $email ? array( '', $email ) : array( $email );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$found = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_post_ID = %d AND comment_author_email IN (%s, %s) AND TRIM(comment_content) = %s AND comment_type IN ('review', 'comment')",
+				$pool_id,
+				$emails[0],
+				end( $emails ),
+				trim( wp_kses_post( $content ) )
+			)
+		);
+
+		return (int) $found > 0;
+	}
+
+	/**
+	 * Set the review date from the CSV (site-local time). Written directly:
+	 * wp_update_comment() re-filters the whole comment just to change a date.
+	 *
+	 * @param int    $comment_id Review id.
+	 * @param string $date       Date string from the CSV.
+	 * @return void
+	 */
+	private function set_date( $comment_id, $date ) {
+		global $wpdb;
+
+		if ( '' === $date ) {
+			return;
+		}
+
+		$timestamp = strtotime( $date );
+		if ( false === $timestamp ) {
+			return;
+		}
+
+		$local = gmdate( 'Y-m-d H:i:s', $timestamp );
+		$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->comments,
+			array(
+				'comment_date'     => $local,
+				'comment_date_gmt' => get_gmt_from_date( $local ),
+			),
+			array( 'comment_ID' => (int) $comment_id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+		clean_comment_cache( (int) $comment_id );
 	}
 }

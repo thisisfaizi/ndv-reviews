@@ -67,6 +67,23 @@ class Page implements Registerable {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'register_menu' ), 11 );
 		add_action( 'admin_init', array( $this, 'handle_actions' ) );
+		add_filter( 'comment_edit_redirect', array( $this, 'edit_redirect' ), 10, 2 );
+	}
+
+	/**
+	 * After a review is saved in the core comment editor, return users who
+	 * can't open the Comments screen (no `edit_posts`) to All Reviews.
+	 *
+	 * @param string $location   Redirect URL.
+	 * @param int    $comment_id Comment id.
+	 * @return string
+	 */
+	public function edit_redirect( $location, $comment_id ) {
+		if ( 'review' !== get_comment_type( $comment_id ) || current_user_can( 'edit_posts' ) ) {
+			return $location;
+		}
+
+		return admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 	}
 
 	/**
@@ -146,7 +163,7 @@ class Page implements Registerable {
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		return in_array( $action, array( 'approve', 'unapprove', 'spam', 'trash' ), true ) ? $action : '';
+		return in_array( $action, array( 'approve', 'unapprove', 'spam', 'trash', 'unspam', 'untrash', 'delete' ), true ) ? $action : '';
 	}
 
 	/**
@@ -166,6 +183,9 @@ class Page implements Registerable {
 		if ( ! empty( $_GET['star'] ) ) {
 			$out['star'] = absint( $_GET['star'] );
 		}
+		if ( isset( $_GET['s'] ) && '' !== $_GET['s'] ) {
+			$out['s'] = sanitize_text_field( wp_unslash( $_GET['s'] ) );
+		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		return $out;
@@ -175,10 +195,30 @@ class Page implements Registerable {
 	 * Apply a status change to a review.
 	 *
 	 * @param int    $id     Comment id.
-	 * @param string $action approve|unapprove|spam|trash.
+	 * @param string $action approve|unapprove|spam|trash|unspam|untrash|delete.
 	 * @return void
 	 */
 	private function apply_status( $id, $action ) {
+		$comment = get_comment( $id );
+		if ( ! $comment ) {
+			return;
+		}
+
+		switch ( $action ) {
+			case 'untrash':
+				wp_untrash_comment( $comment );
+				return;
+			case 'unspam':
+				wp_unspam_comment( $comment );
+				return;
+			case 'delete':
+				// Permanent deletion only from the Trash or Spam views, as in core.
+				if ( in_array( (string) $comment->comment_approved, array( 'trash', 'spam' ), true ) ) {
+					wp_delete_comment( $comment, true );
+				}
+				return;
+		}
+
 		$map = array(
 			'approve'   => 'approve',
 			'unapprove' => 'hold',
@@ -190,7 +230,7 @@ class Page implements Registerable {
 			return;
 		}
 
-		wp_set_comment_status( $id, $map[ $action ] );
+		wp_set_comment_status( $comment, $map[ $action ] );
 	}
 
 	/**
@@ -199,6 +239,7 @@ class Page implements Registerable {
 	 * @return void
 	 */
 	private function save_edit() {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- caller ran check_admin_referer( 'ndvr_edit_review' ) + capability check.
 		$id = isset( $_POST['review'] ) ? absint( wp_unslash( $_POST['review'] ) ) : 0;
 		if ( ! $id ) {
 			return;
@@ -206,6 +247,23 @@ class Page implements Registerable {
 
 		$content = isset( $_POST['ndvr_content'] ) ? wp_kses_post( wp_unslash( $_POST['ndvr_content'] ) ) : '';
 		$title   = isset( $_POST['ndvr_title'] ) ? sanitize_text_field( wp_unslash( $_POST['ndvr_title'] ) ) : '';
+
+		// Criteria scores. Validated before anything is written: a review that has
+		// (or is given) criteria scores must keep at least one, otherwise it would
+		// silently keep a stale rating. A native review with no scores and none
+		// submitted keeps its WooCommerce rating untouched.
+		$submitted = isset( $_POST['ndvr_criteria'] ) && is_array( $_POST['ndvr_criteria'] ) ? array_map( 'floatval', wp_unslash( $_POST['ndvr_criteria'] ) ) : array();
+		$scores    = $this->valid_scores( $submitted );
+		$touched   = ! empty( array_filter( $submitted ) ) || $this->has_scores( $id );
+		if ( $touched && empty( $scores ) ) {
+			$this->redirect_clean(
+				array(
+					'ndvr_action' => 'edit',
+					'review'      => $id,
+					'ndvr_error'  => 'rating',
+				)
+			);
+		}
 
 		wp_update_comment(
 			array(
@@ -222,9 +280,7 @@ class Page implements Registerable {
 			\NdvReviews\Reviews\ReviewTags::set( $id, $tags );
 		}
 
-		// Criteria scores.
-		if ( isset( $_POST['ndvr_criteria'] ) && is_array( $_POST['ndvr_criteria'] ) ) {
-			$scores = array_map( 'floatval', wp_unslash( $_POST['ndvr_criteria'] ) );
+		if ( $touched ) {
 			$this->save_criteria_scores( $id, $scores );
 		}
 
@@ -241,38 +297,67 @@ class Page implements Registerable {
 		}
 
 		$this->redirect_clean( array( 'updated' => 1 ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+	}
+
+	/**
+	 * Keep scores for existing criteria (any status) within 0.5-5.
+	 *
+	 * @param array<int|string,float> $scores criteria_id => rating.
+	 * @return array<int,float>
+	 */
+	private function valid_scores( array $scores ) {
+		$known = array();
+		foreach ( $this->criteria->get_all() as $criterion ) {
+			$known[ (int) $criterion->id ] = true;
+		}
+
+		$out = array();
+		foreach ( $scores as $criteria_id => $rating ) {
+			$criteria_id = absint( $criteria_id );
+			$rating      = (float) $rating;
+			if ( isset( $known[ $criteria_id ] ) && $rating >= 0.5 && $rating <= 5 ) {
+				$out[ $criteria_id ] = round( $rating, 2 );
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Whether a review has any stored criteria scores.
+	 *
+	 * @param int $comment_id Comment id.
+	 * @return bool
+	 */
+	private function has_scores( $comment_id ) {
+		global $wpdb;
+		$table = Db::table( 'review_criteria' );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM `{$table}` WHERE comment_id = %d", $comment_id ) ) > 0;
 	}
 
 	/**
 	 * Replace a review's criteria scores.
 	 *
-	 * @param int                $comment_id Comment id.
-	 * @param array<int,float>   $scores     criteria_id => rating.
+	 * @param int              $comment_id Comment id.
+	 * @param array<int,float> $scores     criteria_id => rating, from valid_scores().
 	 * @return void
 	 */
 	private function save_criteria_scores( $comment_id, array $scores ) {
 		global $wpdb;
 		$table = Db::table( 'review_criteria' );
 
-		$valid = array();
-		foreach ( $this->criteria->get_all() as $criterion ) {
-			$valid[ $criterion->id ] = true;
-		}
-
 		$wpdb->delete( $table, array( 'comment_id' => $comment_id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 
 		foreach ( $scores as $criteria_id => $rating ) {
-			$criteria_id = absint( $criteria_id );
-			$rating      = (float) $rating;
-			if ( ! isset( $valid[ $criteria_id ] ) || $rating < 0.5 || $rating > 5 ) {
-				continue;
-			}
 			$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				$table,
 				array(
 					'comment_id'  => $comment_id,
-					'criteria_id' => $criteria_id,
-					'rating'      => round( $rating, 2 ),
+					'criteria_id' => (int) $criteria_id,
+					'rating'      => $rating,
 				),
 				array( '%d', '%d', '%f' )
 			);
@@ -280,25 +365,31 @@ class Page implements Registerable {
 	}
 
 	/**
-	 * Remove media rows from a review.
+	 * Remove photos from a review and delete each file once no review uses it.
 	 *
-	 * @param int   $comment_id Comment id.
-	 * @param int[] $media_ids  ndvr_review_media ids to remove.
+	 * @param int   $comment_id     Comment id.
+	 * @param int[] $attachment_ids Attachment ids (as posted by the edit form).
 	 * @return void
 	 */
-	private function remove_media( $comment_id, array $media_ids ) {
+	private function remove_media( $comment_id, array $attachment_ids ) {
 		global $wpdb;
 		$table = Db::table( 'review_media' );
 
-		foreach ( $media_ids as $mid ) {
-			$wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		foreach ( $attachment_ids as $attachment_id ) {
+			$attachment_id = absint( $attachment_id );
+			$removed       = $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				$table,
 				array(
-					'id'         => absint( $mid ),
-					'comment_id' => $comment_id,
+					'attachment_id' => $attachment_id,
+					'comment_id'    => $comment_id,
 				),
 				array( '%d', '%d' )
 			);
+
+			// Only an attachment that really belonged to this review is deleted.
+			if ( $removed ) {
+				Actions::delete_photo_if_unused( $attachment_id, $comment_id );
+			}
 		}
 	}
 
@@ -349,10 +440,11 @@ class Page implements Registerable {
 			<form method="get">
 				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>" />
 				<?php
-				// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only view filter carried into the search form.
 				if ( isset( $_GET['status'] ) ) {
 					echo '<input type="hidden" name="status" value="' . esc_attr( sanitize_key( wp_unslash( $_GET['status'] ) ) ) . '" />';
 				}
+				// phpcs:enable WordPress.Security.NonceVerification.Recommended
 				$table->search_box( __( 'Search reviews', 'ndv-reviews' ), 'ndvr-review' );
 				wp_nonce_field( 'bulk-ndvr_reviews' );
 				$table->display();
@@ -386,6 +478,10 @@ class Page implements Registerable {
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Edit Review', 'ndv-reviews' ); ?></h1>
+			<?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+			<?php if ( isset( $_GET['ndvr_error'] ) && 'rating' === sanitize_key( wp_unslash( $_GET['ndvr_error'] ) ) ) : ?>
+				<div class="notice notice-error"><p><?php esc_html_e( 'Not saved: a review needs at least one criteria rating.', 'ndv-reviews' ); ?></p></div>
+			<?php endif; ?>
 			<form method="post">
 				<?php wp_nonce_field( 'ndvr_edit_review' ); ?>
 				<input type="hidden" name="review" value="<?php echo esc_attr( $id ); ?>" />
@@ -411,15 +507,24 @@ class Page implements Registerable {
 							<th><?php esc_html_e( 'Criteria ratings', 'ndv-reviews' ); ?></th>
 							<td>
 								<?php foreach ( $criteria as $criterion ) : ?>
-									<?php $val = isset( $scores[ $criterion->name ] ) ? $scores[ $criterion->name ] : 0; ?>
+									<?php
+									$val = isset( $scores[ $criterion->name ] ) ? round( (float) $scores[ $criterion->name ], 2 ) : 0.0;
+									// Half-star steps, plus the stored value when it falls between them
+									// (e.g. an imported 4.25), so saving never rounds a score.
+									$steps = range( 0.5, 5, 0.5 );
+									if ( $val > 0 && ! in_array( $val, $steps, false ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.FoundNonStrictFalse -- float comparison.
+										$steps[] = $val;
+										sort( $steps );
+									}
+									?>
 									<p>
 										<label>
 											<span style="display:inline-block;min-width:140px;"><?php echo esc_html( $criterion->name ); ?></span>
 											<select name="ndvr_criteria[<?php echo esc_attr( $criterion->id ); ?>]">
 												<option value="0"><?php esc_html_e( '—', 'ndv-reviews' ); ?></option>
-												<?php for ( $s = 1; $s <= 5; $s++ ) : ?>
-													<option value="<?php echo esc_attr( $s ); ?>" <?php selected( (int) round( $val ), $s ); ?>><?php echo esc_html( $s ); ?></option>
-												<?php endfor; ?>
+												<?php foreach ( $steps as $step ) : ?>
+													<option value="<?php echo esc_attr( $step ); ?>" <?php selected( abs( $val - $step ) < 0.001 ); ?>><?php echo esc_html( (string) $step ); ?></option>
+												<?php endforeach; ?>
 											</select>
 										</label>
 									</p>

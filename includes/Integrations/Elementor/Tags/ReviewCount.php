@@ -59,6 +59,7 @@ class ReviewCount extends \Elementor\Core\DynamicTags\Tag {
 	 */
 	public function render() {
 		$product_id = Module::current_product_id();
-		echo esc_html( (string) (int) get_post_meta( $product_id, '_wc_review_count', true ) );
+		$agg        = \NdvReviews\Reviews\AggregateStore::get( \NdvReviews\Reviews\Pool::resolve_id( $product_id ) );
+		echo esc_html( number_format_i18n( (int) $agg['count'] ) );
 	}
 }

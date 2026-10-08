@@ -13,10 +13,38 @@
    between them (each row is otherwise a complete, unmodified .ndvr-marquee). */
 .ndvr-marquee-rows { display: flex; flex-direction: column; gap: 14px; }
 
+/* Wrapper: holds the track(s) plus the pause/play button (outside the masked,
+   animated element so it never moves or fades). */
+.ndvr-marquee-wrap { position: relative; font-family: var(--ndvr-font); font-size: var(--ndvr-text); }
+.ndvr-marquee-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	min-height: 36px;
+	margin: 10px 0 0;
+	padding: 0 14px;
+	border: 1px solid var(--ndvr-line);
+	border-radius: 999px;
+	background: var(--ndvr-paper);
+	color: var(--ndvr-slate);
+	font: inherit;
+	font-size: 0.8em;
+	font-weight: 600;
+	line-height: 1;
+	cursor: pointer;
+}
+.ndvr-marquee-toggle:hover { border-color: var(--ndvr-ink); color: var(--ndvr-ink); }
+.ndvr-marquee-toggle:focus-visible { outline: 2px solid var(--ndvr-accent); outline-offset: 2px; }
+/* Pause glyph (two bars) / play glyph (triangle), drawn with CSS. */
+.ndvr-marquee-toggle-icon { width: 10px; height: 10px; border-left: 3px solid currentColor; border-right: 3px solid currentColor; box-sizing: border-box; }
+.ndvr-marquee-wrap.is-paused .ndvr-marquee-toggle-icon { border-style: solid; border-width: 5px 0 5px 9px; border-color: transparent transparent transparent currentColor; width: 0; height: 0; }
+.ndvr-marquee-wrap.is-paused .ndvr-marquee-group { animation-play-state: paused; }
+
 .ndvr-marquee {
 	--ndvr-duration: 40s;
 	--ndvr-gap: 18px;
 	font-family: var(--ndvr-font);
+	font-size: var(--ndvr-text);
 	display: flex;
 	overflow: hidden;
 	gap: var(--ndvr-gap);
@@ -65,29 +93,14 @@
 .ndvr-marquee-head { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
 .ndvr-marquee-head img { border-radius: 50%; width: 36px; height: 36px; }
 
-/* Initials avatar (used when there's no Gravatar/email — nicer than the grey
-   mystery-person default). Colour is set inline per card from the author name. */
-.ndvr-marquee-avatar {
-	width: 36px;
-	height: 36px;
-	border-radius: 50%;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	flex-shrink: 0;
-	color: #fff;
-	font-weight: 700;
-	font-size: 15px;
-	line-height: 1;
-	text-transform: uppercase;
-}
-.ndvr-marquee-name { font-weight: 700; font-size: 14px; color: var(--ndvr-ink); }
+/* Initials avatar: base style is .ndvr-avatar in display.css; this sizes it. */
+.ndvr-marquee-avatar { width: 36px; height: 36px; font-size: 15px; }
+.ndvr-marquee-name { font-weight: 700; font-size: 0.933em; color: var(--ndvr-ink); }
 .ndvr-marquee-verified { color: var(--ndvr-verdant); margin-left: 4px; font-weight: 800; }
 .ndvr-marquee-stars { margin-bottom: 10px; }
-.ndvr-marquee-stars .ndvr-stars-display { font-size: 15px; }
-.ndvr-marquee-stars .ndvr-star-full { color: var(--ndvr-gold); }
-.ndvr-marquee-stars .ndvr-star-empty, .ndvr-marquee-stars .ndvr-star-half { color: var(--ndvr-line); }
-.ndvr-marquee-body { margin: 0; font-size: 14px; color: #3a4150; line-height: 1.6; }
+.ndvr-marquee-stars .ndvr-stars-display { font-size: 1em; }
+.ndvr-marquee-stars .ndvr-star-empty, .ndvr-marquee-stars .ndvr-star-half { color: var(--ndvr-star-empty); }
+.ndvr-marquee-body { margin: 0; padding: 0; border: 0; font-size: 0.933em; color: #3a4150; line-height: 1.6; }
 
 @keyframes ndvr-scroll-x { from { transform: translateX(0); } to { transform: translateX(calc(-100% - var(--ndvr-gap))); } }
 @keyframes ndvr-scroll-y { from { transform: translateY(0); } to { transform: translateY(calc(-100% - var(--ndvr-gap))); } }
@@ -100,4 +113,5 @@
 	}
 	.ndvr-marquee-group { animation: none !important; }
 	.ndvr-marquee-vertical { max-height: none; }
+	.ndvr-marquee-toggle { display: none; } /* nothing moves, nothing to pause */
 }

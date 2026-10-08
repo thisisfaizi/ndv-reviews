@@ -57,6 +57,35 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 	}
 
 	/**
+	 * Stylesheets Elementor must load wherever this widget appears (including
+	 * cached element output, where render() does not run).
+	 *
+	 * @return string[]
+	 */
+	public function get_style_depends() {
+		return array( 'ndvr-display' );
+	}
+
+	/**
+	 * Scripts Elementor must load wherever this widget appears.
+	 *
+	 * @return string[]
+	 */
+	public function get_script_depends() {
+		return array( 'ndvr-display' );
+	}
+
+	/**
+	 * Output depends on live review data and carries per-visitor nonces, so it
+	 * must never be served from Elementor's element cache.
+	 *
+	 * @return bool
+	 */
+	protected function is_dynamic_content(): bool {
+		return true;
+	}
+
+	/**
 	 * Controls.
 	 *
 	 * @return void
@@ -77,6 +106,20 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 				'label'   => __( 'Reviews per page', 'ndv-reviews' ),
 				'type'    => \Elementor\Controls_Manager::NUMBER,
 				'default' => 10,
+			)
+		);
+		$this->add_control(
+			'orderby',
+			array(
+				'label'   => __( 'Order by', 'ndv-reviews' ),
+				'type'    => \Elementor\Controls_Manager::SELECT,
+				'default' => 'recent',
+				'options' => array(
+					'recent'  => __( 'Most recent', 'ndv-reviews' ),
+					'helpful' => __( 'Most helpful', 'ndv-reviews' ),
+					'highest' => __( 'Highest rated', 'ndv-reviews' ),
+					'lowest'  => __( 'Lowest rated', 'ndv-reviews' ),
+				),
 			)
 		);
 		$this->add_control(
@@ -172,15 +215,16 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 		$product  = ! empty( $settings['product_id'] ) ? (int) $settings['product_id'] : Module::current_product_id();
 		$widgets  = Plugin::instance()->container()->get( 'widgets' );
 
-		if ( 'yes' === ( $settings['show_summary'] ?? 'yes' ) ) {
-			echo $widgets->summary( $product ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		}
-
-		echo $widgets->reviews( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		// The summary renders inside the list instance so its distribution rows
+		// can filter this list.
+		$html = $widgets->reviews(
 			array(
-				'product_id' => $product,
-				'per_page'   => isset( $settings['per_page'] ) ? (int) $settings['per_page'] : 10,
+				'product_id'   => $product,
+				'per_page'     => isset( $settings['per_page'] ) ? (int) $settings['per_page'] : 10,
+				'orderby'      => isset( $settings['orderby'] ) ? (string) $settings['orderby'] : 'recent',
+				'show_summary' => 'yes' === ( $settings['show_summary'] ?? 'yes' ),
 			)
 		);
+		echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- widget output is escaped at source.
 	}
 }

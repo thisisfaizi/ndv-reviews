@@ -5,6 +5,7 @@
 .ndvr-design .ndvr-design-intro { color: var(--ndvr-slate, #5e6675); font-size: 14px; margin: 0 0 8px; }
 
 .ndvr-design .ndvr-design-section {
+	min-width: 0;
 	background: #fff;
 	border: 1px solid var(--ndvr-line, #e6e9ef);
 	border-radius: 14px;
@@ -12,13 +13,16 @@
 	margin: 0 0 18px;
 	box-shadow: var(--ndvr-shadow, 0 1px 2px rgba(20,22,28,.04), 0 18px 40px -30px rgba(20,22,28,.18));
 }
-.ndvr-design .ndvr-design-section h2 {
-	margin: 0 0 14px !important;
+.ndvr-design .ndvr-design-section legend {
+	float: left;
+	width: 100%;
+	padding: 0;
+	margin: 0 0 14px;
 	font-size: 12px;
 	font-weight: 700;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: var(--ndvr-faint, #8b93a3);
+	color: var(--ndvr-slate, #5e6675);
 }
 
 /* Option cards */
@@ -70,8 +74,12 @@
 	background: var(--ndvr-haze, #f4f6f9);
 }
 .ndvr-design .ndvr-opt-preview svg { display: block; }
+.ndvr-design .ndvr-opts { clear: both; }
 .ndvr-design .ndvr-opt-label { font-size: 13px; font-weight: 600; color: var(--ndvr-ink, #181a1f); }
 .ndvr-design .ndvr-opts-rating .ndvr-glyph { font-size: 18px; letter-spacing: 2px; }
+/* Same colours as the storefront tokens (--ndvr-gold / --ndvr-heart in tokens.css). */
+.ndvr-design .ndvr-glyph-star { color: #d97706; }
+.ndvr-design .ndvr-glyph-heart { color: #d6334f; }
 
 /* Accent picker */
 .ndvr-design .ndvr-accent-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
@@ -84,18 +92,53 @@
 	background: #fff;
 	cursor: pointer;
 }
-.ndvr-design .ndvr-swatches { display: inline-flex; gap: 8px; }
+.ndvr-design .ndvr-accent-field { display: inline-flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ndvr-ink, #181a1f); }
+.ndvr-design .ndvr-swatches { display: inline-flex; flex-wrap: wrap; gap: 8px; align-self: flex-end; }
 .ndvr-design .ndvr-swatch {
-	width: 28px;
-	height: 28px;
-	border-radius: 50%;
-	border: 2px solid #fff;
-	box-shadow: 0 0 0 1px var(--ndvr-line, #e6e9ef);
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	min-height: 36px;
+	padding: 0 12px 0 6px;
+	border: 1px solid var(--ndvr-line, #e6e9ef);
+	border-radius: 999px;
+	background: #fff;
+	color: var(--ndvr-ink, #181a1f);
+	font-size: 13px;
 	cursor: pointer;
-	padding: 0;
-	transition: transform 0.1s;
 }
-.ndvr-design .ndvr-swatch:hover { transform: scale(1.12); }
-.ndvr-design .ndvr-accent-help { color: var(--ndvr-slate, #5e6675); font-size: 13px; }
+.ndvr-design .ndvr-swatch-dot { width: 22px; height: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+.ndvr-design .ndvr-swatch:hover { border-color: #9aa3b2; }
+.ndvr-design .ndvr-swatch[aria-pressed="true"] { border-color: var(--ndvr-ink, #181a1f); box-shadow: inset 0 0 0 1px var(--ndvr-ink, #181a1f); font-weight: 600; }
+.ndvr-design .ndvr-swatch:focus-visible { outline: 2px solid #2271b1; outline-offset: 2px; }
+.ndvr-design .ndvr-accent-help { color: var(--ndvr-slate, #5e6675); font-size: 13px; margin: 0 0 12px; clear: both; }
 
-.ndvr-design .ndvr-design-actions { margin-top: 8px; }
+.ndvr-design .ndvr-typo-row { display: flex; gap: 24px; flex-wrap: wrap; clear: both; }
+.ndvr-design .ndvr-typo-row label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; }
+.ndvr-design .ndvr-opt input:focus-visible + .ndvr-opt-card { outline: 2px solid #2271b1; outline-offset: 2px; }
+
+.ndvr-design .ndvr-design-actions { display: flex; gap: 10px; margin-top: 8px; }
+
+/* Form + sticky live preview side by side; stacked on narrow screens. */
+.ndvr-design .ndvr-design-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.ndvr-design .ndvr-design-preview {
+	position: sticky;
+	top: 46px;
+	background: #fff;
+	border: 1px solid var(--ndvr-line, #e6e9ef);
+	border-radius: 14px;
+	padding: 16px;
+}
+.ndvr-design .ndvr-design-preview-title {
+	margin: 0 0 10px !important;
+	font-size: 12px !important;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--ndvr-slate, #5e6675);
+}
+.ndvr-design .ndvr-design-preview-frame { display: block; width: 100%; min-height: 320px; border: 0; }
+@media (max-width: 1100px) {
+	.ndvr-design .ndvr-design-layout { grid-template-columns: 1fr; }
+	.ndvr-design .ndvr-design-preview { position: static; }
+}

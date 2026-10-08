@@ -56,4 +56,31 @@ class Html {
 		 */
 		return (string) apply_filters( 'ndv-reviews/stars_html', $out, $rating );
 	}
+
+	/**
+	 * Initials avatar: a coloured circle with the author's first letter.
+	 *
+	 * Used instead of get_avatar() because reviews rarely carry a Gravatar —
+	 * every card would show the same grey silhouette — and because a Gravatar
+	 * lookup is an external request (the free plugin makes none by default).
+	 * The colour is derived from the name so it is stable across renders; each
+	 * palette entry keeps white text at >= 4.5:1.
+	 *
+	 * @param string $name  Display name.
+	 * @param string $class Extra class (e.g. the marquee's sizing class).
+	 * @return string Escaped HTML.
+	 */
+	public static function avatar( $name, $class = '' ) {
+		$palette = array( '#0f7d5b', '#2563eb', '#7c3aed', '#be185d', '#c2410c', '#0e7490', '#4f46e5', '#b45309' );
+		$name    = trim( (string) $name );
+		$color   = $palette[ abs( crc32( $name ) ) % count( $palette ) ];
+		$initial = '' !== $name ? ( function_exists( 'mb_substr' ) ? mb_substr( $name, 0, 1 ) : substr( $name, 0, 1 ) ) : '?';
+
+		return sprintf(
+			'<span class="%1$s" style="background:%2$s" aria-hidden="true">%3$s</span>',
+			esc_attr( trim( 'ndvr-avatar ' . $class ) ),
+			esc_attr( $color ),
+			esc_html( $initial )
+		);
+	}
 }

@@ -65,7 +65,9 @@ class Design {
 	}
 
 	/**
-	 * Inline CSS setting the accent custom property on our roots.
+	 * Inline CSS: accent (+ a readable text colour on it), font, and text size
+	 * as custom properties on :root. Attached to the shared `ndvr-tokens`
+	 * handle so every surface that loads one of our stylesheets gets it.
 	 *
 	 * @param Settings $settings Settings.
 	 * @return string
@@ -76,39 +78,80 @@ class Design {
 		$accent = self::sanitize_color( (string) $settings->get( 'design_accent' ) );
 		if ( '' !== $accent ) {
 			$vars[] = '--ndvr-accent:' . $accent;
+			$vars[] = '--ndvr-accent-ink:' . self::ink_for( $accent );
 		}
 
-		$fonts = array(
+		$fonts = self::fonts();
+		$font  = (string) $settings->get( 'design_font', 'system' );
+		if ( isset( $fonts[ $font ] ) && 'system' !== $font ) {
+			$vars[] = '--ndvr-font:' . $fonts[ $font ];
+		}
+
+		$scales = self::scales();
+		$scale  = (string) $settings->get( 'design_scale', 'normal' );
+		if ( isset( $scales[ $scale ] ) && 'normal' !== $scale ) {
+			$vars[] = '--ndvr-text:' . $scales[ $scale ];
+		}
+
+		return empty( $vars ) ? '' : ':root{' . implode( ';', $vars ) . ';}';
+	}
+
+	/**
+	 * Font stacks per design_font value.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function fonts() {
+		return array(
 			'system'  => '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 			'serif'   => 'Georgia, "Times New Roman", "Iowan Old Style", serif',
 			'rounded' => '"Segoe UI Rounded", ui-rounded, "SF Pro Rounded", system-ui, sans-serif',
 			'mono'    => 'ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace',
 		);
-		$font = (string) $settings->get( 'design_font', 'system' );
-		if ( isset( $fonts[ $font ] ) && 'system' !== $font ) {
-			$vars[] = '--ndvr-font:' . $fonts[ $font ];
-		}
+	}
 
-		$scales = array(
+	/**
+	 * Base text size per design_scale value. Every review surface sizes its
+	 * text in em from this one value, so changing it scales the whole UI.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function scales() {
+		return array(
 			'compact' => '14px',
 			'normal'  => '15px',
 			'large'   => '17px',
 		);
-		$scale = (string) $settings->get( 'design_scale', 'normal' );
+	}
 
-		if ( empty( $vars ) && 'normal' === $scale ) {
-			return '';
+	/**
+	 * Readable text colour (near-black or white) for a background colour,
+	 * picked by WCAG contrast ratio.
+	 *
+	 * @param string $hex Background hex colour.
+	 * @return string
+	 */
+	public static function ink_for( $hex ) {
+		$hex = ltrim( (string) $hex, '#' );
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+		if ( 6 !== strlen( $hex ) ) {
+			return '#ffffff';
 		}
 
-		$css = '';
-		if ( ! empty( $vars ) ) {
-			$css .= ':root{' . implode( ';', $vars ) . ';}';
+		$channels = array();
+		foreach ( array( 0, 2, 4 ) as $i ) {
+			$c          = hexdec( substr( $hex, $i, 2 ) ) / 255;
+			$channels[] = $c <= 0.03928 ? $c / 12.92 : pow( ( $c + 0.055 ) / 1.055, 2.4 );
 		}
-		if ( isset( $scales[ $scale ] ) && 'normal' !== $scale ) {
-			$css .= '.ndvr-reviews-wrap,.ndvr-review-body,.ndvr-collect,.ndvr-marquee-body{font-size:' . $scales[ $scale ] . ';}';
-		}
+		$lum = 0.2126 * $channels[0] + 0.7152 * $channels[1] + 0.0722 * $channels[2];
 
-		return $css;
+		// Contrast against white vs against the ink token (#181a1f, L≈0.0103).
+		$on_white = 1.05 / ( $lum + 0.05 );
+		$on_dark  = ( $lum + 0.05 ) / 0.0603;
+
+		return $on_white >= $on_dark ? '#ffffff' : '#181a1f';
 	}
 
 	/**

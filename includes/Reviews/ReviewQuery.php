@@ -67,17 +67,26 @@ class ReviewQuery {
 			'no_found_rows' => false,
 		);
 
+		// Every caller is public-facing (AJAX list, shortcodes, widgets, schema), so
+		// reviews on drafts, private or password-protected posts must not leak.
+		if ( $product_id ) {
+			if ( ! $this->is_viewable( $product_id ) ) {
+				return $this->empty_result( $page );
+			}
+		} else {
+			$query_args['post_status'] = 'publish';
+			$protected                 = $this->password_protected_ids();
+			if ( ! empty( $protected ) ) {
+				$query_args['post__not_in'] = $protected;
+			}
+		}
+
 		// Category filter: restrict to reviews on products in this product_cat term
 		// (only meaningful when no single product_id is already set).
 		if ( ! $product_id && ! empty( $args['category'] ) ) {
 			$cat_product_ids = $this->product_ids_for_category( $args['category'] );
 			if ( empty( $cat_product_ids ) ) {
-				return array(
-					'items' => array(),
-					'total' => 0,
-					'pages' => 0,
-					'page'  => $page,
-				);
+				return $this->empty_result( $page );
 			}
 			$query_args['post__in'] = $cat_product_ids;
 		}
@@ -86,16 +95,9 @@ class ReviewQuery {
 		if ( ! empty( $args['tag'] ) ) {
 			$ids = ReviewTags::comment_ids_for_tag( $product_id, sanitize_title( $args['tag'] ) );
 			if ( empty( $ids ) ) {
-				return array(
-					'items' => array(),
-					'total' => 0,
-					'pages' => 0,
-					'page'  => $page,
-				);
+				return $this->empty_result( $page );
 			}
-			$query_args['comment__in'] = isset( $query_args['comment__in'] )
-				? array_values( array_intersect( $query_args['comment__in'], $ids ) )
-				: $ids;
+			$query_args['comment__in'] = $ids;
 		}
 
 		// Filters.
@@ -133,54 +135,60 @@ class ReviewQuery {
 		}
 
 		if ( ! empty( $args['with_media'] ) ) {
-			$ids = $this->comment_ids_with_media( $product_id );
-			if ( empty( $ids ) ) {
-				return array(
-					'items' => array(),
-					'total' => 0,
-					'pages' => 0,
-					'page'  => $page,
-				);
+			$ids = $this->comment_ids_with_media( $product_id, isset( $query_args['post__in'] ) ? $query_args['post__in'] : array() );
+			if ( isset( $query_args['comment__in'] ) ) {
+				$ids = array_values( array_intersect( $query_args['comment__in'], $ids ) );
 			}
-			$query_args['comment__in'] = isset( $query_args['comment__in'] )
-				? array_values( array_intersect( $query_args['comment__in'], $ids ) )
-				: $ids;
+			// An empty comment__in means "no restriction" to WP_Comment_Query, so
+			// an empty intersection has to end the query here.
+			if ( empty( $ids ) ) {
+				return $this->empty_result( $page );
+			}
+			$query_args['comment__in'] = $ids;
 		}
 
+		// Sorting. Meta-based sorts are applied by sort_clauses() as a correlated
+		// subquery instead of `meta_key`, whose INNER JOIN dropped every review
+		// lacking that meta from both the page and the total.
+		$sorts = array(
+			'helpful' => array( '_ndvr_helpful_up', 'DESC' ),
+			'highest' => array( 'rating', 'DESC' ),
+			'lowest'  => array( 'rating', 'ASC' ),
+		);
+		$sort  = isset( $sorts[ $args['orderby'] ] ) ? $args['orderby'] : '';
+
+		// The unknown 'ndvr_sort_*' key is ignored by WP_Comment_Query's own ORDER
+		// BY but is part of its results cache key, so each sort caches separately.
+		$query_args['orderby'] = $sort
+			? array(
+				'ndvr_sort_' . $sort => $sorts[ $sort ][1],
+				'comment_date_gmt'   => 'DESC',
+			)
+			: 'comment_date_gmt';
+		$query_args['order']   = 'DESC';
+
 		/**
-		 * Filter the review query args before they run (Pro extra filters).
+		 * Filter the review query args before they run, after the sort is set, so a filter may change it.
 		 *
 		 * @param array<string,mixed> $query_args WP_Comment_Query args.
 		 * @param array<string,mixed> $args       The normalized request args.
 		 */
 		$query_args = (array) apply_filters( 'ndv-reviews/review_query_args', $query_args, $args );
 
-		// Sorting.
-		switch ( $args['orderby'] ) {
-			case 'helpful':
-				$query_args['meta_key'] = '_ndvr_helpful_up'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				$query_args['orderby']  = 'meta_value_num';
-				$query_args['order']    = 'DESC';
-				break;
-			case 'highest':
-				$query_args['meta_key'] = 'rating'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				$query_args['orderby']  = 'meta_value_num';
-				$query_args['order']    = 'DESC';
-				break;
-			case 'lowest':
-				$query_args['meta_key'] = 'rating'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				$query_args['orderby']  = 'meta_value_num';
-				$query_args['order']    = 'ASC';
-				break;
-			case 'recent':
-			default:
-				$query_args['orderby'] = 'comment_date_gmt';
-				$query_args['order']   = 'DESC';
-				break;
+		$sort_filter = null;
+		if ( $sort ) {
+			$sort_filter = static function ( $clauses ) use ( $sorts, $sort ) {
+				return self::sort_clauses( $clauses, $sorts[ $sort ][0], $sorts[ $sort ][1] );
+			};
+			add_filter( 'comments_clauses', $sort_filter );
 		}
 
 		$query    = new \WP_Comment_Query();
 		$comments = $query->query( $query_args );
+
+		if ( $sort_filter ) {
+			remove_filter( 'comments_clauses', $sort_filter );
+		}
 
 		// Total for pagination (separate count query honoring the same filters).
 		$count_args           = $query_args;
@@ -432,15 +440,30 @@ class ReviewQuery {
 	}
 
 	/**
-	 * Comment ids (for a product) that have at least one approved media item.
+	 * Comment ids that have at least one approved media item, for one product,
+	 * a set of products, or (neither given) any post — the main query applies
+	 * the remaining post restrictions.
 	 *
-	 * @param int $product_id Product id.
+	 * @param int   $product_id Product id (0 for none).
+	 * @param int[] $post_ids   Restrict to these posts when no product id is given.
 	 * @return int[]
 	 */
-	private function comment_ids_with_media( $product_id ) {
+	private function comment_ids_with_media( $product_id, array $post_ids = array() ) {
 		global $wpdb;
 
-		$media = Db::table( 'review_media' );
+		$media    = Db::table( 'review_media' );
+		$post_ids = array_values( array_filter( array_map( 'absint', $post_ids ) ) );
+
+		if ( $product_id ) {
+			$where  = 'c.comment_post_ID = %d';
+			$params = array( $product_id );
+		} elseif ( ! empty( $post_ids ) ) {
+			$where  = 'c.comment_post_ID IN (' . implode( ',', array_fill( 0, count( $post_ids ), '%d' ) ) . ')';
+			$params = $post_ids;
+		} else {
+			$where  = '1 = %d';
+			$params = array( 1 );
+		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
 		$ids = $wpdb->get_col(
@@ -448,11 +471,86 @@ class ReviewQuery {
 				"SELECT DISTINCT m.comment_id
 				FROM {$media} m
 				INNER JOIN {$wpdb->comments} c ON c.comment_ID = m.comment_id
-				WHERE c.comment_post_ID = %d AND m.status = 'approved'",
-				$product_id
+				WHERE {$where} AND m.status = 'approved' AND c.comment_approved = '1'",
+				$params
 			)
 		);
 
 		return array_map( 'absint', (array) $ids );
+	}
+
+	/**
+	 * Empty paginate() result.
+	 *
+	 * @param int $page Requested page.
+	 * @return array{items:array<int,array<string,mixed>>,total:int,pages:int,page:int}
+	 */
+	private function empty_result( $page ) {
+		return array(
+			'items' => array(),
+			'total' => 0,
+			'pages' => 0,
+			'page'  => $page,
+		);
+	}
+
+	/**
+	 * Whether the current visitor may see reviews of a post: published and not
+	 * password-locked, or (drafts/private) readable by the current user.
+	 *
+	 * @param int $post_id Post id.
+	 * @return bool
+	 */
+	private function is_viewable( $post_id ) {
+		$post = get_post( $post_id );
+		if ( ! $post || post_password_required( $post ) ) {
+			return false;
+		}
+
+		return 'publish' === $post->post_status || current_user_can( 'read_post', $post->ID );
+	}
+
+	/**
+	 * Ids of published, password-protected reviewable posts (excluded from
+	 * store-wide lists).
+	 *
+	 * @return int[]
+	 */
+	private function password_protected_ids() {
+		global $wpdb;
+
+		$types = PostTypes::all();
+		if ( empty( $types ) ) {
+			return array();
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $types ), '%s' ) );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_password <> '' AND post_status = 'publish' AND post_type IN ({$placeholders})", $types ) );
+
+		return array_map( 'absint', (array) $ids );
+	}
+
+	/**
+	 * Prepend a comment-meta sort to the ORDER BY clause. Reviews without the
+	 * meta stay in the result and sort last.
+	 *
+	 * @param array<string,string> $clauses  WP_Comment_Query clauses.
+	 * @param string               $meta_key Meta key to sort by.
+	 * @param string               $order    ASC|DESC.
+	 * @return array<string,string>
+	 */
+	private static function sort_clauses( $clauses, $meta_key, $order ) {
+		global $wpdb;
+
+		$value = $wpdb->prepare(
+			"(SELECT MAX(CAST(ndvr_sm.meta_value AS DECIMAL(10,2))) FROM {$wpdb->commentmeta} ndvr_sm WHERE ndvr_sm.comment_id = {$wpdb->comments}.comment_ID AND ndvr_sm.meta_key = %s)",
+			$meta_key
+		);
+		$order = 'ASC' === $order ? 'ASC' : 'DESC';
+
+		$clauses['orderby'] = "{$value} IS NULL ASC, {$value} {$order}" . ( '' !== (string) $clauses['orderby'] ? ', ' . $clauses['orderby'] : '' );
+
+		return $clauses;
 	}
 }

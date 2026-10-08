@@ -56,14 +56,24 @@ in `/.agents/CONTRACTS.md` — **that file is canonical.**
 ## 4. Landmines (things that look like cleanups but are data loss / breakage)
 - **Never rename `ndvr_*` / `ndv_reviews_*` / `ndv-reviews/*`.** The rebrand deliberately kept the internal
   prefix; options, tables, meta, nonces, hooks, CSS classes and the Pro add-on all key off it.
-- **Never persist a 0-rating review.** `RatingCache::recalc_review()` writes the `rating` meta only when
-  `> 0`; a rating-less review is displayed but silently excluded from the Woo average — require a rating on
-  submit (known open defect B1 in `PRODUCTION-PLAN.md`).
+- **Never persist a 0-rating review.** `ReviewRepository::create()` is the single gate: it keeps only scores
+  for active criteria in 0.5–5 (`valid_scores()`), or a plain `rating` 1–5, and otherwise returns
+  `ndvr_missing_rating`. Every entry path (AJAX form, testimonial, magic link, CSV, Pro importers) relies on
+  it; a no-JS native post of an unrated review is blocked in `preprocess_comment`. Don't add a bypass.
 - **Reviews are `WP_Comment`s**, not posts — Elementor's post-query Loop Grid can't iterate them; Pro
   renders review loops itself via its own context.
 - **`extract()` is banned** (WP.org) — `Support\View::render()` expands vars manually. Don't reintroduce it.
 - **Reminder actions are Action Scheduler** (`ndvr_send_request`, group `ndv-reviews`), not `wp_schedule_
-  event` — the `Deactivator` currently clears the wrong hook (open defect).
+  event`. Unschedule with the hook only — passing empty args exact-matches nothing.
+- **Uninstall keeps native WooCommerce reviews.** Only reviews with `_ndvr_recommend` or a `_ndvr_source`
+  other than `import`/`erased` are deleted (opt-in). `RatingCache` writes `_ndvr_*` meta onto native reviews,
+  so never select by `_ndvr_overall_rating`.
+- **Admin capability is `Support\Caps::manage()`** (filter `ndv-reviews/manage_capability`, default
+  `manage_woocommerce`); moderation stays on `moderate_comments`. Don't hardcode `manage_woocommerce`.
+- **The `ndv-reviews` menu slug renders the Overview** (`Admin\DashboardPage`, which also owns submenu
+  order). Rating Criteria lives at `ndv-reviews-criteria`.
+- **Schema enriches WooCommerce's own Product node** (`woocommerce_structured_data_product`); a standalone
+  Product is output only when Woo's isn't. Never print a second Product.
 - Woo-compat duplicate meta is intentional: `rating`/`verified` alongside `_ndvr_overall_rating`/
   `_ndvr_verified`. Don't "dedupe" them.
 - **Assets load conditionally (page-speed).** Register handles on load if needed, but only `wp_enqueue_*`

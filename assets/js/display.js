@@ -1,40 +1,65 @@
 /**
- * NDV Reviews — front-end display interactions (filter/sort/paginate + voting).
- * Vanilla JS, no jQuery.
+ * NDV Reviews — front-end display interactions (filter/sort/paginate, voting,
+ * photo lightbox, "Write a review" disclosure). Vanilla JS, no jQuery.
+ *
+ * Every list is an independent instance (`.ndvr-reviews-instance`, or the
+ * legacy `#ndvr-reviews`) whose state lives on the element, so several lists
+ * can share a page. Listeners are delegated from the document, so lists added
+ * later (Elementor editor preview, AJAX-inserted markup) work without re-init.
  */
 ( function () {
 	'use strict';
 
 	var cfg = window.ndvrDisplay || {};
-	var wrap = document.getElementById( 'ndvr-reviews' );
-	if ( ! wrap || ! cfg.ajaxUrl ) {
+	if ( ! cfg.ajaxUrl ) {
 		return;
 	}
 
-	var listWrap = document.getElementById( 'ndvr-review-list' );
-	var filterBar = wrap.querySelector( '.ndvr-filter-bar' );
-	var productId = wrap.getAttribute( 'data-product' );
+	var INSTANCE = '.ndvr-reviews-instance, #ndvr-reviews';
 
-	var state = { star: 0, verified: false, with_media: false, orderby: 'recent', tag: '', page: 1 };
-	var pills = wrap.querySelector( '.ndvr-topic-pills' );
+	function closest( el, selector ) {
+		return el && el.closest ? el.closest( selector ) : null;
+	}
 
-	function fetchList() {
+	function getState( wrap ) {
+		if ( ! wrap.ndvrState ) {
+			wrap.ndvrState = {
+				star: 0,
+				verified: false,
+				with_media: false,
+				orderby: wrap.getAttribute( 'data-orderby' ) || 'recent',
+				tag: '',
+				page: 1,
+				perPage: parseInt( wrap.getAttribute( 'data-per-page' ), 10 ) || 0
+			};
+		}
+		return wrap.ndvrState;
+	}
+
+	function listOf( wrap ) {
+		return wrap.querySelector( '.ndvr-review-list-wrap' ) || wrap.querySelector( '#ndvr-review-list' );
+	}
+
+	function fetchList( wrap, scroll ) {
+		var listWrap = listOf( wrap );
 		if ( ! listWrap ) {
 			return;
 		}
+		var state = getState( wrap );
 		listWrap.classList.add( 'is-loading' );
 		listWrap.setAttribute( 'aria-busy', 'true' );
 
 		var body = new FormData();
 		body.append( 'action', cfg.action );
 		body.append( 'nonce', cfg.nonce );
-		body.append( 'product_id', productId );
+		body.append( 'product_id', wrap.getAttribute( 'data-product' ) || '' );
 		body.append( 'star', state.star );
 		body.append( 'verified', state.verified ? '1' : '' );
 		body.append( 'with_media', state.with_media ? '1' : '' );
 		body.append( 'orderby', state.orderby );
 		body.append( 'tag', state.tag );
 		body.append( 'page', state.page );
+		body.append( 'per_page', state.perPage );
 
 		fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
 			.then( function ( r ) { return r.json(); } )
@@ -42,7 +67,9 @@
 				listWrap.classList.remove( 'is-loading' );
 				if ( res && res.success && res.data && typeof res.data.html === 'string' ) {
 					listWrap.innerHTML = res.data.html;
-					wrap.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+					if ( scroll ) {
+						listWrap.scrollIntoView( { behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' } );
+					}
 				}
 				listWrap.setAttribute( 'aria-busy', 'false' );
 			} )
@@ -52,79 +79,191 @@
 			} );
 	}
 
-	if ( pills ) {
-		pills.addEventListener( 'click', function ( e ) {
-			var btn = e.target.closest( '.ndvr-topic' );
-			if ( ! btn ) {
-				return;
-			}
-			Array.prototype.forEach.call( pills.querySelectorAll( '.ndvr-topic' ), function ( b ) {
-				b.classList.remove( 'is-current' );
-				b.setAttribute( 'aria-pressed', 'false' );
-			} );
-			btn.classList.add( 'is-current' );
-			btn.setAttribute( 'aria-pressed', 'true' );
-			state.tag = btn.getAttribute( 'data-value' ) || '';
-			state.page = 1;
-			fetchList();
+	function reducedMotion() {
+		return window.matchMedia && window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
+	}
+
+	// Reflect the active star filter on both the filter-bar buttons and the
+	// clickable summary rows, so the two controls never disagree.
+	function syncStar( wrap, value ) {
+		Array.prototype.forEach.call( wrap.querySelectorAll( '[data-filter="star"]' ), function ( b ) {
+			var on = String( parseInt( b.getAttribute( 'data-value' ), 10 ) || 0 ) === String( value );
+			b.classList.toggle( 'is-current', on );
+			b.setAttribute( 'aria-pressed', on ? 'true' : 'false' );
 		} );
 	}
 
-	if ( filterBar ) {
-		filterBar.addEventListener( 'click', function ( e ) {
-			var btn = e.target.closest( '.ndvr-filter[data-filter="star"]' );
-			if ( ! btn ) {
-				return;
-			}
-			Array.prototype.forEach.call( filterBar.querySelectorAll( '.ndvr-filter[data-filter="star"]' ), function ( b ) {
-				b.classList.remove( 'is-current' );
-				b.setAttribute( 'aria-pressed', 'false' );
-			} );
-			btn.classList.add( 'is-current' );
-			btn.setAttribute( 'aria-pressed', 'true' );
-			state.star = parseInt( btn.getAttribute( 'data-value' ), 10 ) || 0;
-			state.page = 1;
-			fetchList();
-		} );
+	document.addEventListener( 'click', function ( e ) {
+		var target = e.target;
 
-		filterBar.addEventListener( 'change', function ( e ) {
-			var el = e.target;
-			var filter = el.getAttribute( 'data-filter' );
-			if ( filter === 'verified' ) {
-				state.verified = el.checked;
-			} else if ( filter === 'with_media' ) {
-				state.with_media = el.checked;
-			} else if ( filter === 'orderby' ) {
-				state.orderby = el.value;
-			} else {
-				return;
-			}
-			state.page = 1;
-			fetchList();
-		} );
-	}
-
-	// Pagination + photo lightbox (delegated, survives list replacement).
-	wrap.addEventListener( 'click', function ( e ) {
-		var page = e.target.closest( '.ndvr-page' );
-		if ( page ) {
-			state.page = parseInt( page.getAttribute( 'data-page' ), 10 ) || 1;
-			fetchList();
+		var write = closest( target, '[data-ndvr-write-review]' );
+		if ( write ) {
+			openForm( write, e );
 			return;
 		}
 
-		var helpful = e.target.closest( '.ndvr-helpful' );
-		if ( helpful && ! helpful.disabled ) {
-			vote( helpful );
+		var helpful = closest( target, '.ndvr-helpful' );
+		if ( helpful ) {
+			if ( ! helpful.disabled && ! helpful.classList.contains( 'is-voted' ) ) {
+				vote( helpful );
+			}
 			return;
 		}
 
-		var photo = e.target.closest( '.ndvr-review-photo' );
+		var photo = closest( target, '.ndvr-review-photo' );
 		if ( photo ) {
 			e.preventDefault();
 			openLightbox( photo );
+			return;
+		}
+
+		var wrap = closest( target, INSTANCE );
+		if ( ! wrap ) {
+			return;
+		}
+		var state = getState( wrap );
+
+		var page = closest( target, '.ndvr-page' );
+		if ( page ) {
+			state.page = parseInt( page.getAttribute( 'data-page' ), 10 ) || 1;
+			fetchList( wrap, true );
+			return;
+		}
+
+		var star = closest( target, '[data-filter="star"]' );
+		if ( star ) {
+			var value = parseInt( star.getAttribute( 'data-value' ), 10 ) || 0;
+			// Clicking the active summary row again clears the filter.
+			if ( star.classList.contains( 'ndvr-bar-row' ) && state.star === value ) {
+				value = 0;
+			}
+			state.star = value;
+			state.page = 1;
+			syncStar( wrap, value );
+			fetchList( wrap, star.classList.contains( 'ndvr-bar-row' ) );
+			return;
+		}
+
+		var topic = closest( target, '.ndvr-topic' );
+		if ( topic ) {
+			Array.prototype.forEach.call( wrap.querySelectorAll( '.ndvr-topic' ), function ( b ) {
+				b.classList.remove( 'is-current' );
+				b.setAttribute( 'aria-pressed', 'false' );
+			} );
+			topic.classList.add( 'is-current' );
+			topic.setAttribute( 'aria-pressed', 'true' );
+			state.tag = topic.getAttribute( 'data-value' ) || '';
+			state.page = 1;
+			fetchList( wrap, false );
 		}
 	} );
+
+	document.addEventListener( 'change', function ( e ) {
+		var el = e.target;
+		var wrap = closest( el, INSTANCE );
+		var filter = el.getAttribute && el.getAttribute( 'data-filter' );
+		if ( ! wrap || ! filter ) {
+			return;
+		}
+		var state = getState( wrap );
+		if ( filter === 'verified' ) {
+			state.verified = el.checked;
+		} else if ( filter === 'with_media' ) {
+			state.with_media = el.checked;
+		} else if ( filter === 'orderby' ) {
+			state.orderby = el.value;
+		} else {
+			return;
+		}
+		state.page = 1;
+		fetchList( wrap, false );
+	} );
+
+	// ── "Write a review" disclosure ─────────────────────────────────
+	// On the reviews tab the form starts collapsed behind the summary's CTA
+	// when reviews already exist. It stays open when there are none, when the
+	// URL points at the form, or after a non-JS submit came back with an error.
+	// Without JS nothing is hidden (the collapse class is only added here).
+	function formTarget( link ) {
+		var id = ( link.getAttribute( 'href' ) || '' ).replace( /^#/, '' );
+		return id ? document.getElementById( id ) : null;
+	}
+
+	function setExpanded( form, open ) {
+		form.classList.toggle( 'is-collapsed', ! open );
+		Array.prototype.forEach.call( document.querySelectorAll( '[data-ndvr-write-review]' ), function ( l ) {
+			if ( formTarget( l ) === form ) {
+				l.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
+			}
+		} );
+	}
+
+	function openForm( link, e ) {
+		var form = formTarget( link );
+		if ( ! form ) {
+			return;
+		}
+		e.preventDefault();
+		var wasCollapsed = form.classList.contains( 'is-collapsed' );
+		setExpanded( form, true );
+		form.scrollIntoView( { behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' } );
+		if ( wasCollapsed || document.activeElement === link ) {
+			var first = form.querySelector( 'input:not([type="hidden"]):not([tabindex="-1"]), textarea, select' );
+			( first || form ).focus( { preventScroll: true } );
+		}
+	}
+
+	function initForms() {
+		Array.prototype.forEach.call( document.querySelectorAll( INSTANCE ), function ( wrap ) {
+			var form = wrap.querySelector( '#ndvr-review-form-wrap' );
+			var link = wrap.querySelector( '[data-ndvr-write-review]' );
+			if ( ! form || ! link || form.ndvrInit ) {
+				return;
+			}
+			form.ndvrInit = true;
+			link.setAttribute( 'aria-controls', form.id );
+
+			var count = parseInt( wrap.getAttribute( 'data-count' ), 10 ) || 0;
+			var hash = window.location.hash;
+			var params = window.location.search;
+			// ?ndvr_review=1 is the shareable/QR review link (Collection\ReviewLinkFocus
+			// scrolls to the form for it, so it must be open).
+			var targeted = hash === '#ndvr-review-form-wrap' || hash === '#respond' || hash === '#review_form';
+			var wantsForm = targeted ||
+				/[?&]ndvr_review=1(&|$)/.test( params ) ||
+				!! form.querySelector( '.ndvr-form-message.is-error, .comment-form-error' );
+
+			setExpanded( form, count === 0 || wantsForm );
+
+			// WooCommerce only opens the Reviews tab for #reviews / #tab-reviews /
+			// #comment-*; for a direct link to the form, open the tab ourselves —
+			// after window load, because Woo's own tab init (on ready) would
+			// otherwise switch back to the first tab.
+			if ( targeted ) {
+				var openTab = function () {
+					if ( form.offsetParent !== null ) {
+						return;
+					}
+					var tab = document.querySelector( '.reviews_tab a, #tab-title-reviews a' );
+					if ( tab ) {
+						tab.click();
+						form.scrollIntoView( { block: 'start' } );
+					}
+				};
+				if ( document.readyState === 'complete' ) {
+					setTimeout( openTab, 0 );
+				} else {
+					window.addEventListener( 'load', function () { setTimeout( openTab, 0 ); } );
+				}
+			}
+		} );
+	}
+
+	if ( document.readyState === 'loading' ) {
+		document.addEventListener( 'DOMContentLoaded', initForms );
+	} else {
+		initForms();
+	}
 
 	// ── Photo lightbox ──────────────────────────────────────────────
 	// Keyboard-operable modal: Escape/overlay/close-button dismiss, Left/Right
@@ -134,6 +273,10 @@
 	var lbGroup = [];
 	var lbIndex = 0;
 	var lbReturnFocus = null;
+
+	function escAttr( s ) {
+		return String( s ).replace( /&/g, '&amp;' ).replace( /"/g, '&quot;' ).replace( /</g, '&lt;' );
+	}
 
 	function buildLightbox() {
 		if ( lightbox ) {
@@ -145,11 +288,11 @@
 		var i18n = cfg.i18n || {};
 		lightbox.innerHTML =
 			'<div class="ndvr-lightbox-overlay" data-ndvr-close></div>' +
-			'<div class="ndvr-lightbox-dialog" role="dialog" aria-modal="true" aria-label="' + ( i18n.photo || 'Customer photo' ) + '">' +
-			'<button type="button" class="ndvr-lightbox-close" data-ndvr-close aria-label="' + ( i18n.close || 'Close' ) + '">&times;</button>' +
-			'<button type="button" class="ndvr-lightbox-prev" aria-label="' + ( i18n.prev || 'Previous photo' ) + '">&lsaquo;</button>' +
+			'<div class="ndvr-lightbox-dialog" role="dialog" aria-modal="true" aria-label="' + escAttr( i18n.photo || 'Customer photo' ) + '">' +
+			'<button type="button" class="ndvr-lightbox-close" data-ndvr-close aria-label="' + escAttr( i18n.close || 'Close' ) + '">&times;</button>' +
+			'<button type="button" class="ndvr-lightbox-prev" aria-label="' + escAttr( i18n.prev || 'Previous photo' ) + '">&lsaquo;</button>' +
 			'<img class="ndvr-lightbox-img" src="" alt="" />' +
-			'<button type="button" class="ndvr-lightbox-next" aria-label="' + ( i18n.next || 'Next photo' ) + '">&rsaquo;</button>' +
+			'<button type="button" class="ndvr-lightbox-next" aria-label="' + escAttr( i18n.next || 'Next photo' ) + '">&rsaquo;</button>' +
 			'</div>';
 		document.body.appendChild( lightbox );
 
@@ -171,8 +314,8 @@
 			} else if ( e.key === 'ArrowRight' ) {
 				stepLightbox( 1 );
 			} else if ( e.key === 'Tab' ) {
-				// Simple focus trap: only the dialog's own buttons are focusable.
-				var focusable = lightbox.querySelectorAll( 'button' );
+				// Simple focus trap: only the dialog's own visible buttons.
+				var focusable = Array.prototype.filter.call( lightbox.querySelectorAll( 'button' ), function ( b ) { return ! b.hidden; } );
 				var first = focusable[ 0 ];
 				var last = focusable[ focusable.length - 1 ];
 				if ( e.shiftKey && document.activeElement === first ) {
@@ -254,6 +397,7 @@
 						c.textContent = '(' + res.data.count + ')';
 					}
 					btn.classList.add( 'is-voted' );
+					btn.setAttribute( 'aria-pressed', 'true' );
 				} else {
 					btn.disabled = false;
 				}

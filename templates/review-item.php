@@ -20,47 +20,56 @@ if ( empty( $review ) ) {
 ?>
 <li class="ndvr-review" id="ndvr-review-<?php echo esc_attr( $review['id'] ); ?>">
 	<div class="ndvr-review-head">
-		<div class="ndvr-review-author">
-			<?php echo get_avatar( '', 40, '', $review['author'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-			<span class="ndvr-review-name"><?php echo esc_html( $review['author'] ); ?></span>
-			<?php
-			/**
-			 * Filter: show/hide the "Verified Buyer" badge.
-			 * Default: true when the review has _ndvr_verified = 1.
-			 * Pro hooks this to respect the "Review Card" setting.
-			 *
-			 * @param bool                $show   Whether to show the badge.
-			 * @param array<string,mixed> $review Review view-model.
-			 */
-			if ( apply_filters( 'ndv-reviews/show_verified_badge', ! empty( $review['verified'] ), $review ) ) :
-			?>
-				<span class="ndvr-verified-badge"><?php esc_html_e( 'Verified buyer', 'ndv-reviews' ); ?></span>
-			<?php endif; ?>
-		</div>
-		<div class="ndvr-review-meta">
-			<?php
-			/**
-			 * Filter: show/hide the overall star rating in the card header.
-			 *
-			 * @param bool                $show   Default true.
-			 * @param array<string,mixed> $review Review view-model.
-			 */
-			if ( apply_filters( 'ndv-reviews/show_overall_stars', true, $review ) ) :
-				echo Html::stars( $review['overall'] ? $review['overall'] : $review['rating'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			endif;
+		<?php echo Html::avatar( $review['author'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Html::avatar(). ?>
+		<div class="ndvr-review-byline">
+			<div class="ndvr-review-author">
+				<span class="ndvr-review-name"><?php echo esc_html( $review['author'] ); ?></span>
+				<?php
+				/**
+				 * Filter: show/hide the "Verified Buyer" badge.
+				 * Default: true when the review has _ndvr_verified = 1.
+				 * Pro hooks this to respect the "Review Card" setting.
+				 *
+				 * @param bool                $show   Whether to show the badge.
+				 * @param array<string,mixed> $review Review view-model.
+				 */
+				if ( apply_filters( 'ndv-reviews/show_verified_badge', ! empty( $review['verified'] ), $review ) ) :
+					?>
+					<span class="ndvr-verified-badge"><?php esc_html_e( 'Verified buyer', 'ndv-reviews' ); ?></span>
+				<?php endif; ?>
+				<?php
+				/**
+				 * Fires inside the author line, after the verified badge — for
+				 * small inline badges (e.g. Pro's "Top reviewer").
+				 *
+				 * @param array<string,mixed> $review Review view-model.
+				 */
+				do_action( 'ndv-reviews/review_author_badges', $review );
+				?>
+			</div>
+			<div class="ndvr-review-meta">
+				<?php
+				/**
+				 * Filter: show/hide the overall star rating in the card header.
+				 *
+				 * @param bool                $show   Default true.
+				 * @param array<string,mixed> $review Review view-model.
+				 */
+				if ( apply_filters( 'ndv-reviews/show_overall_stars', true, $review ) ) :
+					echo Html::stars( $review['overall'] ? $review['overall'] : $review['rating'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				endif;
 
-			/**
-			 * Filter: show/hide the review date.
-			 *
-			 * @param bool                $show   Default true.
-			 * @param array<string,mixed> $review Review view-model.
-			 */
-			if ( apply_filters( 'ndv-reviews/show_review_date', true, $review ) ) :
-			?>
-				<time class="ndvr-review-date" datetime="<?php echo esc_attr( $review['date'] ); ?>">
-					<?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $review['date'] ) ) ); ?>
-				</time>
-			<?php endif; ?>
+				/**
+				 * Filter: show/hide the review date.
+				 *
+				 * @param bool                $show   Default true.
+				 * @param array<string,mixed> $review Review view-model.
+				 */
+				if ( apply_filters( 'ndv-reviews/show_review_date', true, $review ) ) :
+					?>
+					<time class="ndvr-review-date" datetime="<?php echo esc_attr( mysql2date( 'c', $review['date'], false ) ); ?>"><?php echo esc_html( mysql2date( get_option( 'date_format' ), $review['date'] ) ); ?></time>
+				<?php endif; ?>
+			</div>
 		</div>
 	</div>
 
@@ -107,8 +116,8 @@ if ( empty( $review ) ) {
 		 * @param bool                $show   Default: true when recommend value is 'yes' or 'no'.
 		 * @param array<string,mixed> $review Review view-model.
 		 */
-		$_ndvr_has_recommend = in_array( $review['recommend'] ?? '', array( 'yes', 'no' ), true );
-		if ( apply_filters( 'ndv-reviews/show_recommend', $_ndvr_has_recommend, $review ) ) :
+		$ndvr_has_recommend = in_array( $review['recommend'] ?? '', array( 'yes', 'no' ), true );
+		if ( apply_filters( 'ndv-reviews/show_recommend', $ndvr_has_recommend, $review ) ) :
 			if ( 'yes' === $review['recommend'] ) :
 		?>
 				<span class="ndvr-recommend ndvr-recommend-yes"><?php esc_html_e( 'Recommends this product', 'ndv-reviews' ); ?></span>
@@ -127,6 +136,7 @@ if ( empty( $review ) ) {
 		if ( apply_filters( 'ndv-reviews/show_helpful_button', true, $review ) ) :
 		?>
 			<button type="button" class="ndvr-helpful" data-comment-id="<?php echo esc_attr( $review['id'] ); ?>" data-nonce="<?php echo esc_attr( $vote_nonce ); ?>">
+				<svg class="ndvr-helpful-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 10v11H3V10h4z"/><path d="M7 10l4-8a3 3 0 0 1 3 3v4h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7"/></svg>
 				<?php esc_html_e( 'Helpful', 'ndv-reviews' ); ?>
 				<span class="ndvr-helpful-count">(<?php echo esc_html( number_format_i18n( $review['helpful_up'] ) ); ?>)</span>
 			</button>

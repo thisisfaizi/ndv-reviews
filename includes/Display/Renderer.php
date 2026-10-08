@@ -25,6 +25,11 @@ class Renderer implements Registerable {
 	const NONCE       = 'ndvr_list_reviews';
 
 	/**
+	 * Hard cap on reviews per page for any list (AJAX input is untrusted).
+	 */
+	const MAX_PER_PAGE = 50;
+
+	/**
 	 * Settings.
 	 *
 	 * @var Settings
@@ -46,6 +51,13 @@ class Renderer implements Registerable {
 	private $query;
 
 	/**
+	 * Whether a list instance has already taken the legacy element ids.
+	 *
+	 * @var bool
+	 */
+	private static $ids_claimed = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param Settings    $settings Settings.
@@ -65,10 +77,101 @@ class Renderer implements Registerable {
 	 */
 	public function register() {
 		add_filter( 'woocommerce_product_tabs', array( $this, 'take_over_reviews_tab' ), 98 );
+		// Register (not enqueue) on init so the handles exist for render paths,
+		// the block editor (editor_style) and Elementor before anything asks.
+		add_action( 'init', array( __CLASS__, 'register_assets' ), 20 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'wp_ajax_' . self::AJAX_ACTION, array( $this, 'ajax_list' ) );
 		add_action( 'wp_ajax_nopriv_' . self::AJAX_ACTION, array( $this, 'ajax_list' ) );
 		add_filter( 'body_class', array( $this, 'body_class' ) );
+	}
+
+	/**
+	 * Register every front-end display handle once, localize `ndvrDisplay` once,
+	 * and attach the Design inline CSS to `ndvr-tokens` so it reaches every
+	 * surface that loads any of our stylesheets (tab, shortcodes, blocks,
+	 * Elementor, the review/testimonial forms). Nothing is enqueued here.
+	 *
+	 * @return void
+	 */
+	public static function register_assets() {
+		if ( wp_style_is( 'ndvr-display', 'registered' ) && wp_script_is( 'ndvr-marquee', 'registered' ) ) {
+			return;
+		}
+
+		if ( ! wp_style_is( 'ndvr-tokens', 'registered' ) ) {
+			wp_register_style( 'ndvr-tokens', NDVR_URL . 'assets/css/tokens.css', array(), NDVR_VERSION );
+		}
+		wp_register_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array( 'ndvr-tokens' ), NDVR_VERSION );
+		wp_register_style( 'ndvr-marquee', NDVR_URL . 'assets/css/marquee.css', array( 'ndvr-tokens', 'ndvr-display' ), NDVR_VERSION );
+		wp_register_script( 'ndvr-display', NDVR_URL . 'assets/js/display.js', array(), NDVR_VERSION, true );
+		wp_register_script( 'ndvr-marquee', NDVR_URL . 'assets/js/marquee.js', array(), NDVR_VERSION, true );
+
+		$design_css = Design::inline_css( new Settings() );
+		if ( '' !== $design_css ) {
+			wp_add_inline_style( 'ndvr-tokens', $design_css );
+		}
+
+		wp_localize_script(
+			'ndvr-display',
+			'ndvrDisplay',
+			array(
+				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+				'action'     => self::AJAX_ACTION,
+				'nonce'      => wp_create_nonce( self::NONCE ),
+				'voteAction' => Votes::AJAX_ACTION,
+				'i18n'       => array(
+					'photo' => __( 'Customer photo', 'ndv-reviews' ),
+					'close' => __( 'Close', 'ndv-reviews' ),
+					'prev'  => __( 'Previous photo', 'ndv-reviews' ),
+					'next'  => __( 'Next photo', 'ndv-reviews' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * The first list instance on a page keeps the historical `#ndvr-reviews` /
+	 * `#ndvr-review-list` ids (themes and custom CSS target them); later ones
+	 * are identified by class + data attributes only, so ids stay unique.
+	 *
+	 * @return bool True when the caller may print the ids.
+	 */
+	public static function claim_ids() {
+		if ( self::$ids_claimed ) {
+			return false;
+		}
+		self::$ids_claimed = true;
+
+		return true;
+	}
+
+	/**
+	 * Normalize a requested page size: 0/negative/missing → the filtered
+	 * default, everything else clamped to 1–MAX_PER_PAGE.
+	 *
+	 * @param mixed $per_page Requested size.
+	 * @return int
+	 */
+	public static function per_page( $per_page ) {
+		$per_page = (int) $per_page;
+		if ( $per_page < 1 ) {
+			$per_page = (int) apply_filters( 'ndv-reviews/per_page', 10 );
+		}
+
+		return max( 1, min( self::MAX_PER_PAGE, $per_page ) );
+	}
+
+	/**
+	 * Allowed sort keys for lists.
+	 *
+	 * @param string $orderby Requested order.
+	 * @return string
+	 */
+	public static function orderby( $orderby ) {
+		$orderby = sanitize_key( (string) $orderby );
+
+		return in_array( $orderby, array( 'recent', 'helpful', 'highest', 'lowest' ), true ) ? $orderby : 'recent';
 	}
 
 	/**
@@ -108,30 +211,9 @@ class Renderer implements Registerable {
 			return;
 		}
 
-		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array( 'ndvr-tokens' ), NDVR_VERSION );
-		wp_enqueue_script( 'ndvr-display', NDVR_URL . 'assets/js/display.js', array(), NDVR_VERSION, true );
-
-		$accent_css = Design::inline_css( $this->settings );
-		if ( '' !== $accent_css ) {
-			wp_add_inline_style( 'ndvr-display', $accent_css );
-		}
-
-		wp_localize_script(
-			'ndvr-display',
-			'ndvrDisplay',
-			array(
-				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-				'action'     => self::AJAX_ACTION,
-				'nonce'      => wp_create_nonce( self::NONCE ),
-				'voteAction' => Votes::AJAX_ACTION,
-				'i18n'       => array(
-					'photo' => __( 'Customer photo', 'ndv-reviews' ),
-					'close' => __( 'Close', 'ndv-reviews' ),
-					'prev'  => __( 'Previous photo', 'ndv-reviews' ),
-					'next'  => __( 'Next photo', 'ndv-reviews' ),
-				),
-			)
-		);
+		self::register_assets();
+		wp_enqueue_style( 'ndvr-display' );
+		wp_enqueue_script( 'ndvr-display' );
 	}
 
 	/**
@@ -142,11 +224,28 @@ class Renderer implements Registerable {
 	public function render_reviews_tab() {
 		$product_id = get_the_ID();
 		$summary    = $this->summary->for_product( $product_id );
+		$has_form   = comments_open( $product_id );
+		$per_page   = self::per_page( apply_filters( 'ndv-reviews/per_page', 10 ) );
+		$use_ids    = self::claim_ids();
 
-		echo '<div id="ndvr-reviews" class="ndvr-reviews-wrap ' . esc_attr( Design::classes( $this->settings ) ) . '" data-product="' . esc_attr( $product_id ) . '">';
+		printf(
+			'<div%1$s class="ndvr-reviews-wrap ndvr-reviews-instance %2$s" data-product="%3$d" data-per-page="%4$d" data-orderby="recent" data-count="%5$d">',
+			$use_ids ? ' id="ndvr-reviews"' : '',
+			esc_attr( Design::classes( $this->settings ) ),
+			(int) $product_id,
+			(int) $per_page,
+			(int) $summary['count']
+		);
 
-		// Summary (pre-escaped template output).
-		echo View::render( 'summary.php', array( 'summary' => $summary ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$summary_html = View::render(
+			'summary.php',
+			array(
+				'summary'    => $summary,
+				'filterable' => true,
+				'form_id'    => $has_form ? 'ndvr-review-form-wrap' : '',
+			)
+		);
+		echo $summary_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- template output is escaped at source.
 
 		/**
 		 * Fires after the summary box, before the review list (Pro renders the AI
@@ -159,24 +258,25 @@ class Renderer implements Registerable {
 		if ( ! empty( $summary['count'] ) ) {
 			$this->render_topic_pills( $product_id );
 			$this->render_filter_bar();
+
+			$result = $this->query->paginate(
+				array(
+					'product_id' => $product_id,
+					'per_page'   => $per_page,
+				)
+			);
+
+			printf( '<div%s class="ndvr-review-list-wrap" aria-live="polite" aria-busy="false">', $use_ids ? ' id="ndvr-review-list"' : '' );
+			$list_html = View::render(
+				'review-list.php',
+				array(
+					'result'     => $result,
+					'vote_nonce' => wp_create_nonce( Votes::NONCE_ACTION ),
+				)
+			);
+			echo $list_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- template output is escaped at source.
+			echo '</div>';
 		}
-
-		$result = $this->query->paginate(
-			array(
-				'product_id' => $product_id,
-				'per_page'   => (int) apply_filters( 'ndv-reviews/per_page', 10 ),
-			)
-		);
-
-		echo '<div id="ndvr-review-list" class="ndvr-review-list-wrap" aria-live="polite" aria-busy="false">';
-		echo View::render( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			'review-list.php',
-			array(
-				'result'     => $result,
-				'vote_nonce' => wp_create_nonce( Votes::NONCE_ACTION ),
-			)
-		);
-		echo '</div>';
 
 		$this->render_form( $product_id );
 
@@ -214,10 +314,11 @@ class Renderer implements Registerable {
 	private function render_filter_bar() {
 		?>
 		<div class="ndvr-filter-bar" role="region" aria-label="<?php esc_attr_e( 'Filter reviews', 'ndv-reviews' ); ?>">
-			<div class="ndvr-filter-stars" role="group" aria-label="<?php esc_attr_e( 'Filter by star', 'ndv-reviews' ); ?>">
+			<div class="ndvr-filter-stars" role="group" aria-label="<?php esc_attr_e( 'Filter by star rating', 'ndv-reviews' ); ?>">
 				<button type="button" class="ndvr-filter is-current" data-filter="star" data-value="0" aria-pressed="true"><?php esc_html_e( 'All', 'ndv-reviews' ); ?></button>
 				<?php for ( $ndvr_s = 5; $ndvr_s >= 1; $ndvr_s-- ) : ?>
-					<button type="button" class="ndvr-filter" data-filter="star" data-value="<?php echo esc_attr( $ndvr_s ); ?>" aria-pressed="false"><?php echo esc_html( $ndvr_s ); ?>★</button>
+					<?php /* translators: %d: star rating 1-5. */ ?>
+					<button type="button" class="ndvr-filter" data-filter="star" data-value="<?php echo esc_attr( $ndvr_s ); ?>" aria-pressed="false" aria-label="<?php echo esc_attr( sprintf( _n( '%d star', '%d stars', $ndvr_s, 'ndv-reviews' ), $ndvr_s ) ); ?>"><?php echo esc_html( number_format_i18n( $ndvr_s ) ); ?><span class="ndvr-filter-star" aria-hidden="true">&#9733;</span></button>
 				<?php endfor; ?>
 			</div>
 			<label class="ndvr-filter-toggle"><input type="checkbox" data-filter="verified" /> <?php esc_html_e( 'Verified only', 'ndv-reviews' ); ?></label>
@@ -239,6 +340,10 @@ class Renderer implements Registerable {
 	 * Render the review form (mirrors WooCommerce's gating, lets our Phase 1
 	 * field-injection filter apply).
 	 *
+	 * The wrapper id `ndvr-review-form-wrap` is the target of the summary's
+	 * "Write a review" control; display.js collapses it behind that control
+	 * once reviews exist (the form stays visible without JS).
+	 *
 	 * @param int $product_id Product id.
 	 * @return void
 	 */
@@ -251,7 +356,7 @@ class Renderer implements Registerable {
 		$can_review            = ! $verification_required
 			|| ( is_user_logged_in() && wc_customer_bought_product( '', get_current_user_id(), $product_id ) );
 
-		echo '<div id="ndvr-review-form-wrap" class="ndvr-review-form-wrap">';
+		echo '<div id="ndvr-review-form-wrap" class="ndvr-review-form-wrap" tabindex="-1">';
 
 		if ( ! $can_review ) {
 			echo '<p class="ndvr-verification-required woocommerce-verification-required">' .
@@ -299,21 +404,22 @@ class Renderer implements Registerable {
 		$star       = isset( $_POST['star'] ) ? absint( $_POST['star'] ) : 0;
 		$verified   = ! empty( $_POST['verified'] );
 		$with_media = ! empty( $_POST['with_media'] );
-		$orderby    = isset( $_POST['orderby'] ) ? sanitize_key( wp_unslash( $_POST['orderby'] ) ) : 'recent';
+		$orderby    = isset( $_POST['orderby'] ) ? self::orderby( sanitize_key( wp_unslash( $_POST['orderby'] ) ) ) : 'recent';
 		$tag        = isset( $_POST['tag'] ) ? sanitize_title( wp_unslash( $_POST['tag'] ) ) : '';
 		$page       = isset( $_POST['page'] ) ? max( 1, absint( $_POST['page'] ) ) : 1;
+		$per_page   = self::per_page( isset( $_POST['per_page'] ) ? (int) $_POST['per_page'] : 0 );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$result = $this->query->paginate(
 			array(
 				'product_id' => $product_id,
-				'star'       => $star,
+				'star'       => min( 5, $star ),
 				'verified'   => $verified,
 				'with_media' => $with_media,
 				'orderby'    => $orderby,
 				'tag'        => $tag,
 				'page'       => $page,
-				'per_page'   => (int) apply_filters( 'ndv-reviews/per_page', 10 ),
+				'per_page'   => $per_page,
 			)
 		);
 
@@ -322,6 +428,7 @@ class Renderer implements Registerable {
 			array(
 				'result'     => $result,
 				'vote_nonce' => wp_create_nonce( Votes::NONCE_ACTION ),
+				'filtered'   => $star || $verified || $with_media || '' !== $tag,
 			)
 		);
 

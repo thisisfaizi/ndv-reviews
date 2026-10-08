@@ -50,6 +50,9 @@ class Blocks implements Registerable {
 	 * @return void
 	 */
 	public function register_blocks() {
+		// The editor previews (ServerSideRender) need the storefront styles.
+		\NdvReviews\Display\Renderer::register_assets();
+
 		wp_register_script(
 			'ndvr-blocks',
 			NDVR_URL . 'assets/js/blocks.js',
@@ -57,6 +60,7 @@ class Blocks implements Registerable {
 			NDVR_VERSION,
 			true
 		);
+		wp_set_script_translations( 'ndvr-blocks', 'ndv-reviews', NDVR_DIR . 'languages' );
 
 		$common = array(
 			'product_id' => array(
@@ -70,6 +74,7 @@ class Blocks implements Registerable {
 			array(
 				'api_version'     => 2,
 				'editor_script'   => 'ndvr-blocks',
+				'editor_style'    => 'ndvr-display',
 				'attributes'      => $common,
 				'render_callback' => array( $this, 'render_summary' ),
 			)
@@ -80,6 +85,7 @@ class Blocks implements Registerable {
 			array(
 				'api_version'     => 2,
 				'editor_script'   => 'ndvr-blocks',
+				'editor_style'    => 'ndvr-display',
 				'attributes'      => $common,
 				'render_callback' => array( $this, 'render_stars' ),
 			)
@@ -90,6 +96,7 @@ class Blocks implements Registerable {
 			array(
 				'api_version'     => 2,
 				'editor_script'   => 'ndvr-blocks',
+				'editor_style'    => 'ndvr-display',
 				'attributes'      => array_merge(
 					$common,
 					array(
@@ -112,6 +119,7 @@ class Blocks implements Registerable {
 			array(
 				'api_version'     => 2,
 				'editor_script'   => 'ndvr-blocks',
+				'editor_style'    => 'ndvr-display',
 				'attributes'      => $common,
 				'render_callback' => array( $this, 'render_form' ),
 			)
@@ -122,6 +130,7 @@ class Blocks implements Registerable {
 			array(
 				'api_version'     => 2,
 				'editor_script'   => 'ndvr-blocks',
+				'editor_style'    => 'ndvr-marquee',
 				'attributes'      => array(
 					'source'     => array(
 						'type'    => 'string',
@@ -155,6 +164,18 @@ class Blocks implements Registerable {
 						'type'    => 'boolean',
 						'default' => false,
 					),
+					'with_media' => array(
+						'type'    => 'boolean',
+						'default' => false,
+					),
+					'gap'        => array(
+						'type'    => 'number',
+						'default' => 16,
+					),
+					'pause'      => array(
+						'type'    => 'boolean',
+						'default' => true,
+					),
 					'rows'       => array(
 						'type'    => 'number',
 						'default' => 1,
@@ -172,7 +193,7 @@ class Blocks implements Registerable {
 	 * @return string
 	 */
 	public function render_summary( $attr ) {
-		return $this->widgets->summary( isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0 );
+		return $this->wrap( $this->widgets->summary( isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0 ) );
 	}
 
 	/**
@@ -182,7 +203,7 @@ class Blocks implements Registerable {
 	 * @return string
 	 */
 	public function render_stars( $attr ) {
-		return $this->widgets->stars( isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0 );
+		return $this->wrap( $this->widgets->stars( isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0 ) );
 	}
 
 	/**
@@ -192,11 +213,13 @@ class Blocks implements Registerable {
 	 * @return string
 	 */
 	public function render_reviews( $attr ) {
-		return $this->widgets->reviews(
-			array(
-				'product_id' => isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0,
-				'per_page'   => isset( $attr['per_page'] ) ? (int) $attr['per_page'] : 10,
-				'orderby'    => isset( $attr['orderby'] ) ? sanitize_key( $attr['orderby'] ) : 'recent',
+		return $this->wrap(
+			$this->widgets->reviews(
+				array(
+					'product_id' => isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0,
+					'per_page'   => isset( $attr['per_page'] ) ? (int) $attr['per_page'] : 10,
+					'orderby'    => isset( $attr['orderby'] ) ? sanitize_key( $attr['orderby'] ) : 'recent',
+				)
 			)
 		);
 	}
@@ -210,7 +233,7 @@ class Blocks implements Registerable {
 	public function render_form( $attr ) {
 		$product_id = isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0;
 
-		return do_shortcode( '[ndvr-form product_id="' . $product_id . '"]' );
+		return $this->wrap( do_shortcode( '[ndvr-form product_id="' . $product_id . '"]' ) );
 	}
 
 	/**
@@ -223,7 +246,7 @@ class Blocks implements Registerable {
 		$category = isset( $attr['category'] ) ? (string) $attr['category'] : '';
 		$category = is_numeric( $category ) ? (int) $category : sanitize_title( $category );
 
-		return $this->widgets->marquee(
+		$html = $this->widgets->marquee(
 			array(
 				'source'     => isset( $attr['source'] ) ? sanitize_key( $attr['source'] ) : 'all',
 				'product_id' => isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0,
@@ -234,8 +257,28 @@ class Blocks implements Registerable {
 				'direction'  => isset( $attr['direction'] ) ? sanitize_key( $attr['direction'] ) : 'left',
 				'limit'      => isset( $attr['limit'] ) ? (int) $attr['limit'] : 20,
 				'verified'   => ! empty( $attr['verified'] ),
+				'with_media' => ! empty( $attr['with_media'] ),
+				'gap'        => isset( $attr['gap'] ) ? max( 0, min( 60, (int) $attr['gap'] ) ) : 16,
+				'pause'      => ! isset( $attr['pause'] ) || ! empty( $attr['pause'] ),
 				'rows'       => isset( $attr['rows'] ) ? (int) $attr['rows'] : 1,
 			)
 		);
+
+		return $this->wrap( $html );
+	}
+
+	/**
+	 * Wrap block output in the block wrapper (alignment, custom class, spacing
+	 * supports). Empty output stays empty.
+	 *
+	 * @param string $html Pre-escaped block body.
+	 * @return string
+	 */
+	private function wrap( $html ) {
+		if ( '' === trim( (string) $html ) ) {
+			return '';
+		}
+
+		return '<div ' . get_block_wrapper_attributes() . '>' . $html . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- core-escaped attributes + pre-escaped body.
 	}
 }

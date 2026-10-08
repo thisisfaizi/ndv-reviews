@@ -2,22 +2,2341 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: NDV Reviews 0.1.0\n"
-"Report-Msgid-Bugs-To: https://nowdigiverse.com/ndv-reviews\n"
-"Last-Translator: Nowdigiverse\n"
-"Language-Team: Nowdigiverse\n"
+"Project-Id-Version: NDV Reviews – Product Reviews for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/ndv-reviews\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-28T00:00:00+00:00\n"
+"POT-Creation-Date: 2026-10-08T05:23:36+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: NDV Reviews build pipeline\n"
+"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: ndv-reviews\n"
 
+#. Plugin Name of the plugin
+#: ndv-reviews.php
+msgid "NDV Reviews – Product Reviews for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: ndv-reviews.php
+msgid "https://nowdigiverse.com/ndv-reviews"
+msgstr ""
+
 #. Description of the plugin
+#: ndv-reviews.php
 msgid "Reliable, self-hosted reviews for WooCommerce — multi-criteria ratings, photo reviews, working reminders, and rich schema. No account or external service required."
 msgstr ""
 
-#: includes/Plugin.php
+#. Author of the plugin
+#: ndv-reviews.php
+msgid "Nowdigiverse"
+msgstr ""
+
+#. Author URI of the plugin
+#: ndv-reviews.php
+msgid "https://nowdigiverse.com"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:66
+#: includes/Admin/CriteriaPage.php:67
+#: includes/Admin/CriteriaPage.php:148
+msgid "Rating Criteria"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:85
+msgid "You are not allowed to manage review criteria."
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:95
+msgid "Criterion added."
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:100
+msgid "That criterion no longer exists."
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:102
+msgid "Criterion deleted."
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:107
+msgid "Criterion updated."
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:157
+msgid "Active criteria"
+msgstr ""
+
+#. translators: 1: active count, 2: max allowed.
+#: includes/Admin/CriteriaPage.php:162
+#, php-format
+msgid "Customers rate each active criterion when leaving a review. Active: %1$d of %2$d."
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:172
+msgid "Name"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:173
+#: includes/Admin/RequestsPage.php:402
+#: includes/Privacy/Privacy.php:216
+msgid "Status"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:174
+#: includes/Admin/RequestsPage.php:406
+msgid "Actions"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:179
+msgid "No criteria yet."
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:184
+msgid "Active"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:184
+msgid "Inactive"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:191
+msgid "Deactivate"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:191
+msgid "Activate"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:194
+msgid "Delete this criterion and its scores?"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:198
+msgid "Delete"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:209
+msgid "Add a criterion"
+msgstr ""
+
+#. translators: %d: max criteria.
+#: includes/Admin/CriteriaPage.php:217
+#, php-format
+msgid "The free version supports up to %d active criteria. NDV Reviews Pro removes this limit."
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:226
+msgid "e.g. Comfort"
+msgstr ""
+
+#: includes/Admin/CriteriaPage.php:228
+msgid "Add criterion"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:66
+#: includes/Admin/DashboardPage.php:67
+#: includes/Integrations/Elementor/Module.php:42
+#: includes/Integrations/Elementor/Module.php:69
+#: includes/Privacy/Privacy.php:84
+#: includes/Privacy/Privacy.php:99
+msgid "NDV Reviews"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:77
+#: includes/Admin/DashboardPage.php:78
+#: includes/Admin/DashboardPage.php:403
+msgid "Overview"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:160
+msgid "You are not allowed to do that."
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:341
+msgid "Turn on review reminder emails"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:342
+msgid "Email customers a review link a few days after their order is completed."
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:344
+msgid "Set up reminders"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:348
+msgid "Match the review widget to your brand"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:349
+msgid "Set the accent color, layout and rating icon."
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:351
+msgid "Open Design"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:355
+msgid "Bring in your existing reviews"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:356
+msgid "Import existing WooCommerce reviews or a CSV file."
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:358
+msgid "Import reviews"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:362
+msgid "Harden the form against spam"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:363
+msgid "A honeypot and rate limit are always on. reCAPTCHA is optional."
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:365
+msgid "Review settings"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:405
+msgid "Manage reviews"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:406
+msgid "Review reminders"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:407
+msgid "Customize design"
+msgstr ""
+
+#. translators: 1: completed steps, 2: total steps
+#: includes/Admin/DashboardPage.php:416
+#, php-format
+msgid "Setup: %1$d of %2$d done"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:421
+#: includes/Requests/HealthCheck.php:99
+msgid "Dismiss"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:438
+msgid "Done"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:448
+msgid "Average rating"
+msgstr ""
+
+#. translators: %s: review count
+#: includes/Admin/DashboardPage.php:450
+#, php-format
+msgid "across %s review"
+msgid_plural "across %s reviews"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/Admin/DashboardPage.php:453
+msgid "New reviews · 30 days"
+msgstr ""
+
+#. translators: %s: signed change vs previous 30 days
+#: includes/Admin/DashboardPage.php:462
+#, php-format
+msgid "%s vs previous 30 days"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:467
+msgid "Awaiting moderation"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:469
+msgid "Open queue"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:469
+msgid "All caught up"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:472
+msgid "Verified buyers"
+msgstr ""
+
+#. translators: %s: number of reviews with photos
+#: includes/Admin/DashboardPage.php:477
+#, php-format
+msgid "%s review with photos"
+msgid_plural "%s reviews with photos"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/Admin/DashboardPage.php:495
+msgid "Moderation queue"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:496
+msgid "View all"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:499
+msgid "No reviews are waiting for approval."
+msgstr ""
+
+#. translators: %d: star rating
+#: includes/Admin/DashboardPage.php:505
+#, php-format
+msgid "%d out of 5 stars"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:511
+msgid "Open"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:519
+msgid "Rating distribution"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:521
+msgid "No approved reviews yet."
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:538
+msgid "Review reminders · 30 days"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:539
+msgid "On"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:539
+#: includes/Admin/RequestsPage.php:378
+msgid "Off"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:542
+#: includes/Admin/RequestsPage.php:258
+#: includes/Admin/RequestsPage.php:404
+#: includes/Privacy/Privacy.php:224
+msgid "Sent"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:543
+#: includes/Admin/RequestsPage.php:257
+#: includes/Admin/RequestsPage.php:403
+#: includes/Privacy/Privacy.php:220
+msgid "Scheduled"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:544
+#: includes/Admin/RequestsPage.php:259
+msgid "Failed"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:546
+msgid "Open reminder log"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:550
+msgid "Products"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:552
+msgid "No product has a review yet."
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:554
+msgid "Most reviewed"
+msgstr ""
+
+#: includes/Admin/DashboardPage.php:560
+#: includes/Display/Renderer.php:332
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:121
+#: assets/js/blocks.js:103
+msgid "Lowest rated"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:79
+#: includes/Admin/DesignPage.php:80
+#: includes/Admin/DesignPage.php:303
+msgid "Design"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:101
+msgid "You do not have permission to change the design."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:196
+msgid "Maya R."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:198
+msgid "Exactly as described"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:199
+msgid "The fabric is heavier than I expected and the stitching is neat. It washed well and kept its shape."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:203
+msgid "Daniel K."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:205
+msgid "Good, runs slightly small"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:206
+msgid "Quality is good for the price. I would order one size up next time."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:222
+#: includes/Requests/AdminNotify.php:158
+#: templates/marquee.php:45
+#: templates/review-item.php:38
+msgid "Verified buyer"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:234
+#: templates/review-item.php:123
+msgid "Recommends this product"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:236
+#: templates/review-item.php:140
+msgid "Helpful"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:291
+msgid "Ink"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:292
+msgid "Green"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:293
+msgid "Blue"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:294
+msgid "Violet"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:295
+msgid "Pink"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:296
+msgid "Orange"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:305
+msgid "Design saved."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:307
+msgid "Design reset to the defaults."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:309
+msgid "Choose how reviews look on your storefront: the product reviews tab, shortcodes, blocks, widgets and Elementor widgets. The preview updates as you change options; nothing is applied until you save."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:316
+msgid "Accent color"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:317
+msgid "Used for buttons, active filters and the current page number. Text on the accent switches between dark and white automatically for contrast."
+msgstr ""
+
+#: includes/Admin/DesignPage.php:320
+msgid "Custom color"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:323
+msgid "Preset colors"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:335
+msgid "Review layout"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:338
+msgid "List"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:339
+msgid "Grid"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:345
+msgid "Summary style"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:348
+msgid "Full panel"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:349
+msgid "Compact"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:355
+msgid "Card style"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:358
+msgid "Soft shadow"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:359
+msgid "Bordered"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:360
+msgid "Flat"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:366
+msgid "Rating icon"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:369
+msgid "Stars"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:370
+msgid "Hearts"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:371
+msgid "Thumbs"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:372
+msgid "Emoji"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:378
+msgid "Typography"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:380
+msgid "Font"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:382
+msgid "System (matches the visitor's device)"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:382
+msgid "Serif"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:382
+msgid "Rounded"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:382
+msgid "Monospace"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:387
+msgid "Text size"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:389
+msgid "Small (14px)"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:389
+msgid "Normal (15px)"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:389
+msgid "Large (17px)"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:398
+msgid "Save design"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:399
+msgid "Reset every design option to its default?"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:399
+msgid "Reset to defaults"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:403
+#: includes/Admin/DesignPage.php:404
+msgid "Preview"
+msgstr ""
+
+#: includes/Admin/DesignPage.php:407
+msgid "Preview of the review summary and two sample reviews"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:101
+#: includes/Admin/RequestsPage.php:102
+#: includes/Admin/RequestsPage.php:289
+msgid "Review Reminders"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:131
+msgid "Retry attempted. See the updated status below."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:135
+msgid "Only failed requests can be retried."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:164
+#: includes/Admin/SettingsPage.php:116
+msgid "Settings saved."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:176
+msgid "Notification settings saved."
+msgstr ""
+
+#. translators: %s: email address.
+#: includes/Admin/RequestsPage.php:189
+#, php-format
+msgid "Test email sent to %s."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:204
+msgid "You do not have permission to preview this email."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:226
+msgid "Reminder email preview"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:231
+msgid "Subject:"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:236
+msgid "Built from sample data because there is no completed order yet. The button links to your shop."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:237
+msgid "Built from your most recent completed order. In the preview the button links to your shop; real emails link to the customer's review page."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:242
+msgid "Email preview"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:260
+msgid "Not sent"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:261
+msgid "Reviewed"
+msgstr ""
+
+#. translators: %s: store name.
+#: includes/Admin/RequestsPage.php:286
+#: includes/Requests/Mailer.php:270
+#, php-format
+msgid "How was your order from %s?"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:296
+msgid "Reminder settings"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:301
+msgid "Enable reminders"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:302
+msgid "Send a review-request email after an order reaches the chosen status."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:305
+msgid "Trigger status"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:316
+msgid "Delay (days)"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:317
+msgid "days after the trigger status."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:320
+msgid "Email subject"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:323
+msgid "Leave empty to use the default shown. Merge tags: {customer_name}, {store_name}, {order_number}, {review_link}."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:327
+msgid "Email text"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:329
+msgid ""
+"Hi {customer_name},\n"
+"\n"
+"Thank you for your order from {store_name}. Could you tell other shoppers what you think of it? Your review helps them choose."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:330
+msgid "The text above the product list. Your store logo or name, the ordered products, the \"Write your review\" button and the unsubscribe link are always added around it. Leave empty to use the default text shown."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:331
+msgid "Merge tags: {customer_name} (billing first name), {store_name}, {order_number}, {review_link} (the customer's review page URL). Line breaks become paragraphs; basic HTML such as links and bold text is allowed."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:335
+msgid "From"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:337
+msgid "From name"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:338
+msgid "from@example.com"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:339
+msgid "Leave both empty to use the WordPress default sender."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:343
+msgid "Link expiry (days)"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:346
+msgid "How long the review link in each email keeps working. 0 = never expires. Applies to emails sent from now on."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:351
+#: includes/Admin/SettingsPage.php:248
+msgid "Save settings"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:352
+msgid "Preview email"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:358
+msgid "Send a test"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:359
+msgid "Sends the saved email, built from your most recent completed order (or sample data if there is none). Its review link works for 24 hours and shows the real review page, but reviews cannot be submitted from it."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:363
+msgid "Send test email"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:368
+msgid "New review notifications"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:373
+msgid "Email me when a review is posted"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:376
+msgid "Only reviews awaiting approval"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:377
+msgid "Every new review"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:380
+msgid "Imported reviews and reviews added by an admin do not send an email."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:384
+msgid "Send to"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:386
+msgid "Leave empty to use the site admin email shown."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:390
+msgid "Save notification settings"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:395
+msgid "Request log"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:399
+msgid "ID"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:400
+#: includes/Privacy/Privacy.php:212
+msgid "Order"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:401
+msgid "Email"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:405
+msgid "Note"
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:411
+msgid "No review requests yet."
+msgstr ""
+
+#: includes/Admin/RequestsPage.php:434
+msgid "Retry"
+msgstr ""
+
+#. translators: %s: number of requests.
+#: includes/Admin/RequestsPage.php:447
+#, php-format
+msgid "%s request"
+msgid_plural "%s requests"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/Admin/SettingsPage.php:73
+#: includes/Admin/SettingsPage.php:74
+#: includes/Admin/SettingsPage.php:153
+msgid "Settings"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:164
+msgid "Collection"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:166
+#: includes/Moderation/Page.php:432
+#: assets/js/blocks.js:84
+msgid "Reviews"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:169
+msgid "Enable reviews"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:173
+msgid "Allow guest (logged-out) reviews"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:179
+msgid "Also collect reviews on"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:180
+msgid "WooCommerce products are always reviewable. Add other public post types here."
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:193
+msgid "Photo uploads"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:197
+msgid "Allow photo uploads"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:200
+msgid "Max per review:"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:209
+msgid "Spam Protection"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:213
+msgid "Enable reCAPTCHA v3 (your own keys)"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:217
+msgid "Site key"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:221
+msgid "Secret key"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:230
+msgid "SEO & Advanced"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:232
+msgid "Schema markup (JSON-LD)"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:234
+msgid "Automatic: add ratings to WooCommerce's product schema; skip standalone schema if an SEO plugin is active (recommended)"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:235
+msgid "Always: also output standalone product schema when an SEO plugin is active"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:236
+msgid "Off: add no review schema"
+msgstr ""
+
+#: includes/Admin/SettingsPage.php:242
+msgid "Delete all NDV Reviews data when the plugin is uninstalled"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:101
+#: includes/Admin/ToolsPage.php:102
+#: includes/Admin/ToolsPage.php:207
+msgid "Import / Export"
+msgstr ""
+
+#. translators: 1: reviews processed, 2: products updated.
+#: includes/Admin/ToolsPage.php:130
+#, php-format
+msgid "Imported %1$d native reviews across %2$d products."
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:150
+msgid "Please choose a CSV file."
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:160
+msgid "Only .csv files are supported."
+msgstr ""
+
+#. translators: 1: imported, 2: skipped.
+#: includes/Admin/ToolsPage.php:179
+#, php-format
+msgid "Imported %1$d reviews; skipped %2$d."
+msgstr ""
+
+#. translators: 1: number of rows, 2: reason.
+#: includes/Admin/ToolsPage.php:184
+#, php-format
+msgid "%1$d %2$s"
+msgstr ""
+
+#. translators: %s: list of skip reasons with counts.
+#: includes/Admin/ToolsPage.php:187
+#, php-format
+msgid "Skipped rows: %s."
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:214
+msgid "Import native WooCommerce reviews"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:215
+msgid "Enrich existing WooCommerce reviews with NDV Reviews data (verified status, helpful counter, aggregates). Safe to run more than once."
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:218
+msgid "Import / refresh native reviews"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:223
+msgid "Import from CSV"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:224
+msgid "Columns: product_id, author, email, rating (1-5), title, content, date, recommend (yes/no/neutral), verified (1/0), status (approved/pending, optional). Rows already imported are skipped, so the same file can be imported again safely."
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:228
+msgid "Import CSV"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:233
+msgid "Export"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:234
+msgid "Approved and pending reviews with criteria scores and photo URLs. The CSV can be imported again with the importer above."
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:237
+msgid "Export CSV"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:241
+msgid "Export JSON"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:246
+msgid "QR code & shareable review link"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:247
+msgid "Print a QR code on packaging or receipts. Scanning it opens the product page with the review form in view."
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:255
+#: includes/Moderation/ListTable.php:89
+#: includes/Privacy/Privacy.php:148
+msgid "Product"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:256
+msgid "Search for a product…"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:261
+msgid "Generate"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:267
+msgid "Review link:"
+msgstr ""
+
+#. translators: %d: number of characters.
+#: includes/Admin/ToolsPage.php:272
+#, php-format
+msgid "This link is too long to fit in a QR code (%d characters). Use a shorter product permalink, or share the link directly."
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:281
+msgid "Download SVG"
+msgstr ""
+
+#: includes/Admin/ToolsPage.php:284
+msgid "That product was not found or is not published."
+msgstr ""
+
+#: includes/Collection/Landing.php:214
+#: includes/Forms/TestimonialForm.php:227
+msgid "Session expired. Please reload."
+msgstr ""
+
+#: includes/Collection/Landing.php:224
+msgid "This link is no longer valid. Please request a fresh one."
+msgstr ""
+
+#: includes/Collection/Landing.php:228
+msgid "This is a test link from the store admin. Reviews cannot be submitted from it."
+msgstr ""
+
+#: includes/Collection/Landing.php:233
+msgid "This product is not part of your review link."
+msgstr ""
+
+#: includes/Collection/Landing.php:236
+msgid "This product has already been reviewed."
+msgstr ""
+
+#: includes/Collection/Landing.php:247
+#: includes/Forms/ReviewForm.php:392
+msgid "Please confirm consent to submit your review."
+msgstr ""
+
+#: includes/Collection/Landing.php:257
+msgid "Please choose a rating between 1 and 5 stars."
+msgstr ""
+
+#: includes/Collection/Landing.php:263
+#: includes/Forms/ReviewForm.php:401
+#: includes/Forms/TestimonialForm.php:259
+#: includes/Reviews/ReviewRepository.php:121
+msgid "Please give a star rating before submitting your review."
+msgstr ""
+
+#: includes/Collection/Landing.php:320
+msgid "Thank you. Your review is published."
+msgstr ""
+
+#: includes/Collection/Landing.php:321
+msgid "Thank you. Your review was submitted and is awaiting moderation."
+msgstr ""
+
+#: includes/Collection/Landing.php:361
+msgid "Customer"
+msgstr ""
+
+#: includes/Collection/Landing.php:412
+#: templates/summary.php:72
+msgid "Write a review"
+msgstr ""
+
+#. translators: %s: rating out of 5.
+#: includes/Display/Html.php:34
+#, php-format
+msgid "Rated %s out of 5"
+msgstr ""
+
+#: includes/Display/Qr.php:49
+msgid "QR code"
+msgstr ""
+
+#: includes/Display/Renderer.php:124
+#: templates/review-item.php:105
+msgid "Customer photo"
+msgstr ""
+
+#: includes/Display/Renderer.php:125
+msgid "Close"
+msgstr ""
+
+#: includes/Display/Renderer.php:126
+msgid "Previous photo"
+msgstr ""
+
+#: includes/Display/Renderer.php:127
+msgid "Next photo"
+msgstr ""
+
+#: includes/Display/Renderer.php:298
+msgid "Filter by topic"
+msgstr ""
+
+#: includes/Display/Renderer.php:299
+msgid "All topics"
+msgstr ""
+
+#: includes/Display/Renderer.php:316
+msgid "Filter reviews"
+msgstr ""
+
+#: includes/Display/Renderer.php:317
+msgid "Filter by star rating"
+msgstr ""
+
+#: includes/Display/Renderer.php:318
+#: includes/Moderation/ListTable.php:104
+msgid "All"
+msgstr ""
+
+#. translators: %d: star rating 1-5.
+#. translators: %d: number of stars.
+#. translators: %d: star count.
+#: includes/Display/Renderer.php:321
+#: includes/Forms/ReviewForm.php:270
+#: templates/summary.php:82
+#, php-format
+msgid "%d star"
+msgid_plural "%d stars"
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/Display/Renderer.php:324
+msgid "Verified only"
+msgstr ""
+
+#: includes/Display/Renderer.php:325
+msgid "With photos"
+msgstr ""
+
+#: includes/Display/Renderer.php:327
+msgid "Sort reviews"
+msgstr ""
+
+#: includes/Display/Renderer.php:329
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:118
+#: assets/js/blocks.js:100
+msgid "Most recent"
+msgstr ""
+
+#: includes/Display/Renderer.php:330
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:119
+#: assets/js/blocks.js:101
+msgid "Most helpful"
+msgstr ""
+
+#: includes/Display/Renderer.php:331
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:120
+#: assets/js/blocks.js:102
+msgid "Highest rated"
+msgstr ""
+
+#: includes/Display/Renderer.php:363
+#: includes/Forms/ReviewForm.php:388
+msgid "Only logged in customers who have purchased this product may leave a review."
+msgstr ""
+
+#: includes/Display/Renderer.php:371
+msgid "Add a review"
+msgstr ""
+
+#: includes/Display/Renderer.php:375
+#: includes/Forms/TestimonialForm.php:210
+#: templates/magic-landing.php:135
+msgid "Submit review"
+msgstr ""
+
+#: includes/Display/Renderer.php:399
+#: includes/Reviews/Votes.php:40
+msgid "Session expired."
+msgstr ""
+
+#: includes/Display/Widgets.php:318
+msgid "Pause animation"
+msgstr ""
+
+#: includes/Display/Widgets.php:319
+msgid "Play animation"
+msgstr ""
+
+#: includes/Forms/AntiSpam.php:57
+msgid "Your submission could not be processed."
+msgstr ""
+
+#: includes/Forms/AntiSpam.php:114
+msgid "You are submitting reviews too quickly. Please try again later."
+msgstr ""
+
+#: includes/Forms/AntiSpam.php:162
+msgid "Captcha verification failed. Please reload and try again."
+msgstr ""
+
+#: includes/Forms/AntiSpam.php:191
+msgid "Captcha verification failed. Please try again."
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:125
+msgid "Your review was not submitted: the star rating could not be sent. Please enable JavaScript and try again."
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:126
+msgid "Review not submitted"
+msgstr ""
+
+#. translators: %s: login URL
+#: includes/Forms/ReviewForm.php:164
+#: includes/Forms/TestimonialForm.php:125
+#, php-format
+msgid "You must be <a href=\"%s\">logged in</a> to post a review."
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:200
+msgid "Submitting…"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:201
+#: includes/Forms/ReviewForm.php:446
+msgid "Thank you. Your review has been submitted and is awaiting moderation."
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:202
+msgid "Something went wrong. Please try again."
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:282
+#: includes/Forms/TestimonialForm.php:193
+#: templates/magic-landing.php:96
+msgid "Review title (optional)"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:287
+#: includes/Forms/TestimonialForm.php:194
+#: templates/magic-landing.php:102
+msgid "Your review"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:292
+#: templates/magic-landing.php:108
+msgid "Would you recommend this product?"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:293
+#: includes/Privacy/Privacy.php:240
+#: templates/magic-landing.php:109
+msgid "Yes"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:294
+#: templates/magic-landing.php:110
+msgid "Neutral"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:295
+#: templates/magic-landing.php:111
+msgid "No"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:300
+#: includes/Forms/TestimonialForm.php:197
+#: templates/magic-landing.php:116
+msgid "Add photos (optional)"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:305
+msgid "Click or drag photos here"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:306
+msgid "JPEG · PNG · WEBP"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:326
+msgid "I consent to my review and details being stored and published."
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:332
+msgid "Leave this field empty"
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:352
+msgid "Your session expired. Please reload the page."
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:356
+#: includes/Forms/ReviewForm.php:384
+#: includes/Forms/TestimonialForm.php:252
+msgid "Reviews are not open for this item."
+msgstr ""
+
+#: includes/Forms/ReviewForm.php:360
+#: includes/Forms/TestimonialForm.php:231
+msgid "You must be logged in to submit a review."
+msgstr ""
+
+#: includes/Forms/TestimonialForm.php:102
+msgid "Leave a review"
+msgstr ""
+
+#: includes/Forms/TestimonialForm.php:117
+msgid "Review form: set product_id to a published product (or reviewable post) with reviews open. This notice is shown to editors only."
+msgstr ""
+
+#: includes/Forms/TestimonialForm.php:191
+msgid "Your name"
+msgstr ""
+
+#: includes/Forms/TestimonialForm.php:192
+msgid "Your email"
+msgstr ""
+
+#: includes/Forms/TestimonialForm.php:200
+#: templates/magic-landing.php:123
+msgid "I consent to my review being stored and published."
+msgstr ""
+
+#: includes/Forms/TestimonialForm.php:244
+msgid "Please confirm consent."
+msgstr ""
+
+#: includes/Forms/TestimonialForm.php:297
+msgid "Thank you. Your review is awaiting moderation."
+msgstr ""
+
+#: includes/Forms/Upload.php:84
+msgid "Only JPG, PNG, GIF, or WebP images are allowed."
+msgstr ""
+
+#: includes/Forms/Upload.php:87
+msgid "One of your images is too large."
+msgstr ""
+
+#: includes/Importers/Csv.php:73
+msgid "CSV file could not be read."
+msgstr ""
+
+#: includes/Importers/Csv.php:79
+msgid "CSV file could not be opened."
+msgstr ""
+
+#: includes/Importers/Csv.php:86
+msgid "CSV has no header row."
+msgstr ""
+
+#: includes/Importers/Csv.php:118
+msgid "missing product_id or content"
+msgstr ""
+
+#: includes/Importers/Csv.php:122
+msgid "rating not between 1 and 5"
+msgstr ""
+
+#: includes/Importers/Csv.php:126
+msgid "no active rating criteria"
+msgstr ""
+
+#: includes/Importers/Csv.php:133
+msgid "already imported"
+msgstr ""
+
+#: includes/Importers/Csv.php:144
+#: includes/Moderation/ListTable.php:257
+#: includes/Privacy/Privacy.php:278
+msgid "Anonymous"
+msgstr ""
+
+#: includes/Integrations/Elementor/Tags/RatingValue.php:35
+msgid "Product Rating Value"
+msgstr ""
+
+#: includes/Integrations/Elementor/Tags/ReviewCount.php:34
+msgid "Product Review Count"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:36
+msgid "Reviews Marquee"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:92
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:94
+#: includes/Integrations/Elementor/Widgets/Stars.php:93
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:93
+msgid "Content"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:96
+#: assets/js/blocks.js:70
+#: assets/js/blocks.js:71
+#: assets/js/blocks.js:149
+msgid "Source"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:100
+#: assets/js/blocks.js:152
+msgid "All products"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:101
+#: assets/js/blocks.js:154
+msgid "Category"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:108
+#: assets/js/blocks.js:161
+msgid "Category (slug or ID)"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:116
+#: assets/js/blocks.js:193
+msgid "Rows"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:120
+#: assets/js/blocks.js:196
+msgid "Single row"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:121
+msgid "Two rows (crisscross)"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:128
+#: assets/js/blocks.js:174
+msgid "Minimum rating"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:138
+#: assets/js/blocks.js:167
+msgid "Number of reviews"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:146
+msgid "Speed (seconds)"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:154
+#: assets/js/blocks.js:181
+msgid "Direction"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:158
+#: assets/js/blocks.js:184
+msgid "Left"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:159
+#: assets/js/blocks.js:185
+msgid "Right"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:160
+msgid "Up (vertical)"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:161
+msgid "Down (vertical)"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:168
+msgid "Gap (px)"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:178
+#: assets/js/blocks.js:217
+msgid "Pause on hover"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:186
+#: assets/js/blocks.js:223
+msgid "Verified buyers only"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:194
+msgid "With photos only"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:204
+#: includes/Integrations/Elementor/Widgets/Stars.php:107
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:107
+msgid "Style"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:226
+msgid "Card border radius"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:236
+msgid "Card padding"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:252
+msgid "Card width"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:259
+msgid "Reviewer name color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:261
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:194
+msgid "Verified badge color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:262
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:195
+msgid "Stars color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/MarqueeWidget.php:263
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:200
+msgid "Review text color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:38
+msgid "Review Section"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:98
+#: includes/Integrations/Elementor/Widgets/Stars.php:97
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:97
+msgid "Product ID (0 = current)"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:106
+#: assets/js/blocks.js:89
+msgid "Reviews per page"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:114
+#: assets/js/blocks.js:97
+msgid "Order by"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:128
+msgid "Show summary"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:138
+msgid "Card"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:160
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:134
+msgid "Border radius"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:170
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:144
+msgid "Padding"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:188
+msgid "Text & Badges"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:192
+msgid "Author name color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:196
+msgid "Date color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:198
+msgid "Review title color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:202
+msgid "Helpful button color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:203
+msgid "Recommends color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/ReviewsWidget.php:204
+msgid "Does-not-recommend color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/Stars.php:37
+msgid "Star Rating"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/Stars.php:114
+msgid "Star size"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/Stars.php:121
+msgid "Filled star color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/Stars.php:122
+msgid "Empty star color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/Stars.php:123
+msgid "Count text color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:37
+msgid "Review Summary"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:111
+msgid "Overall number color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:113
+msgid "Bar fill color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:114
+msgid "Bar track color"
+msgstr ""
+
+#: includes/Integrations/Elementor/Widgets/SummaryWidget.php:115
+msgid "Criteria label color"
+msgstr ""
+
+#: includes/Integrations/Widgets/MarqueeWidget.php:25
+msgid "NDV Reviews: Marquee"
+msgstr ""
+
+#: includes/Integrations/Widgets/MarqueeWidget.php:26
+msgid "Scrolling marquee of recent reviews."
+msgstr ""
+
+#: includes/Integrations/Widgets/MarqueeWidget.php:66
+msgid "What customers say"
+msgstr ""
+
+#: includes/Integrations/Widgets/MarqueeWidget.php:71
+#: includes/Integrations/Widgets/RatingBadgeWidget.php:62
+#: includes/Integrations/Widgets/RecentReviewsWidget.php:75
+#: includes/Integrations/Widgets/SummaryWidget.php:63
+#: includes/Integrations/Widgets/TopRatedWidget.php:94
+msgid "Title:"
+msgstr ""
+
+#: includes/Integrations/Widgets/MarqueeWidget.php:75
+#: includes/Integrations/Widgets/RecentReviewsWidget.php:79
+msgid "Number of reviews:"
+msgstr ""
+
+#: includes/Integrations/Widgets/MarqueeWidget.php:79
+msgid "Minimum rating:"
+msgstr ""
+
+#: includes/Integrations/Widgets/RatingBadgeWidget.php:25
+msgid "NDV Reviews: Rating Badge"
+msgstr ""
+
+#: includes/Integrations/Widgets/RatingBadgeWidget.php:26
+msgid "Aggregate stars + review count for a product."
+msgstr ""
+
+#: includes/Integrations/Widgets/RatingBadgeWidget.php:66
+#: includes/Integrations/Widgets/SummaryWidget.php:67
+msgid "Product ID (0 = current):"
+msgstr ""
+
+#: includes/Integrations/Widgets/RecentReviewsWidget.php:26
+msgid "NDV Reviews: Recent Reviews"
+msgstr ""
+
+#: includes/Integrations/Widgets/RecentReviewsWidget.php:27
+msgid "The latest reviews across your store."
+msgstr ""
+
+#: includes/Integrations/Widgets/RecentReviewsWidget.php:48
+msgid "Recent reviews"
+msgstr ""
+
+#: includes/Integrations/Widgets/SummaryWidget.php:25
+#: assets/js/blocks.js:70
+msgid "NDV Reviews: Summary"
+msgstr ""
+
+#: includes/Integrations/Widgets/SummaryWidget.php:26
+msgid "Rating summary for a product."
+msgstr ""
+
+#: includes/Integrations/Widgets/TopRatedWidget.php:25
+msgid "NDV Reviews: Top-Rated Products"
+msgstr ""
+
+#: includes/Integrations/Widgets/TopRatedWidget.php:26
+msgid "Your highest-rated products."
+msgstr ""
+
+#: includes/Integrations/Widgets/TopRatedWidget.php:65
+msgid "Top-rated products"
+msgstr ""
+
+#: includes/Integrations/Widgets/TopRatedWidget.php:98
+msgid "Number of products:"
+msgstr ""
+
+#: includes/Moderation/Actions.php:138
+#: includes/Moderation/ListTable.php:87
+#: includes/Privacy/Privacy.php:156
+msgid "Rating"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:86
+msgid "Author"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:88
+#: includes/Moderation/Page.php:502
+#: includes/Privacy/Privacy.php:164
+msgid "Review"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:90
+#: includes/Moderation/Page.php:537
+msgid "Photos"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:91
+#: includes/Privacy/Privacy.php:168
+msgid "Date"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:105
+msgid "Pending"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:106
+msgid "Approved"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:107
+#: includes/Moderation/ListTable.php:278
+msgid "Spam"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:108
+#: includes/Moderation/ListTable.php:279
+msgid "Trash"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:130
+#: includes/Moderation/ListTable.php:263
+msgid "Restore"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:131
+#: includes/Moderation/ListTable.php:137
+#: includes/Moderation/ListTable.php:267
+msgid "Delete permanently"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:136
+#: includes/Moderation/ListTable.php:265
+msgid "Not spam"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:142
+#: includes/Moderation/ListTable.php:273
+msgid "Approve"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:143
+#: includes/Moderation/ListTable.php:275
+msgid "Unapprove"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:144
+msgid "Mark as spam"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:145
+msgid "Move to trash"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:166
+#: assets/js/blocks.js:158
+msgid "Product ID"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:168
+msgid "All ratings"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:173
+msgid "Filter"
+msgstr ""
+
+#: includes/Moderation/ListTable.php:277
+msgid "Edit"
+msgstr ""
+
+#: includes/Moderation/Page.php:97
+#: includes/Moderation/Page.php:98
+msgid "All Reviews"
+msgstr ""
+
+#: includes/Moderation/Page.php:436
+msgid "Review updated."
+msgstr ""
+
+#: includes/Moderation/Page.php:448
+msgid "Search reviews"
+msgstr ""
+
+#: includes/Moderation/Page.php:467
+#: includes/Reviews/Votes.php:47
+msgid "Review not found."
+msgstr ""
+
+#: includes/Moderation/Page.php:480
+msgid "Edit Review"
+msgstr ""
+
+#: includes/Moderation/Page.php:483
+msgid "Not saved: a review needs at least one criteria rating."
+msgstr ""
+
+#: includes/Moderation/Page.php:491
+#: includes/Privacy/Privacy.php:160
+msgid "Title"
+msgstr ""
+
+#: includes/Moderation/Page.php:495
+msgid "Topics"
+msgstr ""
+
+#: includes/Moderation/Page.php:497
+msgid "e.g. fit, battery, support"
+msgstr ""
+
+#: includes/Moderation/Page.php:498
+msgid "Comma-separated. Shown as filter pills on the storefront."
+msgstr ""
+
+#: includes/Moderation/Page.php:507
+msgid "Criteria ratings"
+msgstr ""
+
+#: includes/Moderation/Page.php:524
+msgid "—"
+msgstr ""
+
+#: includes/Moderation/Page.php:542
+msgid "Remove"
+msgstr ""
+
+#: includes/Moderation/Page.php:551
+msgid "Save review"
+msgstr ""
+
+#: includes/Moderation/Page.php:552
+msgid "Back"
+msgstr ""
+
+#: includes/Plugin.php:526
 msgid "NDV Reviews requires WooCommerce to be installed and active."
+msgstr ""
+
+#: includes/Privacy/Privacy.php:152
+msgid "Name shown"
+msgstr ""
+
+#. translators: %s: rating criterion name.
+#: includes/Privacy/Privacy.php:178
+#, php-format
+msgid "Rating: %s"
+msgstr ""
+
+#: includes/Privacy/Privacy.php:187
+msgid "Photo"
+msgstr ""
+
+#: includes/Privacy/Privacy.php:194
+msgid "Product Reviews"
+msgstr ""
+
+#: includes/Privacy/Privacy.php:208
+#: includes/Privacy/Privacy.php:235
+msgid "Review request emails"
+msgstr ""
+
+#: includes/Privacy/Privacy.php:239
+msgid "Unsubscribed from review requests"
+msgstr ""
+
+#. translators: 1: store name, 2: product name.
+#: includes/Requests/AdminNotify.php:100
+#, php-format
+msgid "[%1$s] New review awaiting approval: %2$s"
+msgstr ""
+
+#. translators: 1: store name, 2: product name.
+#: includes/Requests/AdminNotify.php:102
+#, php-format
+msgid "[%1$s] New review: %2$s"
+msgstr ""
+
+#: includes/Requests/AdminNotify.php:148
+msgid "Awaiting your approval"
+msgstr ""
+
+#: includes/Requests/AdminNotify.php:148
+msgid "Published"
+msgstr ""
+
+#. translators: %s: rating.
+#: includes/Requests/AdminNotify.php:151
+#, php-format
+msgid "%s out of 5 stars"
+msgstr ""
+
+#. translators: %s: reviewer name.
+#: includes/Requests/AdminNotify.php:156
+#, php-format
+msgid "By %s"
+msgstr ""
+
+#: includes/Requests/AdminNotify.php:168
+msgid "Review pending reviews"
+msgstr ""
+
+#: includes/Requests/AdminNotify.php:170
+msgid "Open this review"
+msgstr ""
+
+#: includes/Requests/AdminNotify.php:174
+msgid "You can change or turn off these emails under NDV Reviews > Review Reminders."
+msgstr ""
+
+#: includes/Requests/HealthCheck.php:95
+msgid "NDV Reviews: review reminders are not being sent on time."
+msgstr ""
+
+#: includes/Requests/HealthCheck.php:99
+msgid "Open the reminder log"
+msgstr ""
+
+#: includes/Requests/HealthCheck.php:129
+msgid "Action Scheduler is not available, so reminders cannot be queued. Make sure WooCommerce is active."
+msgstr ""
+
+#. translators: %d: number of reminders.
+#: includes/Requests/HealthCheck.php:149
+#, php-format
+msgid "%d review reminder is more than an hour past its send time. The background queue (Action Scheduler, run by WP-Cron) does not appear to be running."
+msgid_plural "%d review reminders are more than an hour past their send time. The background queue (Action Scheduler, run by WP-Cron) does not appear to be running."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/Requests/HealthCheck.php:160
+msgid "WP-Cron is disabled on this site (DISABLE_WP_CRON). A server cron job must request wp-cron.php regularly, for example every 5 minutes."
+msgstr ""
+
+#: includes/Requests/Mailer.php:73
+msgid "Order not found."
+msgstr ""
+
+#: includes/Requests/Mailer.php:87
+msgid "Order is no longer eligible for a review request."
+msgstr ""
+
+#: includes/Requests/Mailer.php:92
+msgid "Order has no valid email."
+msgstr ""
+
+#: includes/Requests/Mailer.php:96
+msgid "Recipient has unsubscribed."
+msgstr ""
+
+#: includes/Requests/Mailer.php:101
+msgid "No reviewable products in this order."
+msgstr ""
+
+#: includes/Requests/Mailer.php:112
+msgid "wp_mail() returned false."
+msgstr ""
+
+#: includes/Requests/Mailer.php:125
+msgid "Enter a valid email address."
+msgstr ""
+
+#. translators: %s: email subject.
+#: includes/Requests/Mailer.php:138
+#, php-format
+msgid "[Test] %s"
+msgstr ""
+
+#. translators: %s: email subject.
+#: includes/Requests/Mailer.php:140
+#, php-format
+msgid "[Test, sample data: no completed orders yet] %s"
+msgstr ""
+
+#: includes/Requests/Mailer.php:145
+msgid "wp_mail() returned false — check your SMTP/mail configuration."
+msgstr ""
+
+#: includes/Requests/Mailer.php:205
+msgid "Alex"
+msgstr ""
+
+#: includes/Requests/Mailer.php:206
+msgid "Sample"
+msgstr ""
+
+#. translators: 1: customer first name, 2: review link.
+#: includes/Requests/Mailer.php:320
+#, php-format
+msgid ""
+"Hi %1$s,\n"
+"\n"
+"Could you review what you bought? Your review link:\n"
+"%2$s"
+msgstr ""
+
+#: includes/Requests/Unsubscribe.php:73
+msgid "This unsubscribe link is invalid or has expired."
+msgstr ""
+
+#: includes/Requests/Unsubscribe.php:76
+msgid "You have been unsubscribed from review requests."
+msgstr ""
+
+#: includes/Requests/Unsubscribe.php:78
+msgid "You are already unsubscribed from review requests."
+msgstr ""
+
+#. translators: %s: email address.
+#: includes/Requests/Unsubscribe.php:82
+#, php-format
+msgid "Stop sending review request emails to %s?"
+msgstr ""
+
+#: includes/Requests/Unsubscribe.php:91
+#: includes/Requests/Unsubscribe.php:100
+msgid "Unsubscribe"
+msgstr ""
+
+#: includes/Requests/Unsubscribe.php:96
+msgid "Review requests"
+msgstr ""
+
+#: includes/Requests/Unsubscribe.php:103
+#: templates/magic-landing.php:29
+#: templates/magic-landing.php:40
+msgid "Return to the store"
+msgstr ""
+
+#: includes/Reviews/CriteriaRepository.php:125
+#: includes/Reviews/CriteriaRepository.php:175
+msgid "Criterion name is required."
+msgstr ""
+
+#. translators: %d: maximum number of active criteria.
+#: includes/Reviews/CriteriaRepository.php:134
+#, php-format
+msgid "The free version supports up to %d active criteria. Upgrade to Pro for unlimited criteria."
+msgstr ""
+
+#: includes/Reviews/CriteriaRepository.php:151
+msgid "Could not save the criterion."
+msgstr ""
+
+#: includes/Reviews/CriteriaRepository.php:166
+msgid "Criterion not found."
+msgstr ""
+
+#. translators: %d: maximum number of active criteria.
+#: includes/Reviews/CriteriaRepository.php:191
+#, php-format
+msgid "The free version supports up to %d active criteria."
+msgstr ""
+
+#: includes/Reviews/CriteriaRepository.php:277
+msgid "At least one criterion must stay active: reviews need a star rating. Add or activate another criterion first."
+msgstr ""
+
+#: includes/Reviews/CriteriaRepository.php:292
+msgid "Quality"
+msgstr ""
+
+#: includes/Reviews/CriteriaRepository.php:293
+msgid "Value"
+msgstr ""
+
+#: includes/Reviews/CriteriaRepository.php:294
+msgid "Service"
+msgstr ""
+
+#: includes/Reviews/ReviewRepository.php:84
+msgid "This item cannot be reviewed."
+msgstr ""
+
+#: includes/Reviews/ReviewRepository.php:93
+msgid "Please write your review."
+msgstr ""
+
+#: includes/Reviews/ReviewRepository.php:107
+msgid "Please enter your name."
+msgstr ""
+
+#: includes/Reviews/ReviewRepository.php:110
+msgid "Please enter a valid email address."
+msgstr ""
+
+#: includes/Reviews/ReviewRepository.php:163
+msgid "Could not save your review. Please try again."
+msgstr ""
+
+#: includes/Reviews/Votes.php:59
+msgid "Thanks for your feedback!"
+msgstr ""
+
+#: includes/Reviews/Votes.php:88
+msgid "You have already marked this review as helpful."
+msgstr ""
+
+#. translators: %s: store name.
+#: templates/email-request.php:29
+#, php-format
+msgid "Review the items from your recent %s order."
+msgstr ""
+
+#. translators: %s: customer first name.
+#: templates/email-request.php:62
+#, php-format
+msgid "Hi %s,"
+msgstr ""
+
+#. translators: %s: customer first name.
+#: templates/email-request.php:62
+msgid "Hello,"
+msgstr ""
+
+#. translators: %s: store name.
+#: templates/email-request.php:68
+#, php-format
+msgid "Thank you for your order from %s. Could you tell other shoppers what you think of it? Your review helps them choose."
+msgstr ""
+
+#: templates/email-request.php:102
+msgid "Write your review"
+msgstr ""
+
+#: templates/email-request.php:113
+msgid "You received this email because you placed an order with us."
+msgstr ""
+
+#: templates/email-request.php:114
+msgid "Unsubscribe from review requests"
+msgstr ""
+
+#: templates/magic-landing.php:27
+msgid "This link has expired"
+msgstr ""
+
+#: templates/magic-landing.php:28
+msgid "Your review link is no longer valid. If you still have items to review, please request a fresh link or contact the store."
+msgstr ""
+
+#: templates/magic-landing.php:38
+msgid "All done — thank you"
+msgstr ""
+
+#: templates/magic-landing.php:39
+msgid "You have already reviewed everything from this order. We appreciate your feedback."
+msgstr ""
+
+#: templates/magic-landing.php:48
+msgid "Share your feedback"
+msgstr ""
+
+#: templates/magic-landing.php:49
+msgid "Tell other shoppers what you think. Each item has its own short form."
+msgstr ""
+
+#: templates/magic-landing.php:51
+msgid "This page was opened from a test email. It shows what the customer sees; reviews cannot be submitted from it."
+msgstr ""
+
+#: templates/magic-landing.php:90
+msgid "Name shown with your review"
+msgstr ""
+
+#: templates/marquee.php:34
+#: templates/summary.php:41
+msgid "Customer reviews"
+msgstr ""
+
+#: templates/review-item.php:125
+msgid "Does not recommend"
+msgstr ""
+
+#: templates/review-list.php:22
+msgid "No reviews match these filters."
+msgstr ""
+
+#: templates/review-list.php:24
+#: templates/summary.php:31
+msgid "No reviews yet."
+msgstr ""
+
+#: templates/review-list.php:60
+msgid "Reviews pages"
+msgstr ""
+
+#: templates/review-list.php:63
+msgid "Prev"
+msgstr ""
+
+#: templates/review-list.php:82
+msgid "Next"
+msgstr ""
+
+#. translators: %s: number of reviews.
+#: templates/stars.php:23
+#, php-format
+msgid "(%s review)"
+msgid_plural "(%s reviews)"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/stars.php:25
+msgid "(No reviews yet)"
+msgstr ""
+
+#: templates/summary.php:33
+msgid "Write the first review"
+msgstr ""
+
+#. translators: %s: number of reviews.
+#: templates/summary.php:51
+#, php-format
+msgid "Based on %s review"
+msgid_plural "Based on %s reviews"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: number of reviews from verified buyers.
+#: templates/summary.php:59
+#, php-format
+msgid "%s from a verified buyer"
+msgid_plural "%s from verified buyers"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: percentage of reviewers who recommend.
+#: templates/summary.php:67
+#, php-format
+msgid "%d%% would recommend"
+msgstr ""
+
+#: templates/summary.php:76
+msgid "Rating distribution. Select a row to show only those reviews."
+msgstr ""
+
+#. translators: 1: star label e.g. "5 stars", 2: review count, 3: percentage.
+#: templates/summary.php:84
+#, php-format
+msgid "%1$s: %2$s reviews, %3$s%%"
+msgstr ""
+
+#: templates/summary.php:97
+msgid "Rating breakdown"
+msgstr ""
+
+#. translators: %s: average score out of 5.
+#: templates/summary.php:103
+#, php-format
+msgid "%s out of 5"
+msgstr ""
+
+#: assets/js/blocks.js:55
+msgid "Product ID (0 = current product)"
+msgstr ""
+
+#: assets/js/blocks.js:71
+msgid "NDV Reviews: Stars"
+msgstr ""
+
+#: assets/js/blocks.js:72
+msgid "NDV Reviews: Form"
+msgstr ""
+
+#: assets/js/blocks.js:72
+msgid "Form"
+msgstr ""
+
+#: assets/js/blocks.js:76
+msgid "NDV Reviews: Reviews"
+msgstr ""
+
+#: assets/js/blocks.js:126
+msgid "NDV Reviews: Reviews Marquee"
+msgstr ""
+
+#: assets/js/blocks.js:143
+msgid "Marquee"
+msgstr ""
+
+#: assets/js/blocks.js:153
+msgid "Specific product"
+msgstr ""
+
+#: assets/js/blocks.js:186
+msgid "Up"
+msgstr ""
+
+#: assets/js/blocks.js:187
+msgid "Down"
+msgstr ""
+
+#: assets/js/blocks.js:197
+msgid "Two rows (opposite directions)"
+msgstr ""
+
+#: assets/js/blocks.js:203
+msgid "Loop duration (seconds)"
+msgstr ""
+
+#: assets/js/blocks.js:210
+msgid "Gap between cards (px)"
+msgstr ""
+
+#: assets/js/blocks.js:229
+msgid "Reviews with photos only"
 msgstr ""

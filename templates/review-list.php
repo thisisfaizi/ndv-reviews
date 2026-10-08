@@ -6,6 +6,7 @@
  *
  * @var array<string,mixed> $result     Paginated result from ReviewQuery.
  * @var string              $vote_nonce Helpful-vote nonce.
+ * @var bool                $filtered   Optional. True when filters produced the result.
  *
  * @package NdvReviews
  */
@@ -15,21 +16,27 @@ use NdvReviews\Support\View;
 defined( 'ABSPATH' ) || exit;
 
 if ( empty( $result['items'] ) ) {
-	echo '<p class="ndvr-no-reviews">' . esc_html__( 'No reviews match your selection yet.', 'ndv-reviews' ) . '</p>';
+	// "Filtered" = the shopper narrowed the list (AJAX); otherwise there are
+	// simply no reviews. $filtered is optional so theme overrides keep working.
+	if ( ! empty( $filtered ) ) {
+		echo '<p class="ndvr-no-reviews">' . esc_html__( 'No reviews match these filters.', 'ndv-reviews' ) . '</p>';
+	} else {
+		echo '<p class="ndvr-no-reviews">' . esc_html__( 'No reviews yet.', 'ndv-reviews' ) . '</p>';
+	}
 	return;
 }
 ?>
 <ol class="ndvr-review-list">
 	<?php
 	foreach ( $result['items'] as $ndvr_review ) {
-		// View::render returns escaped template output.
-		echo View::render( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$ndvr_item_html = View::render(
 			'review-item.php',
 			array(
 				'review'     => $ndvr_review,
 				'vote_nonce' => $vote_nonce,
 			)
 		);
+		echo $ndvr_item_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render returns escaped template output.
 	}
 	?>
 </ol>

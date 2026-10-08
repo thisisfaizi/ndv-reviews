@@ -180,6 +180,9 @@ class CriteriaRepository {
 
 		if ( isset( $data['status'] ) ) {
 			$status = ( 'inactive' === $data['status'] ) ? 'inactive' : 'active';
+			if ( 'inactive' === $status && 'active' === $existing->status && $this->is_last_active( $existing ) ) {
+				return $this->last_active_error();
+			}
 			// Re-activating must respect the cap.
 			if ( 'active' === $status && 'active' !== $existing->status && $this->count_active() >= $this->max_active() ) {
 				return new \WP_Error(
@@ -207,19 +210,72 @@ class CriteriaRepository {
 	}
 
 	/**
-	 * Delete a criterion and its recorded scores.
+	 * Delete a criterion and its recorded scores, then recompute the overall
+	 * rating of every review that had a score for it (and those products).
+	 *
+	 * A review whose only score was this criterion keeps its last integer
+	 * `rating` (RatingCache falls back to it), so it never becomes unrated.
 	 *
 	 * @param int $id Criterion id.
-	 * @return bool
+	 * @return bool|\WP_Error False if nothing was deleted; WP_Error when it is the last active criterion.
 	 */
 	public function delete( $id ) {
 		global $wpdb;
 
-		$id = absint( $id );
-		$wpdb->delete( Db::table( 'review_criteria' ), array( 'criteria_id' => $id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$id       = absint( $id );
+		$existing = $this->find( $id );
+		if ( ! $existing ) {
+			return false;
+		}
+		if ( 'active' === $existing->status && $this->is_last_active( $existing ) ) {
+			return $this->last_active_error();
+		}
+
+		$scores = Db::table( 'review_criteria' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$comment_ids = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT comment_id FROM `{$scores}` WHERE criteria_id = %d", $id ) );
+
+		$wpdb->delete( $scores, array( 'criteria_id' => $id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$deleted = $wpdb->delete( Db::table( 'criteria' ), array( 'id' => $id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 
+		$ratings  = new RatingCache();
+		$products = array();
+		foreach ( (array) $comment_ids as $comment_id ) {
+			$comment = get_comment( (int) $comment_id );
+			if ( ! $comment ) {
+				continue;
+			}
+			$ratings->recalc_review( (int) $comment_id );
+			$products[ (int) $comment->comment_post_ID ] = true;
+		}
+		foreach ( array_keys( $products ) as $product_id ) {
+			$ratings->recalc_product( $product_id );
+		}
+
 		return (bool) $deleted;
+	}
+
+	/**
+	 * Whether a criterion is the only active one left (removing it would leave
+	 * the review form with no rating field, so every submission would fail).
+	 *
+	 * @param Criteria $criterion Criterion.
+	 * @return bool
+	 */
+	private function is_last_active( Criteria $criterion ) {
+		return 'active' === $criterion->status && $this->count_active() <= 1;
+	}
+
+	/**
+	 * Error returned when an action would leave no active criterion.
+	 *
+	 * @return \WP_Error
+	 */
+	private function last_active_error() {
+		return new \WP_Error(
+			'ndvr_criteria_last_active',
+			__( 'At least one criterion must stay active: reviews need a star rating. Add or activate another criterion first.', 'ndv-reviews' )
+		);
 	}
 
 	/**

@@ -45,7 +45,9 @@ class Shortcodes implements Registerable {
 		add_shortcode( 'ndvr-criteria-graph', array( $this, 'criteria_graph' ) );
 		add_shortcode( 'ndvr-stars', array( $this, 'stars' ) );
 		add_shortcode( 'ndvr-marquee', array( $this, 'marquee' ) );
-		// Pro-rendered shortcode — returns empty unless Pro hooks this filter.
+		// [ndvr-qa] is rendered by Pro through the qa_shortcode_output filter.
+		// It stays registered without Pro so pages that use it print nothing
+		// instead of the raw shortcode text after Pro is deactivated.
 		add_shortcode( 'ndvr-qa', array( $this, 'qa' ) );
 	}
 

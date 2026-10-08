@@ -1,0 +1,580 @@
+<?php
+/**
+ * Admin screen: Overview dashboard (the NDV Reviews landing page).
+ *
+ * @package NdvReviews
+ */
+
+namespace NdvReviews\Admin;
+
+use NdvReviews\Support\Caps;
+use NdvReviews\Support\Db;
+use NdvReviews\Support\Registerable;
+use NdvReviews\Support\Settings;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Registers the top-level NDV Reviews menu and renders the Overview: headline
+ * KPIs, the moderation queue, rating distribution, reminder health and a setup
+ * checklist. Also owns the submenu order so the menu reads as grouped tasks
+ * (Reviews → Collection → Display → Settings → Data) regardless of which
+ * screen registered first.
+ */
+class DashboardPage implements Registerable {
+
+	const MENU_SLUG  = 'ndv-reviews';
+	const NONCE      = 'ndvr_dashboard_action';
+
+	/**
+	 * Settings store.
+	 *
+	 * @var Settings
+	 */
+	private $settings;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param Settings $settings Settings store.
+	 */
+	public function __construct( Settings $settings ) {
+		$this->settings = $settings;
+	}
+
+	/**
+	 * Register hooks.
+	 *
+	 * @return void
+	 */
+	public function register() {
+		add_action( 'admin_menu', array( $this, 'register_menu' ), 9 );
+		add_action( 'admin_menu', array( $this, 'order_submenu' ), 999 );
+		add_action( 'admin_init', array( $this, 'handle_actions' ) );
+	}
+
+	/**
+	 * Add the top-level menu; its first item is the Overview.
+	 *
+	 * @return void
+	 */
+	public function register_menu() {
+		$pending = $this->count_reviews( 'hold' );
+		$bubble  = $pending ? ' <span class="awaiting-mod count-' . absint( $pending ) . '"><span class="pending-count">' . esc_html( number_format_i18n( $pending ) ) . '</span></span>' : '';
+
+		add_menu_page(
+			__( 'NDV Reviews', 'ndv-reviews' ),
+			__( 'NDV Reviews', 'ndv-reviews' ) . $bubble,
+			Caps::manage( 'overview' ),
+			self::MENU_SLUG,
+			array( $this, 'render' ),
+			'dashicons-star-filled',
+			56
+		);
+
+		add_submenu_page(
+			self::MENU_SLUG,
+			__( 'Overview', 'ndv-reviews' ),
+			__( 'Overview', 'ndv-reviews' ),
+			Caps::manage( 'overview' ),
+			self::MENU_SLUG,
+			array( $this, 'render' )
+		);
+	}
+
+	/**
+	 * Sort the NDV Reviews submenu into a task-ordered hierarchy. Unknown items
+	 * (third-party, Freemius account/pricing) keep their relative order at the end.
+	 *
+	 * @return void
+	 */
+	public function order_submenu() {
+		global $submenu;
+
+		if ( empty( $submenu[ self::MENU_SLUG ] ) || ! is_array( $submenu[ self::MENU_SLUG ] ) ) {
+			return;
+		}
+
+		/**
+		 * Filter the NDV Reviews admin submenu order (page slugs, first → last).
+		 *
+		 * @param string[] $order Page slugs.
+		 */
+		$order = (array) apply_filters(
+			'ndv-reviews/admin_menu_order',
+			array(
+				// Reviews.
+				'ndv-reviews',
+				'ndv-reviews-moderation',
+				'ndv-reviews-add',
+				'ndv-reviews-qa',
+				// Collection.
+				'ndv-reviews-reminders',
+				'ndv-reviews-campaigns',
+				'ndv-reviews-external',
+				// Insight.
+				'ndv-reviews-analytics',
+				// Display + configuration.
+				'ndv-reviews-design',
+				'ndv-reviews-criteria',
+				'ndv-reviews-settings',
+				'ndv-reviews-pro',
+				// Data.
+				'ndv-reviews-tools',
+				'ndv-reviews-import-pro',
+				// Freemius account/pricing pages follow.
+			)
+		);
+		$rank  = array_flip( array_values( $order ) );
+		$items = array_values( $submenu[ self::MENU_SLUG ] );
+
+		$keyed = array();
+		foreach ( $items as $i => $item ) {
+			$slug    = isset( $item[2] ) ? (string) $item[2] : '';
+			$keyed[] = array(
+				'w'    => isset( $rank[ $slug ] ) ? $rank[ $slug ] : count( $rank ) + $i,
+				'i'    => $i,
+				'item' => $item,
+			);
+		}
+		usort(
+			$keyed,
+			static function ( $a, $b ) {
+				return $a['w'] === $b['w'] ? $a['i'] - $b['i'] : $a['w'] - $b['w'];
+			}
+		);
+
+		$submenu[ self::MENU_SLUG ] = wp_list_pluck( $keyed, 'item' ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- reordering our own submenu.
+	}
+
+	/**
+	 * Handle the "dismiss setup checklist" action.
+	 *
+	 * @return void
+	 */
+	public function handle_actions() {
+		if ( ! isset( $_POST['ndvr_dashboard_do'] ) ) {
+			return;
+		}
+		if ( ! current_user_can( Caps::manage( 'overview' ) ) ) {
+			wp_die( esc_html__( 'You are not allowed to do that.', 'ndv-reviews' ) );
+		}
+		check_admin_referer( self::NONCE );
+
+		if ( 'dismiss_setup' === sanitize_key( wp_unslash( $_POST['ndvr_dashboard_do'] ) ) ) {
+			update_user_meta( get_current_user_id(), 'ndvr_setup_dismissed', 1 );
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::MENU_SLUG ) );
+		exit;
+	}
+
+	/**
+	 * Count product reviews by status.
+	 *
+	 * @param string $status approve|hold|spam.
+	 * @param string $after  Optional GMT datetime lower bound.
+	 * @param string $before Optional GMT datetime upper bound.
+	 * @return int
+	 */
+	private function count_reviews( $status, $after = '', $before = '' ) {
+		$args = array(
+			'type'   => 'review',
+			'status' => $status,
+			'count'  => true,
+		);
+		if ( $after || $before ) {
+			$args['date_query'] = array(
+				array_filter(
+					array(
+						'after'     => $after,
+						'before'    => $before,
+						'column'    => 'comment_date_gmt',
+						'inclusive' => true,
+					)
+				),
+			);
+		}
+
+		return (int) get_comments( $args );
+	}
+
+	/**
+	 * Store-wide rating stats for approved reviews.
+	 *
+	 * @return array{avg:float,dist:array<int,int>,total:int,photos:int,verified:int}
+	 */
+	private function rating_stats() {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- aggregate over core tables, admin-only.
+		$rows = $wpdb->get_results(
+			"SELECT ROUND(CAST(m.meta_value AS DECIMAL(3,1))) AS star, COUNT(*) AS n
+			FROM {$wpdb->comments} c
+			INNER JOIN {$wpdb->commentmeta} m ON m.comment_id = c.comment_ID AND m.meta_key = 'rating'
+			WHERE c.comment_type = 'review' AND c.comment_approved = '1'
+			GROUP BY star"
+		);
+
+		$dist  = array_fill( 1, 5, 0 );
+		$total = 0;
+		$sum   = 0;
+		foreach ( (array) $rows as $row ) {
+			$star = max( 1, min( 5, (int) $row->star ) );
+			$n    = (int) $row->n;
+			$dist[ $star ] += $n;
+			$total         += $n;
+			$sum           += $star * $n;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- aggregate over core tables, admin-only.
+		$verified = (int) $wpdb->get_var(
+			"SELECT COUNT(*) FROM {$wpdb->comments} c
+			INNER JOIN {$wpdb->commentmeta} m ON m.comment_id = c.comment_ID AND m.meta_key = 'verified' AND m.meta_value = '1'
+			WHERE c.comment_type = 'review' AND c.comment_approved = '1'"
+		);
+
+		$media = Db::table( 'review_media' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from Db::table(), no input.
+		$photos = (int) $wpdb->get_var( "SELECT COUNT(DISTINCT comment_id) FROM `{$media}` WHERE status = 'approved'" );
+
+		return array(
+			'avg'      => $total ? round( $sum / $total, 2 ) : 0.0,
+			'dist'     => $dist,
+			'total'    => $total,
+			'photos'   => $photos,
+			'verified' => $verified,
+		);
+	}
+
+	/**
+	 * Reminder queue counts for the last 30 days.
+	 *
+	 * @return array<string,int>
+	 */
+	private function reminder_stats() {
+		global $wpdb;
+
+		$table = Db::table( 'requests' );
+		$since = gmdate( 'Y-m-d H:i:s', time() - 30 * DAY_IN_SECONDS );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from Db::table(), value placeholdered.
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT status, COUNT(*) AS n FROM `{$table}` WHERE scheduled_at >= %s OR status = 'scheduled' GROUP BY status", $since ) );
+
+		$out = array(
+			'scheduled' => 0,
+			'sent'      => 0,
+			'failed'    => 0,
+			'converted' => 0,
+		);
+		foreach ( (array) $rows as $row ) {
+			if ( isset( $out[ $row->status ] ) ) {
+				$out[ $row->status ] = (int) $row->n;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Products with the most reviews and the lowest average.
+	 *
+	 * @return array{top:\WC_Product[],low:\WC_Product[]}
+	 */
+	private function product_lists() {
+		if ( ! function_exists( 'wc_get_products' ) ) {
+			return array(
+				'top' => array(),
+				'low' => array(),
+			);
+		}
+
+		$base = array(
+			'limit'      => 5,
+			'status'     => 'publish',
+			'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- small admin-only list.
+				array(
+					'key'     => '_wc_review_count',
+					'value'   => 0,
+					'compare' => '>',
+					'type'    => 'NUMERIC',
+				),
+			),
+		);
+
+		$top = wc_get_products(
+			$base + array(
+				'meta_key' => '_wc_review_count', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'orderby'  => 'meta_value_num',
+				'order'    => 'DESC',
+			)
+		);
+		$low = wc_get_products(
+			$base + array(
+				'meta_key' => '_wc_average_rating', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'orderby'  => 'meta_value_num',
+				'order'    => 'ASC',
+			)
+		);
+
+		$has_reviews = static function ( $p ) {
+			return $p->get_review_count() > 0;
+		};
+
+		return array(
+			'top' => array_values( array_filter( (array) $top, $has_reviews ) ),
+			'low' => array_values( array_filter( (array) $low, $has_reviews ) ),
+		);
+	}
+
+	/**
+	 * Setup checklist items.
+	 *
+	 * @param int $total Approved review count.
+	 * @return array<int,array{done:bool,label:string,hint:string,url:string,cta:string}>
+	 */
+	private function checklist( $total ) {
+		$s = $this->settings;
+
+		return array(
+			array(
+				'done'  => (bool) $s->get( 'reminder_enabled' ),
+				'label' => __( 'Turn on review reminder emails', 'ndv-reviews' ),
+				'hint'  => __( 'Email customers a review link a few days after their order is completed.', 'ndv-reviews' ),
+				'url'   => admin_url( 'admin.php?page=ndv-reviews-reminders' ),
+				'cta'   => __( 'Set up reminders', 'ndv-reviews' ),
+			),
+			array(
+				'done'  => '#181a1f' !== (string) $s->get( 'design_accent' ) || 'list' !== (string) $s->get( 'design_template' ),
+				'label' => __( 'Match the review widget to your brand', 'ndv-reviews' ),
+				'hint'  => __( 'Set the accent color, layout and rating icon.', 'ndv-reviews' ),
+				'url'   => admin_url( 'admin.php?page=ndv-reviews-design' ),
+				'cta'   => __( 'Open Design', 'ndv-reviews' ),
+			),
+			array(
+				'done'  => $total > 0,
+				'label' => __( 'Bring in your existing reviews', 'ndv-reviews' ),
+				'hint'  => __( 'Import existing WooCommerce reviews or a CSV file.', 'ndv-reviews' ),
+				'url'   => admin_url( 'admin.php?page=ndv-reviews-tools' ),
+				'cta'   => __( 'Import reviews', 'ndv-reviews' ),
+			),
+			array(
+				'done'  => (bool) $s->get( 'recaptcha_enabled' ) || ! (bool) $s->get( 'allow_guest_reviews' ),
+				'label' => __( 'Harden the form against spam', 'ndv-reviews' ),
+				'hint'  => __( 'A honeypot and rate limit are always on. reCAPTCHA is optional.', 'ndv-reviews' ),
+				'url'   => admin_url( 'admin.php?page=ndv-reviews-settings' ),
+				'cta'   => __( 'Review settings', 'ndv-reviews' ),
+			),
+		);
+	}
+
+	/**
+	 * Render the Overview.
+	 *
+	 * @return void
+	 */
+	public function render() {
+		if ( ! current_user_can( Caps::manage( 'overview' ) ) ) {
+			return;
+		}
+
+		$stats     = $this->rating_stats();
+		$pending   = $this->count_reviews( 'hold' );
+		$now       = time();
+		$last30    = $this->count_reviews( 'approve', gmdate( 'Y-m-d H:i:s', $now - 30 * DAY_IN_SECONDS ) );
+		$prev30    = $this->count_reviews( 'approve', gmdate( 'Y-m-d H:i:s', $now - 60 * DAY_IN_SECONDS ), gmdate( 'Y-m-d H:i:s', $now - 30 * DAY_IN_SECONDS ) );
+		$reminders = $this->reminder_stats();
+		$lists     = $this->product_lists();
+		$checklist = $this->checklist( $stats['total'] );
+		$todo      = count( array_filter( wp_list_pluck( $checklist, 'done' ), static function ( $d ) {
+			return ! $d;
+		} ) );
+		$show_setup = $todo > 0 && ! get_user_meta( get_current_user_id(), 'ndvr_setup_dismissed', true );
+		$mod_url    = admin_url( 'admin.php?page=ndv-reviews-moderation' );
+
+		$queue = get_comments(
+			array(
+				'type'   => 'review',
+				'status' => 'hold',
+				'number' => 5,
+			)
+		);
+		?>
+		<div class="wrap ndvr-dashboard">
+			<h1><?php esc_html_e( 'Overview', 'ndv-reviews' ); ?></h1>
+			<div class="ndvr-dash-actions">
+				<a class="button button-primary" href="<?php echo esc_url( $mod_url ); ?>"><?php esc_html_e( 'Manage reviews', 'ndv-reviews' ); ?></a>
+				<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=ndv-reviews-reminders' ) ); ?>"><?php esc_html_e( 'Review reminders', 'ndv-reviews' ); ?></a>
+				<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=ndv-reviews-design' ) ); ?>"><?php esc_html_e( 'Customize design', 'ndv-reviews' ); ?></a>
+			</div>
+
+			<?php if ( $show_setup ) : ?>
+				<section class="ndvr-card ndvr-setup" aria-labelledby="ndvr-setup-title">
+					<div class="ndvr-card-header">
+						<h2 id="ndvr-setup-title">
+							<?php
+							/* translators: 1: completed steps, 2: total steps */
+							echo esc_html( sprintf( __( 'Setup: %1$d of %2$d done', 'ndv-reviews' ), count( $checklist ) - $todo, count( $checklist ) ) );
+							?>
+						</h2>
+						<form method="post">
+							<?php wp_nonce_field( self::NONCE ); ?>
+							<button type="submit" name="ndvr_dashboard_do" value="dismiss_setup" class="button-link"><?php esc_html_e( 'Dismiss', 'ndv-reviews' ); ?></button>
+						</form>
+					</div>
+					<div class="ndvr-setup-progress" role="progressbar" aria-valuemin="0" aria-valuemax="<?php echo esc_attr( count( $checklist ) ); ?>" aria-valuenow="<?php echo esc_attr( count( $checklist ) - $todo ); ?>">
+						<span style="width:<?php echo esc_attr( (string) round( ( count( $checklist ) - $todo ) / count( $checklist ) * 100 ) ); ?>%"></span>
+					</div>
+					<ol class="ndvr-setup-list">
+						<?php foreach ( $checklist as $item ) : ?>
+							<li class="<?php echo $item['done'] ? 'is-done' : ''; ?>">
+								<span class="ndvr-setup-check" aria-hidden="true"></span>
+								<div>
+									<strong><?php echo esc_html( $item['label'] ); ?></strong>
+									<span><?php echo esc_html( $item['hint'] ); ?></span>
+								</div>
+								<?php if ( ! $item['done'] ) : ?>
+									<a class="button" href="<?php echo esc_url( $item['url'] ); ?>"><?php echo esc_html( $item['cta'] ); ?></a>
+								<?php else : ?>
+									<span class="screen-reader-text"><?php esc_html_e( 'Done', 'ndv-reviews' ); ?></span>
+								<?php endif; ?>
+							</li>
+						<?php endforeach; ?>
+					</ol>
+				</section>
+			<?php endif; ?>
+
+			<div class="ndvr-kpis">
+				<div class="ndvr-kpi">
+					<span class="ndvr-kpi-label"><?php esc_html_e( 'Average rating', 'ndv-reviews' ); ?></span>
+					<span class="ndvr-kpi-value"><?php echo esc_html( $stats['total'] ? number_format_i18n( $stats['avg'], 2 ) : '—' ); ?><small>/5</small></span>
+					<span class="ndvr-kpi-meta"><?php echo esc_html( sprintf( /* translators: %s: review count */ _n( 'across %s review', 'across %s reviews', $stats['total'], 'ndv-reviews' ), number_format_i18n( $stats['total'] ) ) ); ?></span>
+				</div>
+				<div class="ndvr-kpi">
+					<span class="ndvr-kpi-label"><?php esc_html_e( 'New reviews · 30 days', 'ndv-reviews' ); ?></span>
+					<span class="ndvr-kpi-value"><?php echo esc_html( number_format_i18n( $last30 ) ); ?></span>
+					<?php
+					$delta = $last30 - $prev30;
+					$cls   = $delta > 0 ? 'is-up' : ( $delta < 0 ? 'is-down' : '' );
+					?>
+					<span class="ndvr-kpi-meta <?php echo esc_attr( $cls ); ?>">
+						<?php
+						/* translators: %s: signed change vs previous 30 days */
+						echo esc_html( sprintf( __( '%s vs previous 30 days', 'ndv-reviews' ), ( $delta > 0 ? '+' : '' ) . number_format_i18n( $delta ) ) );
+						?>
+					</span>
+				</div>
+				<a class="ndvr-kpi <?php echo $pending ? 'is-alert' : ''; ?>" href="<?php echo esc_url( add_query_arg( 'status', 'moderated', $mod_url ) ); ?>">
+					<span class="ndvr-kpi-label"><?php esc_html_e( 'Awaiting moderation', 'ndv-reviews' ); ?></span>
+					<span class="ndvr-kpi-value"><?php echo esc_html( number_format_i18n( $pending ) ); ?></span>
+					<span class="ndvr-kpi-meta"><?php echo $pending ? esc_html__( 'Open queue', 'ndv-reviews' ) : esc_html__( 'All caught up', 'ndv-reviews' ); ?></span>
+				</a>
+				<div class="ndvr-kpi">
+					<span class="ndvr-kpi-label"><?php esc_html_e( 'Verified buyers', 'ndv-reviews' ); ?></span>
+					<span class="ndvr-kpi-value"><?php echo esc_html( $stats['total'] ? round( $stats['verified'] / $stats['total'] * 100 ) . '%' : '—' ); ?></span>
+					<span class="ndvr-kpi-meta">
+						<?php
+						/* translators: %s: number of reviews with photos */
+						echo esc_html( sprintf( _n( '%s review with photos', '%s reviews with photos', $stats['photos'], 'ndv-reviews' ), number_format_i18n( $stats['photos'] ) ) );
+						?>
+					</span>
+				</div>
+			</div>
+
+			<?php
+			/**
+			 * Fires after the Overview KPI row (Pro adds insight panels here).
+			 *
+			 * @param array $stats Store-wide rating stats.
+			 */
+			do_action( 'ndv-reviews/dashboard/after_kpis', $stats );
+			?>
+
+			<div class="ndvr-dash-grid">
+				<section class="ndvr-card">
+					<div class="ndvr-card-header">
+						<h2><?php esc_html_e( 'Moderation queue', 'ndv-reviews' ); ?></h2>
+						<a href="<?php echo esc_url( add_query_arg( 'status', 'moderated', $mod_url ) ); ?>"><?php esc_html_e( 'View all', 'ndv-reviews' ); ?></a>
+					</div>
+					<?php if ( empty( $queue ) ) : ?>
+						<p class="ndvr-empty"><?php esc_html_e( 'No reviews are waiting for approval.', 'ndv-reviews' ); ?></p>
+					<?php else : ?>
+						<ul class="ndvr-queue">
+							<?php foreach ( $queue as $c ) : ?>
+								<?php $r = (int) get_comment_meta( (int) $c->comment_ID, 'rating', true ); ?>
+								<li>
+									<span class="ndvr-queue-stars" aria-label="<?php echo esc_attr( sprintf( /* translators: %d: star rating */ __( '%d out of 5 stars', 'ndv-reviews' ), $r ) ); ?>"><?php echo esc_html( str_repeat( '★', $r ) . str_repeat( '☆', 5 - $r ) ); ?></span>
+									<div>
+										<strong><?php echo esc_html( $c->comment_author ); ?></strong>
+										<span><?php echo esc_html( get_the_title( (int) $c->comment_post_ID ) ); ?></span>
+										<p><?php echo esc_html( wp_trim_words( $c->comment_content, 18 ) ); ?></p>
+									</div>
+									<a class="button button-small" href="<?php echo esc_url( add_query_arg( array( 'action' => 'edit', 'review' => (int) $c->comment_ID ), $mod_url ) ); ?>"><?php esc_html_e( 'Open', 'ndv-reviews' ); ?></a>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+				</section>
+
+				<section class="ndvr-card">
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Rating distribution', 'ndv-reviews' ); ?></h2></div>
+					<?php if ( ! $stats['total'] ) : ?>
+						<p class="ndvr-empty"><?php esc_html_e( 'No approved reviews yet.', 'ndv-reviews' ); ?></p>
+					<?php else : ?>
+						<ul class="ndvr-dist">
+							<?php for ( $star = 5; $star >= 1; $star-- ) : ?>
+								<?php $pct = round( $stats['dist'][ $star ] / $stats['total'] * 100 ); ?>
+								<li>
+									<span><?php echo esc_html( $star ); ?>★</span>
+									<span class="ndvr-dist-track"><span style="width:<?php echo esc_attr( (string) $pct ); ?>%"></span></span>
+									<span class="ndvr-dist-n"><?php echo esc_html( number_format_i18n( $stats['dist'][ $star ] ) ); ?></span>
+								</li>
+							<?php endfor; ?>
+						</ul>
+					<?php endif; ?>
+				</section>
+
+				<section class="ndvr-card">
+					<div class="ndvr-card-header">
+						<h2><?php esc_html_e( 'Review reminders · 30 days', 'ndv-reviews' ); ?></h2>
+						<span class="ndvr-card-status <?php echo $this->settings->get( 'reminder_enabled' ) ? 'connected' : 'disconnected'; ?>"><?php echo $this->settings->get( 'reminder_enabled' ) ? esc_html__( 'On', 'ndv-reviews' ) : esc_html__( 'Off', 'ndv-reviews' ); ?></span>
+					</div>
+					<div class="ndvr-mini-stats">
+						<div><strong><?php echo esc_html( number_format_i18n( $reminders['sent'] + $reminders['converted'] ) ); ?></strong><span><?php esc_html_e( 'Sent', 'ndv-reviews' ); ?></span></div>
+						<div><strong><?php echo esc_html( number_format_i18n( $reminders['scheduled'] ) ); ?></strong><span><?php esc_html_e( 'Scheduled', 'ndv-reviews' ); ?></span></div>
+						<div class="<?php echo $reminders['failed'] ? 'is-alert' : ''; ?>"><strong><?php echo esc_html( number_format_i18n( $reminders['failed'] ) ); ?></strong><span><?php esc_html_e( 'Failed', 'ndv-reviews' ); ?></span></div>
+					</div>
+					<p class="ndvr-card-foot"><a href="<?php echo esc_url( admin_url( 'admin.php?page=ndv-reviews-reminders' ) ); ?>"><?php esc_html_e( 'Open reminder log', 'ndv-reviews' ); ?></a></p>
+				</section>
+
+				<section class="ndvr-card">
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Products', 'ndv-reviews' ); ?></h2></div>
+					<?php if ( empty( $lists['top'] ) ) : ?>
+						<p class="ndvr-empty"><?php esc_html_e( 'No product has a review yet.', 'ndv-reviews' ); ?></p>
+					<?php else : ?>
+						<h3 class="ndvr-subhead"><?php esc_html_e( 'Most reviewed', 'ndv-reviews' ); ?></h3>
+						<ul class="ndvr-plist">
+							<?php foreach ( $lists['top'] as $p ) : ?>
+								<li><a href="<?php echo esc_url( get_edit_post_link( $p->get_id() ) ); ?>"><?php echo esc_html( $p->get_name() ); ?></a><span><?php echo esc_html( number_format_i18n( (float) $p->get_average_rating(), 1 ) ); ?>★ · <?php echo esc_html( number_format_i18n( $p->get_review_count() ) ); ?></span></li>
+							<?php endforeach; ?>
+						</ul>
+						<h3 class="ndvr-subhead"><?php esc_html_e( 'Lowest rated', 'ndv-reviews' ); ?></h3>
+						<ul class="ndvr-plist">
+							<?php foreach ( array_slice( $lists['low'], 0, 3 ) as $p ) : ?>
+								<li><a href="<?php echo esc_url( get_edit_post_link( $p->get_id() ) ); ?>"><?php echo esc_html( $p->get_name() ); ?></a><span><?php echo esc_html( number_format_i18n( (float) $p->get_average_rating(), 1 ) ); ?>★ · <?php echo esc_html( number_format_i18n( $p->get_review_count() ) ); ?></span></li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+				</section>
+			</div>
+
+			<?php
+			/**
+			 * Fires at the end of the Overview (Pro adds analytics/AI panels; free
+			 * shows nothing here).
+			 */
+			do_action( 'ndv-reviews/dashboard/end' );
+			?>
+		</div>
+		<?php
+	}
+}

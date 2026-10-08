@@ -11,6 +11,8 @@
  * @var string                $nonce       AJAX nonce.
  * @var string                $ajax_url    admin-ajax URL.
  * @var string                $ajax_action AJAX action name.
+ * @var string                $default_author Name shown with the review unless changed.
+ * @var bool                  $is_test     Admin test link (submissions are refused).
  *
  * @package NdvReviews
  */
@@ -33,7 +35,7 @@ endif;
 if ( empty( $products ) ) :
 	?>
 	<div class="ndvr-collect-card">
-		<h1><?php esc_html_e( 'All done — thank you!', 'ndv-reviews' ); ?></h1>
+		<h1><?php esc_html_e( 'All done — thank you', 'ndv-reviews' ); ?></h1>
 		<p><?php esc_html_e( 'You have already reviewed everything from this order. We appreciate your feedback.', 'ndv-reviews' ); ?></p>
 		<p><a class="ndvr-collect-home" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Return to the store', 'ndv-reviews' ); ?></a></p>
 	</div>
@@ -44,7 +46,10 @@ endif;
 <div class="ndvr-collect" data-ajax-url="<?php echo esc_url( $ajax_url ); ?>" data-action="<?php echo esc_attr( $ajax_action ); ?>">
 	<header class="ndvr-collect-header">
 		<h1><?php esc_html_e( 'Share your feedback', 'ndv-reviews' ); ?></h1>
-		<p><?php esc_html_e( 'Tell other shoppers what you think. It only takes a minute per item.', 'ndv-reviews' ); ?></p>
+		<p><?php esc_html_e( 'Tell other shoppers what you think. Each item has its own short form.', 'ndv-reviews' ); ?></p>
+		<?php if ( ! empty( $is_test ) ) : ?>
+			<p class="ndvr-collect-test" role="note"><?php esc_html_e( 'This page was opened from a test email. It shows what the customer sees; reviews cannot be submitted from it.', 'ndv-reviews' ); ?></p>
+		<?php endif; ?>
 	</header>
 
 	<?php foreach ( $products as $ndvr_pid ) : ?>
@@ -80,6 +85,12 @@ endif;
 						<?php endforeach; ?>
 					</div>
 				<?php endif; ?>
+
+				<p class="ndvr-field">
+					<label><?php esc_html_e( 'Name shown with your review', 'ndv-reviews' ); ?>
+						<input type="text" name="author" maxlength="60" autocomplete="name" value="<?php echo esc_attr( isset( $default_author ) ? $default_author : '' ); ?>" />
+					</label>
+				</p>
 
 				<p class="ndvr-field">
 					<label><?php esc_html_e( 'Review title (optional)', 'ndv-reviews' ); ?>

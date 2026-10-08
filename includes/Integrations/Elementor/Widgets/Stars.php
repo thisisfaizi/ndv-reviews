@@ -56,6 +56,35 @@ class Stars extends \Elementor\Widget_Base {
 	}
 
 	/**
+	 * Stylesheets Elementor must load wherever this widget appears (including
+	 * cached element output, where render() does not run).
+	 *
+	 * @return string[]
+	 */
+	public function get_style_depends() {
+		return array( 'ndvr-display' );
+	}
+
+	/**
+	 * Scripts Elementor must load wherever this widget appears.
+	 *
+	 * @return string[]
+	 */
+	public function get_script_depends() {
+		return array();
+	}
+
+	/**
+	 * Output depends on live review data and carries per-visitor nonces, so it
+	 * must never be served from Elementor's element cache.
+	 *
+	 * @return bool
+	 */
+	protected function is_dynamic_content(): bool {
+		return true;
+	}
+
+	/**
 	 * Controls.
 	 *
 	 * @return void

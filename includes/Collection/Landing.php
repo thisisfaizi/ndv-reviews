@@ -132,23 +132,56 @@ class Landing implements Registerable {
 		nocache_headers();
 
 		$pending = $row ? $this->pending_products( $row ) : array();
+		$valid   = (bool) $row;
+
+		// Once every product is reviewed the token flips to `used`, which
+		// resolve() rejects. Show the thank-you state for it rather than
+		// "expired"; submissions stay blocked because handle_submit() uses
+		// resolve().
+		if ( ! $row ) {
+			$any = $this->tokens->lookup( $raw );
+			if ( $any && 'used' === $any->status ) {
+				$valid = true;
+			}
+		}
 
 		$html = View::render(
 			'magic-landing.php',
 			array(
-				'valid'      => (bool) $row,
-				'token'      => $raw,
-				'products'   => $pending,
-				'criteria'   => $this->criteria->get_active(),
-				'settings'   => $this->settings,
-				'nonce'      => wp_create_nonce( self::NONCE ),
-				'ajax_url'   => admin_url( 'admin-ajax.php' ),
-				'ajax_action' => self::AJAX_ACTION,
+				'valid'          => $valid,
+				'token'          => $raw,
+				'products'       => $pending,
+				'criteria'       => $this->criteria->get_active(),
+				'settings'       => $this->settings,
+				'nonce'          => wp_create_nonce( self::NONCE ),
+				'ajax_url'       => admin_url( 'admin-ajax.php' ),
+				'ajax_action'    => self::AJAX_ACTION,
+				'default_author' => $row ? $this->default_author( $row ) : '',
+				'is_test'        => $row && 'test' === $row->type,
 			)
 		);
 
 		$this->output_page( $html );
 		exit;
+	}
+
+	/**
+	 * All product ids recorded on a token, whatever their status.
+	 *
+	 * @param object $row Token row.
+	 * @return int[]
+	 */
+	private function token_products( $row ) {
+		$products = json_decode( (string) $row->products, true );
+		$out      = array();
+
+		foreach ( is_array( $products ) ? $products : array() as $p ) {
+			if ( isset( $p['id'] ) ) {
+				$out[] = absint( $p['id'] );
+			}
+		}
+
+		return $out;
 	}
 
 	/**
@@ -191,13 +224,21 @@ class Landing implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'This link is no longer valid. Please request a fresh one.', 'ndv-reviews' ) ), 410 );
 		}
 
+		if ( 'test' === $row->type ) {
+			wp_send_json_error( array( 'message' => __( 'This is a test link from the store admin. Reviews cannot be submitted from it.', 'ndv-reviews' ) ), 403 );
+		}
+
 		$product_id = isset( $input['product_id'] ) ? absint( $input['product_id'] ) : 0;
-		$pending    = $this->pending_products( $row );
-		if ( ! in_array( $product_id, $pending, true ) ) {
+		if ( ! in_array( $product_id, $this->token_products( $row ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'This product is not part of your review link.', 'ndv-reviews' ) ), 400 );
+		}
+		if ( ! in_array( $product_id, $this->pending_products( $row ), true ) ) {
 			wp_send_json_error( array( 'message' => __( 'This product has already been reviewed.', 'ndv-reviews' ) ), 409 );
 		}
 
-		$spam = $this->antispam->check( $input );
+		// The resolved token authenticates the request, so the per-IP limit and
+		// captcha are skipped; the honeypot still runs.
+		$spam = $this->antispam->check( $input, true );
 		if ( is_wp_error( $spam ) ) {
 			wp_send_json_error( array( 'message' => $spam->get_error_message() ), 400 );
 		}
@@ -206,25 +247,27 @@ class Landing implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Please confirm consent to submit your review.', 'ndv-reviews' ) ), 400 );
 		}
 
-		$criteria = array();
-		if ( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ) {
-			foreach ( $input['ndvr_criteria'] as $cid => $val ) {
-				$criteria[ absint( $cid ) ] = (float) $val;
+		// A rating-less review displays but is silently excluded from the
+		// WooCommerce product average, so at least one valid score is required.
+		// Values outside the star range get their own message instead of being
+		// dropped silently.
+		$raw_scores = isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ? $input['ndvr_criteria'] : array();
+		foreach ( $raw_scores as $val ) {
+			if ( is_scalar( $val ) && '' !== $val && ( ! is_numeric( $val ) || (float) $val < 0.5 || (float) $val > 5 ) ) {
+				wp_send_json_error( array( 'message' => __( 'Please choose a rating between 1 and 5 stars.', 'ndv-reviews' ) ), 400 );
 			}
+		}
+		$criteria = $this->reviews->valid_scores( $raw_scores );
+
+		if ( empty( $criteria ) ) {
+			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
 		}
 
-		// Require at least one star rating — same rule as ReviewForm/TestimonialForm,
-		// for the same reason: a rating-less review displays but is silently
-		// excluded from the WooCommerce product average.
-		$has_rating = false;
-		foreach ( $criteria as $criterion_rating ) {
-			if ( (float) $criterion_rating > 0 ) {
-				$has_rating = true;
-				break;
-			}
-		}
-		if ( ! $has_rating ) {
-			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
+		// Theme overrides of the template may not have the name field, so an
+		// empty or missing value falls back to the order's name.
+		$author = isset( $input['author'] ) && is_string( $input['author'] ) ? trim( sanitize_text_field( $input['author'] ) ) : '';
+		if ( '' === $author ) {
+			$author = $this->default_author( $row );
 		}
 
 		$media = array();
@@ -241,7 +284,7 @@ class Landing implements Registerable {
 		$result = $this->reviews->create(
 			array(
 				'product_id' => $product_id,
-				'author'     => isset( $input['author'] ) ? $input['author'] : '',
+				'author'     => mb_substr( $author, 0, 60 ),
 				'email'      => $email,
 				'content'    => isset( $input['comment'] ) ? $input['comment'] : '',
 				'title'      => isset( $input['ndvr_title'] ) ? $input['ndvr_title'] : '',
@@ -270,13 +313,61 @@ class Landing implements Registerable {
 		update_comment_meta( $result, 'verified', 1 );
 
 		$this->tokens->mark_product( (int) $row->id, $product_id, 'reviewed' );
-		$this->antispam->record();
 
 		wp_send_json_success(
 			array(
-				'message' => __( 'Thanks! Your review was submitted and is awaiting moderation.', 'ndv-reviews' ),
+				'message' => 'approved' === wp_get_comment_status( $result )
+					? __( 'Thank you. Your review is published.', 'ndv-reviews' )
+					: __( 'Thank you. Your review was submitted and is awaiting moderation.', 'ndv-reviews' ),
 			)
 		);
+	}
+
+	/**
+	 * Name shown with the review unless the customer types another: billing
+	 * first name plus last initial ("Jane D."). Never the account login, which
+	 * is often the customer's email address.
+	 *
+	 * @param object $row Token row.
+	 * @return string
+	 */
+	private function default_author( $row ) {
+		$first = '';
+		$last  = '';
+
+		if ( ! empty( $row->order_id ) && function_exists( 'wc_get_order' ) ) {
+			$order = wc_get_order( (int) $row->order_id );
+			if ( $order ) {
+				$first = $order->get_billing_first_name();
+				$last  = $order->get_billing_last_name();
+			}
+		}
+
+		// Customer tokens have no order: use the account's saved names.
+		if ( '' === trim( (string) $first ) && ! empty( $row->customer_id ) ) {
+			$uid   = (int) $row->customer_id;
+			$first = (string) get_user_meta( $uid, 'billing_first_name', true );
+			$last  = (string) get_user_meta( $uid, 'billing_last_name', true );
+			if ( '' === trim( $first ) ) {
+				$first = (string) get_user_meta( $uid, 'first_name', true );
+				$last  = (string) get_user_meta( $uid, 'last_name', true );
+			}
+		}
+
+		$first = trim( sanitize_text_field( (string) $first ) );
+		$last  = trim( sanitize_text_field( (string) $last ) );
+
+		if ( '' === $first ) {
+			return __( 'Customer', 'ndv-reviews' );
+		}
+		if ( '' === $last ) {
+			return $first;
+		}
+
+		$initial = mb_substr( $last, 0, 1 );
+		$initial = function_exists( 'mb_strtoupper' ) ? mb_strtoupper( $initial ) : strtoupper( $initial );
+
+		return $first . ' ' . $initial . '.';
 	}
 
 	/**

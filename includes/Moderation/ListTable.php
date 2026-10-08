@@ -124,6 +124,20 @@ class ListTable extends \WP_List_Table {
 	 * @return array<string,string>
 	 */
 	public function get_bulk_actions() {
+		$view = $this->current_status();
+		if ( 'trash' === $view ) {
+			return array(
+				'untrash' => __( 'Restore', 'ndv-reviews' ),
+				'delete'  => __( 'Delete permanently', 'ndv-reviews' ),
+			);
+		}
+		if ( 'spam' === $view ) {
+			return array(
+				'unspam' => __( 'Not spam', 'ndv-reviews' ),
+				'delete' => __( 'Delete permanently', 'ndv-reviews' ),
+			);
+		}
+
 		return array(
 			'approve'   => __( 'Approve', 'ndv-reviews' ),
 			'unapprove' => __( 'Unapprove', 'ndv-reviews' ),
@@ -173,12 +187,13 @@ class ListTable extends \WP_List_Table {
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
 		$product = isset( $_GET['product_id'] ) ? absint( $_GET['product_id'] ) : 0;
 		$star    = isset( $_GET['star'] ) ? absint( $_GET['star'] ) : 0;
+		$search  = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$args = array(
-			'type__in' => array( 'review', 'comment' ),
-			'post_type' => 'product',
-			'status'   => $this->status_arg( $this->current_status() ),
+			'type__in'  => array( 'review', 'comment' ),
+			'post_type' => \NdvReviews\Reviews\PostTypes::all(),
+			'status'    => $this->status_arg( $this->current_status() ),
 			'number'   => $per_page,
 			'offset'   => ( $paged - 1 ) * $per_page,
 			'orderby'  => 'comment_date_gmt',
@@ -187,6 +202,9 @@ class ListTable extends \WP_List_Table {
 
 		if ( $product ) {
 			$args['post_id'] = $product;
+		}
+		if ( '' !== $search ) {
+			$args['search'] = $search;
 		}
 		if ( $star >= 1 && $star <= 5 ) {
 			$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
@@ -238,8 +256,20 @@ class ListTable extends \WP_List_Table {
 		$id      = (int) $item->comment_ID;
 		$name    = $item->comment_author ? $item->comment_author : __( 'Anonymous', 'ndv-reviews' );
 		$actions = array();
+		$status  = (string) $item->comment_approved;
 
-		if ( '1' !== (string) $item->comment_approved ) {
+		if ( 'trash' === $status || 'spam' === $status ) {
+			if ( 'trash' === $status ) {
+				$actions['untrash'] = $this->action_link( 'untrash', $id, __( 'Restore', 'ndv-reviews' ) );
+			} else {
+				$actions['unspam'] = $this->action_link( 'unspam', $id, __( 'Not spam', 'ndv-reviews' ) );
+			}
+			$actions['delete'] = $this->action_link( 'delete', $id, __( 'Delete permanently', 'ndv-reviews' ) );
+
+			return '<strong>' . esc_html( $name ) . '</strong><br><span class="ndvr-email">' . esc_html( $item->comment_author_email ) . '</span>' . $this->row_actions( $actions );
+		}
+
+		if ( '1' !== $status ) {
 			$actions['approve'] = $this->action_link( 'approve', $id, __( 'Approve', 'ndv-reviews' ) );
 		} else {
 			$actions['unapprove'] = $this->action_link( 'unapprove', $id, __( 'Unapprove', 'ndv-reviews' ) );
@@ -341,15 +371,18 @@ class ListTable extends \WP_List_Table {
 	 * @return string
 	 */
 	private function action_link( $action, $id, $label ) {
+		$args = array(
+			'page'        => $this->page_slug,
+			'ndvr_action' => $action,
+			'review'      => $id,
+		);
+		// Return to the same view (e.g. Trash) after the action.
+		if ( 'all' !== $this->current_status() ) {
+			$args['status'] = $this->current_status();
+		}
+
 		$url = wp_nonce_url(
-			add_query_arg(
-				array(
-					'page'      => $this->page_slug,
-					'ndvr_action' => $action,
-					'review'    => $id,
-				),
-				admin_url( 'admin.php' )
-			),
+			add_query_arg( $args, admin_url( 'admin.php' ) ),
 			'ndvr_review_action'
 		);
 

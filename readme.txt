@@ -1,254 +1,133 @@
 === NDV Reviews ===
 Contributors: nowdigiverse
-Tags: reviews, woocommerce, ratings, testimonials, photo reviews
+Tags: woocommerce reviews, product reviews, photo reviews, review reminder, rich snippets
 Requires at least: 6.0
-Tested up to: 6.8
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.16.0
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Reliable, self-hosted product reviews for WooCommerce: multi-criteria ratings, photo reviews, working reminders, and rich schema.
+Self-hosted WooCommerce product reviews with multi-criteria ratings, photo reviews, review reminder emails and review schema. No account required.
 
 == Description ==
 
-NDV Reviews is a fast, privacy-first reviews plugin for WooCommerce stores. Everything runs on your own server — there is no required account, no forced sign-up, and no external service call to use the free plugin. Your review data stays in your database.
+NDV Reviews replaces the default WooCommerce reviews tab with a review section built for collecting and showing more reviews. It runs entirely on your own server: there is no account to create, no sending quota, and no review data leaves your site.
 
-**Why store owners switch to NDV Reviews**
+= Collect reviews =
 
-* **Self-hosted, no account.** The free plugin works fully with zero external calls. You own 100% of your review data.
-* **Reliable review reminders.** Reminder emails run on a battle-tested background queue with a visible log, retry, and test-send — not flaky cron.
-* **Honest free tier.** Full review moderation, including editing reviews, is free.
-* **Multi-criteria ratings.** Let customers rate up to three criteria (e.g. Quality, Value, Service).
-* **Photo reviews.** Customers can attach photos to their reviews.
-* **Verified-buyer badge.** Reviews from real purchasers are marked verified.
-* **Rich schema for SEO.** Outputs valid Product, AggregateRating, and Review JSON-LD.
+* **Review reminder emails.** Sent automatically a set number of days after an order reaches the status you choose. Sends run on Action Scheduler (the queue WooCommerce itself uses), with a delivery log, retry for failed sends, a test send and a preview.
+* **One link for the whole order.** Each reminder contains a signed link where the customer can review every product in the order without logging in. Reviews submitted this way are marked as verified purchases.
+* **Editable email.** Change the subject and message, with merge tags for the customer name, store name and review link.
+* **QR code and share link** for any product, for packaging inserts and receipts.
+* **Testimonial form** shortcode for collecting a review on a page of your choice.
+* **New review notifications** to the store admin.
 
-This plugin is compatible with WooCommerce High-Performance Order Storage (HPOS) and the block-based Cart and Checkout.
+= Show reviews =
+
+* **Rating summary** with the average, total, star distribution (click a bar to filter), recommendation rate and verified-buyer count.
+* **Multi-criteria ratings.** Customers rate up to three criteria such as Quality, Value and Service; each criterion gets its own bar.
+* **Photo reviews** with a keyboard-accessible lightbox.
+* **Verified buyer badge**, matched against the customer's own orders.
+* **Filters and sorting:** by star rating, with photos, verified only, topic tags, most recent, highest, lowest and most helpful.
+* **Helpful votes**, one per visitor.
+* **Reviews marquee:** a scrolling strip of reviews for home and landing pages, with pause control.
+* **Design settings:** accent color, list or grid layout, card style, rating icon (stars, hearts, thumbs, emoji), font and text size, with a live preview.
+
+= Works with your site =
+
+* Gutenberg blocks, shortcodes, classic widgets, and native Elementor widgets with dynamic tags.
+* Product, AggregateRating and Review structured data added to WooCommerce's own product markup, so search engines see one consistent product.
+* WooCommerce High-Performance Order Storage (HPOS) and Cart/Checkout blocks compatible.
+* Assets load only on pages that show reviews.
+* Theme-overridable templates (`yourtheme/ndv-reviews/`).
+
+= Moderation and data =
+
+* Review dashboard with the moderation queue, rating distribution, reminder statistics and your most and least reviewed products.
+* Approve, unapprove, spam, trash and **edit** reviews, including criteria scores, title, tags and photos.
+* Spam protection: honeypot and rate limiting by default, optional Google reCAPTCHA v3.
+* Import existing WooCommerce reviews or a CSV file. Export to CSV or JSON at any time.
+* GDPR: consent checkbox, and WordPress personal data export and erasure.
+
+= Shortcodes =
+
+* `[ndvr-reviews product_id="" per_page="10"]` – review list
+* `[ndvr-summary product_id=""]` – rating summary
+* `[ndvr-criteria-graph product_id=""]` – criteria bars
+* `[ndvr-stars product_id=""]` – star rating
+* `[ndvr-marquee limit="20" direction="left" rows="1"]` – reviews marquee
+* `[ndvr-form product_id=""]` – review form
+
+= NDV Reviews Pro =
+
+An optional paid add-on adds unlimited criteria, video reviews, admin replies, review-for-coupon rewards, product Q&A, AI review summaries (with your own API key), Google and Facebook review import, more display widgets and analytics. The free plugin is complete on its own and does not require it.
+
+== External services ==
+
+This plugin connects to one external service, and only if you turn it on.
+
+**Google reCAPTCHA v3** (off by default). When enabled under NDV Reviews → Settings with your own site and secret keys, the review forms load Google's reCAPTCHA script (`https://www.google.com/recaptcha/api.js`) in the visitor's browser on pages that show a review form; that script sends browser and interaction data to Google. On submit, your server sends the resulting reCAPTCHA token and your secret key to `https://www.google.com/recaptcha/api/siteverify` to check whether the submission is automated. Google's [Terms of Service](https://policies.google.com/terms) and [Privacy Policy](https://policies.google.com/privacy) apply.
+
+No other data is sent anywhere. Avatars on review cards are generated locally from the reviewer's initials.
 
 == Installation ==
 
-1. Upload the `ndv-reviews` folder to `/wp-content/plugins/`, or install through the Plugins screen.
-2. Activate the plugin through the Plugins screen.
-3. Ensure WooCommerce is installed and active.
-4. Configure options under the NDV Reviews settings screen.
+1. Install and activate WooCommerce.
+2. Install NDV Reviews from Plugins → Add New, or upload the `ndv-reviews` folder to `/wp-content/plugins/`.
+3. Activate it. Reviews appear in the product Reviews tab straight away.
+4. Open **NDV Reviews → Overview** and follow the setup checklist: turn on reminder emails, set your design and import existing reviews.
 
 == Frequently Asked Questions ==
 
-= Does this plugin require an account or external service? =
+= Do I need an account or an API key? =
 
-No. The free plugin is fully self-hosted and makes no external calls by default. Optional features such as reCAPTCHA only run if you enable them with your own keys.
+No. Everything runs on your WordPress site. reCAPTCHA is the only optional feature that uses an outside service, with your own keys.
 
-= Is it compatible with WooCommerce HPOS? =
+= Are there limits on reviews or emails? =
 
-Yes. NDV Reviews declares compatibility with High-Performance Order Storage and the block-based checkout.
+No. The plugin does not count or cap reviews, reminder emails or photos. Emails are sent by your site's normal mail setup, so use an SMTP plugin if your host's mail delivery is unreliable.
+
+= What happens to my existing WooCommerce reviews? =
+
+They stay where they are and keep showing. Use NDV Reviews → Import / Export to bring their ratings into the plugin's summary and filters. Deactivating or deleting NDV Reviews leaves WooCommerce reviews untouched.
+
+= Can customers review without an account? =
+
+Yes, if guest reviews are allowed in Settings. Customers who follow a reminder email link never need to log in. You can also require a verified purchase using WooCommerce's own "Reviews can only be left by verified owners" setting.
+
+= Why are reminder emails not sending? =
+
+Reminders run on Action Scheduler, which relies on WP-Cron. If your site has little traffic or WP-Cron is disabled, set up a real server cron job. The Review Reminders screen shows each send and any error.
+
+= Will it conflict with my SEO plugin's schema? =
+
+NDV Reviews adds its rating and review data to WooCommerce's product schema instead of printing a second product, which avoids duplicate rating markup.
+
+= Can I change how reviews look? =
+
+Use NDV Reviews → Design for colors and layout, or copy a file from the plugin's `templates/` folder into `yourtheme/ndv-reviews/` and edit it.
+
+= Is my data removed if I delete the plugin? =
+
+Only if you turn on "Remove all data on uninstall" in Settings. Reviews created by NDV Reviews are deleted then; native WooCommerce reviews are always kept.
 
 == Screenshots ==
 
-1. Modern review summary with star distribution, criteria bars, and verified-buyer badge.
-2. Multi-criteria review form with custom photo upload zone and recommend pills.
-3. Review card showing verified badge, criteria ratings, helpful button, and photo gallery.
-4. Admin Reviews screen with bulk actions, star filter, and inline editing.
-5. Settings → General: configure guest reviews, pagination, and sorting.
-6. Settings → Rating Criteria: label and enable/disable each criterion.
-7. Settings → Design: accent color, layout, and rating icon selector.
+1. Review section: rating summary, criteria bars, filters and review cards with photos.
+2. Review form with criteria ratings, photo upload and recommendation.
+3. Overview dashboard with setup checklist and moderation queue.
+4. All Reviews moderation screen with inline editing.
+5. Review reminder email settings, preview and delivery log.
+6. Design settings with live preview.
+7. Reviews marquee.
 
 == Changelog ==
 
-= 0.16.0 =
-* Security: closed a gap where a direct request could submit a review bypassing the "verified purchase
-  required" setting or a closed reviews policy.
-* Security: the "Verified buyer" badge could previously be earned by anyone submitting with a real
-  customer's email address; verification is now tied to the submitter's own account only.
-* Security: the GDPR data eraser now also deletes a customer's uploaded review photos, not just the
-  database record pointing to them.
-* Fixed: importing a CSV of star-rated reviews (no per-criteria breakdown) could leave the product's
-  displayed average/count stale until an unrelated review changed later.
-* Fixed: submitting a review with no star rating through the testimonial form or an email-collected
-  review link is now blocked, matching the existing on-page form behavior.
-* Fixed: a rare race condition on multi-product review-request links that could allow a duplicate
-  submission.
-* Fixed: a review request could still be sent for an order that was refunded/cancelled in the days
-  between the order and the scheduled send.
-* UI: the review summary panel and filter/pagination controls got a small visual refresh.
-
-= 0.15.1 =
-* Fixed: on sites running Elementor, the review-photo lightbox could open behind Elementor's own global
-  image lightbox (Elementor auto-attaches to any image link sitewide). The review photo link now opts out
-  of that behavior so only the review lightbox opens.
-
-= 0.15.0 =
-* Fixed: the `[ndvr-reviews]` shortcode (and the matching Gutenberg block) never wrapped its output in the
-  container the front-end script needs — so the helpful-vote button, pagination, and the photo lightbox
-  all silently did nothing when reviews were shown this way outside the native WooCommerce Reviews tab.
-
-= 0.14.0 =
-* Marquee: fixed the category filter (was accepted but silently ignored),
-  fixed a bug where a minimum-rating filter combined with a small review
-  limit could under-fill or empty the marquee even when enough qualifying
-  reviews existed (the filter now runs in the database query, not after the
-  limit was already applied), normalized scroll speed so marquees with
-  different review counts move at a consistent visual pace, and added an
-  optional two-row "crisscross" layout. All exposed via the shortcode,
-  Gutenberg block, and Elementor widget.
-* Admin UI: migrated the Rating Criteria, Review Reminders, and Import/Export
-  screens to the same card-based design used elsewhere in the plugin
-  (previously a mix of raw tables and form-tables).
-
-= 0.13.0 =
-* Accessibility: review photos now open in a keyboard-operable lightbox
-  (Escape/overlay/close-button dismiss, arrow-key navigation between a
-  review's photos, focus returns to the trigger link on close) instead of
-  opening the raw image in a new tab. The AJAX-filtered review list now
-  announces itself to screen readers on update (`aria-live`), and star/topic
-  filter pills expose their toggle state (`aria-pressed`).
-* Design: consolidated the front-end CSS design tokens (colors, radii,
-  shadow) that had drifted slightly out of sync across display/collect/
-  marquee/reviews.css into one shared source, so widgets appearing together
-  on the same page (e.g. the review list and a marquee) render with
-  identical borders/colors. Fixed a couple of hardcoded off-palette colors
-  along the way.
-
-= 0.12.0 =
-* Performance: review list pages now batch-fetch criteria scores and photos
-  for the whole page in 2 queries instead of 2 per review (fixes an N+1 that
-  scaled with review count).
-* Pagination: the review list pager is now windowed (first/last + a small
-  run around the current page) instead of one button per page — matters on
-  products with many pages of reviews.
-* Deactivation/uninstall: deactivating now cancels pending review-reminder
-  jobs correctly (was targeting a hook that was never scheduled). Uninstall
-  (with the opt-in data-removal setting) now also clears the unsubscribe
-  list, per-IP rate-limit records, pending reminder jobs, and — new — the
-  review comments and their plugin metadata themselves.
-* New `question_votes` table (supports Q&A vote de-duplication; consumed by
-  the Pro add-on).
-
-= 0.11.0 =
-* Elementor: all 4 free widgets (Star Rating, Review Summary, Review Section,
-  Reviews Marquee) now have a **Style tab** — colors, typography, card
-  background/border/radius/shadow/padding — matching normal Elementor widget
-  expectations. No changes to existing Content controls or output markup.
-
-= 0.10.1 =
-* Performance: the plugin now serves **minified** CSS/JS in production (source
-  files stay bundled for transparency; minified versions are swapped in
-  automatically unless SCRIPT_DEBUG is on). Confirmed that no plugin CSS/JS
-  loads on pages that don't use a reviews feature.
-
-= 0.10.0 =
-* Marquee overhaul: the reviews marquee now loops **seamlessly** (previously it
-  scrolled then jumped back). Fixed by animating each duplicated card group by
-  exactly one group width so the next copy slides into place with no gap.
-* New **direction** control — left / right / up / down — on the marquee shortcode,
-  Gutenberg block, and Elementor widget (the old horizontal/vertical + reverse
-  still work). The Elementor widget also gains gap, pause-on-hover, and
-  with-photos-only controls.
-* Marquee polish: clean initials avatar (deterministic colour from the reviewer
-  name) instead of the grey mystery-person, responsive card width, and a subtle
-  hover lift. Enough card copies now render to always fill the row on any width.
-
-= 0.9.9 =
-* Security/data integrity: reviews now require a star rating (client + server).
-  A rating-less review used to display but was silently excluded from the
-  product average — fixed. Recomputing a review to zero now clears its stale
-  rating so it never contributes a phantom value to the WooCommerce aggregate.
-* Security: review photos now upload only after the cheap validations pass, and
-  any orphaned attachments from a failed submission are deleted. The per-IP
-  rate limiter now counts every attempt (not only successful ones), so failed
-  spam is throttled too.
-* Add the `ndv-reviews/should_send_reminder` filter so an add-on can suppress
-  the built-in review reminder for an order (prevents double-messaging when Pro
-  automation/ESP is active).
-
-= 0.9.8 =
-* Add [ndvr-qa] shortcode stub — returns empty unless NDV Reviews Pro is active,
-  where it renders the full Q&A section for the current (or specified) product.
-
-= 0.9.7 =
-* Add six `ndv-reviews/show_*` filter hooks to the review card template so the
-  Pro add-on (or themes) can hide individual card elements without editing
-  template files.
-
-= 0.9.6 =
-* Fix: `pre_option_comment_registration` now returns an explicit '0' or '1'
-  on product pages, making our plugin the sole authority over login-gating
-  regardless of the site-wide WordPress Discussion setting.
-
-= 0.9.5 =
-* Fix: "Allow guest reviews" setting now enforced both via the
-  `pre_option_comment_registration` filter (hides the form for non-logged-in
-  visitors) and server-side AJAX validation on submission.
-* Fix: "Must be logged in" message now reads "post a review" instead of
-  "post a comment".
-
-= 0.9.4 =
-* Review form UI overhaul: clean open-grid criteria layout (no grey box),
-  larger star icons, haze-fill inputs with focus ring, custom drag-and-drop
-  photo zone, and a full-width green pill submit button.
-* Recommend field now uses hidden radio inputs with CSS pill selection state.
-
-= 0.9.0 =
-* Reviews on custom post types; aggregate/pool substrate (variation pooling-ready); shopper-facing topic filter pills (manual tags) + admin topic assignment; QR code generation for review links (bundled, no network); Recent Reviews / Rating Badge / Top-Rated classic widgets; review Form block; typography options; a General Settings screen; and stable extension hooks for the Pro add-on.
-
-= 0.8.2 =
-* Fix Reviews list-table layout: override WordPress fixed-table layout that squeezed the Product column to one character (causing vertical text + huge row heights); vertically center cells; single-line row actions. Now consistent and professional.
-
-= 0.8.1 =
-* Admin polish: Reviews list table — visible row-action pills (no empty gaps), aligned filter toolbar, hidden duplicate footer header.
-
-= 0.8.0 =
-* New Design screen (NDV Reviews → Design): pick accent color, layout (list/grid), summary style, card style, and rating icon (stars/hearts/thumbs/emoji) — free, with modern card selectors. Applies live on the storefront.
-
-= 0.7.0 =
-* New "Trust Panel" design system: a modern, theme-safe visual identity across the summary, review list, form, marquee, collection page, and widgets — plus a modern admin skin. Distinctive, not the default WordPress look.
-
-= 0.6.3 =
-* Fix: PSR-4 autoloader returned after the first matching prefix even when the file was absent, so the Pro add-on's NdvReviewsPro classes never loaded and Pro would not boot. Now continues to more specific prefixes.
-
-= 0.6.2 =
-* Added the ndv-reviews/criteria_name filter (Pro multilingual translates criteria labels). Docs through Phase 9.
-
-= 0.6.1 =
-* Added the ndv-reviews/after_summary hook so Pro can render the AI "Customers say" summary above the review list.
-
-= 0.6.0 =
-* Added stable extension hooks so the Pro add-on can plug in without editing free files (stars_html, review_items, review_item_after, review_form_fields).
-
-= 0.5.0 =
-* Integrations: shortcodes, Gutenberg blocks, Elementor widgets + dynamic tags, classic widgets, and the Reviews Marquee — all from one renderer.
-* Importers (native WooCommerce, CSV) and CSV/JSON export.
-* GDPR personal-data export/erasure + consent logging.
-* Standalone testimonial form.
-
-= 0.4.1 =
-* Verified storefront rendering; fixed Most-helpful sort excluding unvoted reviews and filter/helpful button contrast.
-
-= 0.4.0 =
-* Review reminders on Action Scheduler: configurable trigger status and delay, customizable email, test-send, request log with retry, and a reliability health check.
-* One-click unsubscribe.
-* Tokenized, no-login multi-product review-collection link sent with the reminder; opens a prefilled review page and marks items as reviewed.
-
-= 0.3.0 =
-* Display: review summary box, star-distribution and per-criterion bars, photo thumbnails, verified badge.
-* Filtering (star / verified / with-photos), sorting, and AJAX pagination — no page reload.
-* Helpful voting on reviews.
-* Moderation: dedicated Reviews admin screen with status filters, bulk actions, and full review editing (body, criteria, photos); Rating column on the Comments screen.
-* SEO: Product/AggregateRating/Review JSON-LD with duplicate-avoidance (defers to WooCommerce/SEO plugins).
-
-= 0.2.1 =
-* Fix: review photo uploads failing with "Specified file failed upload test" (correct media handling; Windows temp-path fix).
-
-= 0.2.0 =
-* Core reviews: multi-criteria rating form (up to 3 criteria) with photo uploads, recommend, and consent.
-* AJAX submission with honeypot, per-IP rate limiting, and optional reCAPTCHA v3.
-* Verified-buyer detection, overall-rating caching synced with WooCommerce aggregates.
-* Admin "Rating Criteria" screen with the free 3-criteria cap.
-
-= 0.1.0 =
-* Initial scaffolding: bootstrap, database schema, activation/deactivation, settings, WooCommerce HPOS and block-checkout compatibility declarations.
+= 1.0.0 =
+* Initial public release.
 
 == Upgrade Notice ==
 
-= 0.2.0 =
-Adds the core multi-criteria review form, photo uploads, and anti-spam.
+= 1.0.0 =
+Initial public release.

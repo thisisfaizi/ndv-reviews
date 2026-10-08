@@ -89,6 +89,46 @@ class ReviewForm implements Registerable {
 		add_filter( 'pre_option_comment_registration', array( $this, 'maybe_require_login' ) );
 		// Fix the "post a comment" login message to say "review" on product pages.
 		add_filter( 'comment_form_must_log_in', array( $this, 'fix_login_message' ) );
+		add_filter( 'preprocess_comment', array( $this, 'block_unrated_native_post' ) );
+	}
+
+	/**
+	 * Refuse a product review posted straight to wp-comments-post.php without a
+	 * rating.
+	 *
+	 * Our fields replace WooCommerce's rating select and are saved only by the
+	 * AJAX handler, so a no-JS (or scripted) post of the form would otherwise
+	 * store a review with no rating. A post that carries WooCommerce's own 1-5
+	 * `rating` field is left to WooCommerce. Replies and admin screens are not
+	 * affected.
+	 *
+	 * @param array<string,mixed> $commentdata Comment data.
+	 * @return array<string,mixed>
+	 */
+	public function block_unrated_native_post( $commentdata ) {
+		if ( is_admin() || ! empty( $commentdata['comment_parent'] ) || ! $this->settings->get( 'enable_reviews', true ) ) {
+			return $commentdata;
+		}
+
+		$post_id = isset( $commentdata['comment_post_ID'] ) ? absint( $commentdata['comment_post_ID'] ) : 0;
+		if ( 'product' !== get_post_type( $post_id ) ) {
+			return $commentdata;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- read-only check; core verifies the comment post.
+		$rating = isset( $_POST['rating'] ) ? (int) $_POST['rating'] : 0;
+		if ( $rating >= 1 && $rating <= 5 ) {
+			return $commentdata;
+		}
+
+		wp_die(
+			esc_html__( 'Your review was not submitted: the star rating could not be sent. Please enable JavaScript and try again.', 'ndv-reviews' ),
+			esc_html__( 'Review not submitted', 'ndv-reviews' ),
+			array(
+				'response'  => 400,
+				'back_link' => true,
+			)
+		);
 	}
 
 	/**
@@ -158,7 +198,7 @@ class ReviewForm implements Registerable {
 				'siteKey' => $this->settings->get( 'recaptcha_enabled' ) ? (string) $this->settings->get( 'recaptcha_site_key' ) : false,
 				'i18n'    => array(
 					'submitting' => __( 'Submitting…', 'ndv-reviews' ),
-					'thanks'     => __( 'Thank you! Your review has been submitted and is awaiting moderation.', 'ndv-reviews' ),
+					'thanks'     => __( 'Thank you. Your review has been submitted and is awaiting moderation.', 'ndv-reviews' ),
 					'error'      => __( 'Something went wrong. Please try again.', 'ndv-reviews' ),
 				),
 			)
@@ -182,6 +222,12 @@ class ReviewForm implements Registerable {
 	 * @return array<string,mixed>
 	 */
 	public function customize_review_form( $args ) {
+		// With reviews switched off, leave WooCommerce's own form untouched — our
+		// fields would post to a handler that refuses them.
+		if ( ! $this->settings->get( 'enable_reviews', true ) ) {
+			return $args;
+		}
+
 		$args['comment_field'] = $this->render_fields();
 
 		// Mark the form so our JS can take over submission.
@@ -306,6 +352,10 @@ class ReviewForm implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Your session expired. Please reload the page.', 'ndv-reviews' ) ), 403 );
 		}
 
+		if ( ! $this->settings->get( 'enable_reviews', true ) ) {
+			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'ndv-reviews' ) ), 403 );
+		}
+
 		if ( ! $this->settings->get( 'allow_guest_reviews', true ) && ! is_user_logged_in() ) {
 			wp_send_json_error( array( 'message' => __( 'You must be logged in to submit a review.', 'ndv-reviews' ) ), 403 );
 		}
@@ -342,25 +392,12 @@ class ReviewForm implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Please confirm consent to submit your review.', 'ndv-reviews' ) ), 400 );
 		}
 
-		// Criteria scores.
-		$criteria = array();
-		if ( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ) {
-			foreach ( $input['ndvr_criteria'] as $cid => $val ) {
-				$criteria[ absint( $cid ) ] = (float) $val;
-			}
-		}
-
-		// Require at least one star rating — a rating-less review would display
-		// but be silently excluded from the WooCommerce product average. Checked
-		// BEFORE any file upload so a bad submission never stores attachments.
-		$has_rating = false;
-		foreach ( $criteria as $criterion_rating ) {
-			if ( (float) $criterion_rating > 0 ) {
-				$has_rating = true;
-				break;
-			}
-		}
-		if ( ! $has_rating ) {
+		// Require at least one valid star rating (active criterion, 0.5-5) — a
+		// rating-less review would display but be left out of the product
+		// average. Checked BEFORE any file upload so a bad submission never
+		// stores attachments; create() repeats the same check.
+		$criteria = $this->reviews->valid_scores( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ? $input['ndvr_criteria'] : array() );
+		if ( empty( $criteria ) ) {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
 		}
 
@@ -406,7 +443,7 @@ class ReviewForm implements Registerable {
 
 		wp_send_json_success(
 			array(
-				'message' => __( 'Thank you! Your review has been submitted and is awaiting moderation.', 'ndv-reviews' ),
+				'message' => __( 'Thank you. Your review has been submitted and is awaiting moderation.', 'ndv-reviews' ),
 			)
 		);
 	}

@@ -40,6 +40,9 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
 | `token_expiry_days` | f | `Collection\TokenRepository` |
 | `template_path` | f | `Support\View::locate()` |
 | `json_ld` / `woo_structured_data_active` / `seo_plugin_active` | f | `Schema\JsonLd` |
+| `admin_menu_order` | f | `Admin\DashboardPage::order_submenu()` — submenu slugs, first → last (1.0.0) |
+| `dashboard/after_kpis` | a | `Admin\DashboardPage::render()` — arg `$stats`; Pro insight panels (1.0.0) |
+| `dashboard/end` | a | `Admin\DashboardPage::render()` (1.0.0) |
 
 ## AJAX actions
 - Free: `ndvr_list_reviews` (Renderer, priv+nopriv), `ndvr_vote` (Votes, priv+nopriv), review submit
@@ -72,7 +75,9 @@ Legend: (a) = action, (f) = filter. All hooks are prefixed `ndv-reviews/`.
   only — renamed from `[ndvr-trustpilot-badge]`, which never pulled live Trustpilot data)
 
 ## Options
-- Free: `ndv_reviews_settings`, `ndv_reviews_db_version`, `ndv_reviews_unsubscribed`. Transient marker
+- Free: `ndv_reviews_settings` (1.0.0 adds keys `admin_notify` off|all|pending and `admin_notify_email`;
+  removed unused `schema_version`, `criteria_mode`, `require_verified`), `ndv_reviews_db_version`,
+  `ndv_reviews_unsubscribed`. Transient marker
   `ndv_reviews_activated`.
 - Pro: `ndv_reviews_pro_settings`, `ndvr_google_aggregate`.
 
@@ -85,8 +90,12 @@ for Q&A voting, same `UNIQUE KEY (entity_id, user_id, ip_hash)` shape as `review
 
 ## Comment meta
 - Free: `rating` (Woo), `verified` (Woo), `_ndvr_overall_rating`, `_ndvr_title`, `_ndvr_recommend`,
-  `_ndvr_verified`, `_ndvr_helpful_up`, `_ndvr_tag` (repeated), `_ndvr_source`, `_ndvr_external_id`.
-- Pro: `_ndvr_video`, `_ndvr_admin_reply`, `_ndvr_posted`, `_ndvr_esp_pushed`, `_ndvr_rewarded`.
+  `_ndvr_verified`, `_ndvr_helpful_up`, `_ndvr_tag` (repeated), `_ndvr_source`, `_ndvr_external_id`,
+  `_ndvr_import_hash` (CSV import dedup, 1.0.0). `_ndvr_source` values `import` (Woo backfill) and
+  `erased` (GDPR) mark reviews that opt-in uninstall must keep.
+- User meta (free, 1.0.0): `ndvr_setup_dismissed`, `ndvr_health_notice_dismissed`.
+- Token types: order, customer, `test` (24h test-send token; cannot submit; 1.0.0).
+- Pro: `_ndvr_video`, `_ndvr_video_embed` (cached oEmbed HTML, 1.0.0), `_ndvr_admin_reply`, `_ndvr_posted`, `_ndvr_esp_pushed`, `_ndvr_rewarded`.
 
 ## Elementor
 - Category `ndv-reviews`. Free widgets: `ndvr-stars`, `ndvr-summary`, `ndvr-reviews`, `ndvr-marquee`.
@@ -111,9 +120,12 @@ for Q&A voting, same `UNIQUE KEY (entity_id, user_id, ip_hash)` shape as `review
 - Pro: `NDVR_PRO_VERSION`, `NDVR_PRO_FILE/DIR/URL/BASENAME`, `NDVR_PRO_OPTION_SETTINGS='ndv_reviews_pro_settings'`.
 
 ## Admin
-- Menu parent slug `ndv-reviews`; submenus include Reviews list, Rating Criteria, Design, Settings,
-  Requests. Pro adds: Pro Settings, Manual Reviews, Q&A.
+- Menu parent slug `ndv-reviews` renders the **Overview dashboard** (1.0.0; Rating Criteria moved to
+  `ndv-reviews-criteria`). Submenu order is set by `DashboardPage::order_submenu()`. Pro adds: Pro
+  Settings (`ndv-reviews-pro`, also the Freemius menu slug), Manual Reviews, Q&A, Analytics, Campaigns,
+  External, Import+.
+- admin-post action `ndvr_reminder_preview` (nonce'd, `manage_woocommerce`).
 
 ## Nonce actions (reference)
-`ndvr_list_reviews` (Renderer), `ndvr_vote` (Votes::NONCE_ACTION), plus per-form review/testimonial nonces.
+`ndvr_list_reviews` (Renderer), `ndvr_vote` (Votes::NONCE_ACTION), `ndvr_dashboard_action` (DashboardPage), plus per-form review/testimonial nonces.
 Pro: `ndvr_qa`, `ndvr_admin_reply`, `ndvr_external`, `ndvr_qa_admin`.

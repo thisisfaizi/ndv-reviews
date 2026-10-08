@@ -33,6 +33,26 @@
 	} );
 	syncRecommendPills(); // mark the pre-checked "Neutral" on load
 
+	// Focus-ring fallback for browsers without :has() — the radio is invisible,
+	// so keyboard focus has to be shown on its pill.
+	recommendLabels.forEach( function ( label ) {
+		var radio = label.querySelector( 'input[type="radio"]' );
+		if ( ! radio ) {
+			return;
+		}
+		radio.addEventListener( 'focus', function () {
+			var visible = true;
+			try {
+				visible = radio.matches( ':focus-visible' );
+			} catch ( e ) {}
+			label.classList.toggle( 'has-focus', visible );
+		} );
+		radio.addEventListener( 'blur', function () {
+			label.classList.remove( 'has-focus' );
+		} );
+		radio.addEventListener( 'change', syncRecommendPills );
+	} );
+
 	// ── Upload zone enhancements ─────────────────────────────────────────────
 	var uploadWrappers = form.querySelectorAll( '.ndvr-upload-wrapper' );
 	uploadWrappers.forEach( function ( wrapper ) {

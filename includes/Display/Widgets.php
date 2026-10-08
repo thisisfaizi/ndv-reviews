@@ -8,6 +8,7 @@
 
 namespace NdvReviews\Display;
 
+use NdvReviews\Support\Settings;
 use NdvReviews\Support\View;
 use NdvReviews\Reviews\ReviewQuery;
 use NdvReviews\Reviews\Votes;
@@ -35,11 +36,11 @@ class Widgets {
 	private $query;
 
 	/**
-	 * Whether display assets have been requested for this request.
+	 * Settings (lazy).
 	 *
-	 * @var bool
+	 * @var Settings|null
 	 */
-	private $assets_enqueued = false;
+	private $settings;
 
 	/**
 	 * Constructor.
@@ -75,42 +76,39 @@ class Widgets {
 	}
 
 	/**
-	 * Ensure the display CSS/JS are enqueued (idempotent, conditional).
+	 * Enqueue only what a given widget needs (idempotent, conditional).
 	 *
+	 * - stars:   display.css (glyphs + rating-icon swap)
+	 * - list:    display.css + display.js (filters, pagination, votes, lightbox)
+	 * - marquee: display.css + marquee.css + marquee.js
+	 *
+	 * @param string $what stars|list|marquee.
 	 * @return void
 	 */
-	public function enqueue() {
-		if ( $this->assets_enqueued ) {
-			return;
+	public function enqueue( $what = 'list' ) {
+		Renderer::register_assets();
+
+		wp_enqueue_style( 'ndvr-display' );
+
+		if ( 'list' === $what ) {
+			wp_enqueue_script( 'ndvr-display' );
+		} elseif ( 'marquee' === $what ) {
+			wp_enqueue_style( 'ndvr-marquee' );
+			wp_enqueue_script( 'ndvr-marquee' );
 		}
-		$this->assets_enqueued = true;
+	}
 
-		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array( 'ndvr-tokens' ), NDVR_VERSION );
-		wp_enqueue_style( 'ndvr-marquee', NDVR_URL . 'assets/css/marquee.css', array( 'ndvr-tokens' ), NDVR_VERSION );
-		wp_enqueue_script( 'ndvr-display', NDVR_URL . 'assets/js/display.js', array(), NDVR_VERSION, true );
-		wp_enqueue_script( 'ndvr-marquee', NDVR_URL . 'assets/js/marquee.js', array(), NDVR_VERSION, true );
-
-		$accent_css = Design::inline_css( new \NdvReviews\Support\Settings() );
-		if ( '' !== $accent_css ) {
-			wp_add_inline_style( 'ndvr-display', $accent_css );
+	/**
+	 * Root class list for wrapped widget output (Design settings applied).
+	 *
+	 * @return string
+	 */
+	private function wrap_classes() {
+		if ( null === $this->settings ) {
+			$this->settings = new Settings();
 		}
 
-		wp_localize_script(
-			'ndvr-display',
-			'ndvrDisplay',
-			array(
-				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-				'action'     => Renderer::AJAX_ACTION,
-				'nonce'      => wp_create_nonce( Renderer::NONCE ),
-				'voteAction' => Votes::AJAX_ACTION,
-				'i18n'       => array(
-					'photo' => __( 'Customer photo', 'ndv-reviews' ),
-					'close' => __( 'Close', 'ndv-reviews' ),
-					'prev'  => __( 'Previous photo', 'ndv-reviews' ),
-					'next'  => __( 'Next photo', 'ndv-reviews' ),
-				),
-			)
-		);
+		return trim( 'ndvr-reviews-wrap ' . Design::classes( $this->settings ) );
 	}
 
 	/**
@@ -125,7 +123,7 @@ class Widgets {
 		$average = (float) $agg['average'];
 		$count   = (int) $agg['count'];
 
-		$this->enqueue();
+		$this->enqueue( 'stars' );
 
 		return View::render(
 			'stars.php',
@@ -137,16 +135,21 @@ class Widgets {
 	}
 
 	/**
-	 * Summary box.
+	 * Summary box (renders an empty state when the product has no reviews, so
+	 * blocks/shortcodes never collapse to nothing).
 	 *
 	 * @param int $post_id Product id (0 = current).
 	 * @return string
 	 */
 	public function summary( $post_id = 0 ) {
 		$post_id = $this->resolve_id( $post_id );
-		$this->enqueue();
+		$this->enqueue( 'stars' );
 
-		return View::render( 'summary.php', array( 'summary' => $this->summary->for_product( $post_id ) ) );
+		return sprintf(
+			'<div class="%1$s">%2$s</div>',
+			esc_attr( $this->wrap_classes() ),
+			View::render( 'summary.php', array( 'summary' => $this->summary->for_product( $post_id ) ) ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render() output is pre-escaped.
+		);
 	}
 
 	/**
@@ -162,23 +165,48 @@ class Widgets {
 	/**
 	 * A paginated review list.
 	 *
-	 * @param array<string,mixed> $args product_id, per_page, orderby, etc.
+	 * Each list is a self-contained instance: display.js finds it by the
+	 * `ndvr-reviews-instance` class and reads its page size / order from the
+	 * data attributes, so several lists can live on one page. Only the first
+	 * instance carries the legacy `#ndvr-reviews` / `#ndvr-review-list` ids.
+	 *
+	 * @param array<string,mixed> $args product_id, per_page, orderby, show_summary.
 	 * @return string
 	 */
 	public function reviews( array $args = array() ) {
 		$args = wp_parse_args(
 			$args,
 			array(
-				'product_id' => 0,
-				'per_page'   => 10,
-				'orderby'    => 'recent',
+				'product_id'   => 0,
+				'per_page'     => 10,
+				'orderby'      => 'recent',
+				'show_summary' => false,
 			)
 		);
 		$args['product_id'] = $this->resolve_id( $args['product_id'] );
+		$args['per_page']   = Renderer::per_page( $args['per_page'] );
+		$args['orderby']    = Renderer::orderby( $args['orderby'] );
 
-		$this->enqueue();
+		$this->enqueue( 'list' );
 
-		$result = $this->query->paginate( $args );
+		$result = $this->query->paginate(
+			array(
+				'product_id' => $args['product_id'],
+				'per_page'   => $args['per_page'],
+				'orderby'    => $args['orderby'],
+			)
+		);
+
+		$summary_html = '';
+		if ( ! empty( $args['show_summary'] ) ) {
+			$summary_html = View::render(
+				'summary.php',
+				array(
+					'summary'    => $this->summary->for_product( $args['product_id'] ),
+					'filterable' => true,
+				)
+			);
+		}
 
 		$list_html = View::render(
 			'review-list.php',
@@ -188,16 +216,17 @@ class Widgets {
 			)
 		);
 
-		// display.js's delegated click handler (helpful vote, photo lightbox,
-		// pagination) only attaches when #ndvr-reviews exists, and its AJAX
-		// re-fetch on pagination/filter only runs when #ndvr-review-list also
-		// exists — without these two wrapper ids, every review-list.php
-		// consumer (this shortcode/block, and the classic widget below) would
-		// silently render a dead list: the vote button, the pagination
-		// buttons, and the photo lightbox all no-op with no visible error.
+		$use_ids = Renderer::claim_ids();
+
 		return sprintf(
-			'<div id="ndvr-reviews" data-product="%d"><div id="ndvr-review-list">%s</div></div>',
+			'<div%1$s class="%2$s ndvr-reviews-instance" data-product="%3$d" data-per-page="%4$d" data-orderby="%5$s">%6$s<div%7$s class="ndvr-review-list-wrap" aria-live="polite" aria-busy="false">%8$s</div></div>',
+			$use_ids ? ' id="ndvr-reviews"' : '',
+			esc_attr( $this->wrap_classes() ),
 			(int) $args['product_id'],
+			(int) $args['per_page'],
+			esc_attr( $args['orderby'] ),
+			$summary_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render() output is pre-escaped.
+			$use_ids ? ' id="ndvr-review-list"' : '',
 			$list_html // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render() output is pre-escaped.
 		);
 	}
@@ -238,16 +267,16 @@ class Widgets {
 		$args['direction'] = $vertical ? 'vertical' : 'horizontal';
 		$args['reverse']   = $reverse;
 
-		$this->enqueue();
-
 		$items = $this->marquee_items( $args );
 		if ( empty( $items ) ) {
 			return '';
 		}
 
+		$this->enqueue( 'marquee' );
+
 		$rows = max( 1, min( 2, (int) $args['rows'] ) );
 		if ( 1 === $rows ) {
-			return $this->render_marquee_row( $items, $args );
+			return $this->marquee_wrap( $this->render_marquee_row( $items, $args ) );
 		}
 
 		// Double row: split the set across two independent tracks. Too few items
@@ -263,13 +292,32 @@ class Widgets {
 			$row2_items = $items;
 		}
 
-		$row2_args             = $args;
-		$row2_args['reverse']  = ! $args['reverse'];
+		$row2_args            = $args;
+		$row2_args['reverse'] = ! $args['reverse'];
 
-		return '<div class="ndvr-marquee-rows">'
+		return $this->marquee_wrap(
+			'<div class="ndvr-marquee-rows">'
 			. $this->render_marquee_row( $row1_items, $args )
 			. $this->render_marquee_row( $row2_items, $row2_args )
-			. '</div>';
+			. '</div>'
+		);
+	}
+
+	/**
+	 * Wrap marquee track(s) with a visible pause/play control (WCAG 2.2.2:
+	 * moving content that lasts > 5s needs a way to stop it). The button sits
+	 * outside the masked, animated element so it is never clipped or moving.
+	 *
+	 * @param string $inner Pre-escaped track markup.
+	 * @return string
+	 */
+	private function marquee_wrap( $inner ) {
+		return sprintf(
+			'<div class="ndvr-marquee-wrap">%1$s<button type="button" class="ndvr-marquee-toggle" data-label-pause="%2$s" data-label-play="%3$s"><span class="ndvr-marquee-toggle-icon" aria-hidden="true"></span><span class="ndvr-marquee-toggle-text">%2$s</span></button></div>',
+			$inner, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render() output is pre-escaped.
+			esc_attr__( 'Pause animation', 'ndv-reviews' ),
+			esc_attr__( 'Play animation', 'ndv-reviews' )
+		);
 	}
 
 	/**

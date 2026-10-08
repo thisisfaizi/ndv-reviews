@@ -1,7 +1,7 @@
 /**
  * NDV Reviews — marquee accessibility + speed-normalization helper.
- * The scroll animation itself is pure CSS; this adds keyboard-pause on focus
- * and normalizes px/s across instances (see normalizeSpeed below). Vanilla
+ * The scroll animation itself is pure CSS; this adds keyboard-pause on focus,
+ * the visible pause/play button, and normalizes px/s across instances (see normalizeSpeed below). Vanilla
  * JS, no jQuery.
  */
 ( function () {
@@ -15,6 +15,27 @@
 		}
 		marquee.addEventListener( 'focusin', function () { track.style.animationPlayState = 'paused'; } );
 		marquee.addEventListener( 'focusout', function () { track.style.animationPlayState = ''; } );
+	} );
+
+	// ── Pause / play button (WCAG 2.2.2) ────────────────────────────
+	// Hover/focus pausing is not enough: keyboard and touch users need a
+	// persistent way to stop the motion. One button controls every track in
+	// its wrapper (both rows of a rows=2 marquee).
+	document.addEventListener( 'click', function ( e ) {
+		var btn = e.target.closest ? e.target.closest( '.ndvr-marquee-toggle' ) : null;
+		if ( ! btn ) {
+			return;
+		}
+		var wrap = btn.closest( '.ndvr-marquee-wrap' );
+		if ( ! wrap ) {
+			return;
+		}
+		var paused = wrap.classList.toggle( 'is-paused' );
+		var label = btn.getAttribute( paused ? 'data-label-play' : 'data-label-pause' ) || '';
+		var text = btn.querySelector( '.ndvr-marquee-toggle-text' );
+		if ( text ) {
+			text.textContent = label;
+		}
 	} );
 
 	// ── Speed (px/s) normalization ──────────────────────────────────────

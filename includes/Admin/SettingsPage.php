@@ -7,6 +7,7 @@
 
 namespace NdvReviews\Admin;
 
+use NdvReviews\Support\Caps;
 use NdvReviews\Support\Registerable;
 use NdvReviews\Support\Settings;
 
@@ -18,9 +19,13 @@ defined( 'ABSPATH' ) || exit;
  */
 class SettingsPage implements Registerable {
 
-	const CAPABILITY = 'manage_woocommerce';
 	const PAGE_SLUG  = 'ndv-reviews-settings';
 	const NONCE      = 'ndvr_settings';
+
+	/**
+	 * Upper bound for photos per review (matches the input's max).
+	 */
+	const MAX_PHOTOS = 20;
 
 	/**
 	 * Settings.
@@ -67,7 +72,7 @@ class SettingsPage implements Registerable {
 			'ndv-reviews',
 			__( 'Settings', 'ndv-reviews' ),
 			__( 'Settings', 'ndv-reviews' ),
-			self::CAPABILITY,
+			Caps::manage(),
 			self::PAGE_SLUG,
 			array( $this, 'render' )
 		);
@@ -79,24 +84,31 @@ class SettingsPage implements Registerable {
 	 * @return void
 	 */
 	public function handle_save() {
-		if ( ! isset( $_POST['ndvr_settings_save'] ) || ! current_user_can( self::CAPABILITY ) ) {
+		if ( ! isset( $_POST['ndvr_settings_save'] ) || ! current_user_can( Caps::manage() ) ) {
 			return;
 		}
 		check_admin_referer( self::NONCE );
 
+		// Only the public post types the screen offers may be stored.
 		$cpts = isset( $_POST['reviewable_post_types'] ) ? array_map( 'sanitize_key', (array) wp_unslash( $_POST['reviewable_post_types'] ) ) : array();
+		$cpts = array_values( array_intersect( $cpts, array_keys( $this->offered_post_types() ) ) );
+
+		$schema_mode = isset( $_POST['schema_mode'] ) ? sanitize_key( wp_unslash( $_POST['schema_mode'] ) ) : 'auto';
+		if ( ! in_array( $schema_mode, array( 'auto', 'plugin', 'off' ), true ) ) {
+			$schema_mode = 'auto';
+		}
 
 		$this->settings->update(
 			array(
 				'enable_reviews'        => ! empty( $_POST['enable_reviews'] ),
-				'reviewable_post_types' => array_values( array_diff( $cpts, array( 'product' ) ) ),
+				'reviewable_post_types' => $cpts,
 				'allow_guest_reviews'   => ! empty( $_POST['allow_guest_reviews'] ),
 				'photo_uploads'         => ! empty( $_POST['photo_uploads'] ),
-				'max_photos'            => isset( $_POST['max_photos'] ) ? absint( $_POST['max_photos'] ) : 5,
+				'max_photos'            => isset( $_POST['max_photos'] ) ? min( self::MAX_PHOTOS, absint( $_POST['max_photos'] ) ) : 5,
 				'recaptcha_enabled'     => ! empty( $_POST['recaptcha_enabled'] ),
 				'recaptcha_site_key'    => isset( $_POST['recaptcha_site_key'] ) ? sanitize_text_field( wp_unslash( $_POST['recaptcha_site_key'] ) ) : '',
 				'recaptcha_secret'      => isset( $_POST['recaptcha_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['recaptcha_secret'] ) ) : '',
-				'schema_mode'           => isset( $_POST['schema_mode'] ) ? sanitize_key( wp_unslash( $_POST['schema_mode'] ) ) : 'auto',
+				'schema_mode'           => $schema_mode,
 				'remove_data_on_uninstall' => ! empty( $_POST['remove_data_on_uninstall'] ),
 			)
 		);
@@ -105,16 +117,12 @@ class SettingsPage implements Registerable {
 	}
 
 	/**
-	 * Render the screen.
+	 * Public post types (other than products and attachments) the screen
+	 * offers as reviewable.
 	 *
-	 * @return void
+	 * @return array<string,\WP_Post_Type>
 	 */
-	public function render() {
-		if ( ! current_user_can( self::CAPABILITY ) ) {
-			return;
-		}
-		$s = $this->settings;
-
+	private function offered_post_types() {
 		$cpts = get_post_types(
 			array(
 				'public'   => true,
@@ -123,7 +131,23 @@ class SettingsPage implements Registerable {
 			'objects'
 		);
 		unset( $cpts['product'], $cpts['attachment'] );
-		$enabled = (array) $s->get( 'reviewable_post_types', array() );
+
+		return $cpts;
+	}
+
+	/**
+	 * Render the screen.
+	 *
+	 * @return void
+	 */
+	public function render() {
+		if ( ! current_user_can( Caps::manage() ) ) {
+			return;
+		}
+		$s = $this->settings;
+
+		$cpts    = $this->offered_post_types();
+		$enabled =(array) $s->get( 'reviewable_post_types', array() );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Settings', 'ndv-reviews' ); ?></h1>
@@ -174,7 +198,7 @@ class SettingsPage implements Registerable {
 							</label>
 							<label style="display:flex;align-items:center;gap:7px;font-weight:400;color:var(--ndvr-slate);">
 								<?php esc_html_e( 'Max per review:', 'ndv-reviews' ); ?>
-								<input type="number" name="max_photos" min="0" max="20" value="<?php echo esc_attr( $s->get( 'max_photos', 5 ) ); ?>" style="width:60px;" />
+								<input type="number" name="max_photos" min="0" max="<?php echo esc_attr( self::MAX_PHOTOS ); ?>" value="<?php echo esc_attr( $s->get( 'max_photos', 5 ) ); ?>" style="width:60px;" />
 							</label>
 						</div>
 					</div>
@@ -207,9 +231,9 @@ class SettingsPage implements Registerable {
 					<div class="ndvr-field">
 						<label><?php esc_html_e( 'Schema markup (JSON-LD)', 'ndv-reviews' ); ?></label>
 						<select name="schema_mode" style="max-width:340px;">
-							<option value="auto"   <?php selected( $s->get( 'schema_mode' ), 'auto' ); ?>><?php esc_html_e( 'Auto — defer to WooCommerce / SEO plugin', 'ndv-reviews' ); ?></option>
-							<option value="plugin" <?php selected( $s->get( 'schema_mode' ), 'plugin' ); ?>><?php esc_html_e( 'Always output NDV Reviews schema', 'ndv-reviews' ); ?></option>
-							<option value="off"    <?php selected( $s->get( 'schema_mode' ), 'off' ); ?>><?php esc_html_e( 'Off', 'ndv-reviews' ); ?></option>
+							<option value="auto"   <?php selected( $s->get( 'schema_mode' ), 'auto' ); ?>><?php esc_html_e( 'Automatic: add ratings to WooCommerce\'s product schema; skip standalone schema if an SEO plugin is active (recommended)', 'ndv-reviews' ); ?></option>
+							<option value="plugin" <?php selected( $s->get( 'schema_mode' ), 'plugin' ); ?>><?php esc_html_e( 'Always: also output standalone product schema when an SEO plugin is active', 'ndv-reviews' ); ?></option>
+							<option value="off"    <?php selected( $s->get( 'schema_mode' ), 'off' ); ?>><?php esc_html_e( 'Off: add no review schema', 'ndv-reviews' ); ?></option>
 						</select>
 					</div>
 					<div class="ndvr-field" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ndvr-line);">

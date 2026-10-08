@@ -40,13 +40,25 @@ class AntiSpam {
 	/**
 	 * Run all enabled checks against a submission.
 	 *
-	 * @param array<string,mixed> $input Raw (already-unslashed) request data.
+	 * The per-IP limit and reCAPTCHA exist to stop anonymous floods. A request
+	 * that the caller has already authenticated server-side (a resolved
+	 * review-link token) skips both: the token caps what can be submitted, and
+	 * a customer reviewing six items, or several customers behind one office
+	 * IP, would otherwise hit the hourly ceiling. Never derive $authenticated
+	 * from a client-supplied field.
+	 *
+	 * @param array<string,mixed> $input         Raw (already-unslashed) request data.
+	 * @param bool                $authenticated Whether the caller verified a credential server-side.
 	 * @return true|\WP_Error True if clean, WP_Error otherwise.
 	 */
-	public function check( array $input ) {
+	public function check( array $input, $authenticated = false ) {
 		// 1. Honeypot — bots fill hidden fields.
 		if ( ! empty( $input[ self::HONEYPOT ] ) ) {
 			return new \WP_Error( 'ndvr_spam_honeypot', __( 'Your submission could not be processed.', 'ndv-reviews' ) );
+		}
+
+		if ( true === $authenticated ) {
+			return true;
 		}
 
 		// 2. Per-IP rate limit.

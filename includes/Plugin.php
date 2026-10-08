@@ -154,6 +154,13 @@ final class Plugin {
 		);
 
 		$c->set(
+			'admin_dashboard_page',
+			static function ( $c ) {
+				return new \NdvReviews\Admin\DashboardPage( $c->get( 'settings' ) );
+			}
+		);
+
+		$c->set(
 			'admin_criteria_page',
 			static function ( $c ) {
 				return new \NdvReviews\Admin\CriteriaPage( $c->get( 'criteria' ) );
@@ -244,8 +251,8 @@ final class Plugin {
 
 		$c->set(
 			'token_repository',
-			static function () {
-				return new \NdvReviews\Collection\TokenRepository();
+			static function ( $c ) {
+				return new \NdvReviews\Collection\TokenRepository( $c->get( 'settings' ) );
 			}
 		);
 
@@ -314,6 +321,20 @@ final class Plugin {
 		);
 
 		$c->set(
+			'admin_notify',
+			static function ( $c ) {
+				return new \NdvReviews\Requests\AdminNotify( $c->get( 'settings' ) );
+			}
+		);
+
+		$c->set(
+			'review_link_focus',
+			static function () {
+				return new \NdvReviews\Collection\ReviewLinkFocus();
+			}
+		);
+
+		$c->set(
 			'admin_requests_page',
 			static function ( $c ) {
 				return new \NdvReviews\Admin\RequestsPage(
@@ -377,8 +398,12 @@ final class Plugin {
 
 		$c->set(
 			'privacy',
-			static function () {
-				return new \NdvReviews\Privacy\Privacy();
+			static function ( $c ) {
+				return new \NdvReviews\Privacy\Privacy(
+					$c->get( 'token_repository' ),
+					$c->get( 'mailer' ),
+					$c->get( 'request_repository' )
+				);
 			}
 		);
 
@@ -392,7 +417,7 @@ final class Plugin {
 		$c->set(
 			'csv_importer',
 			static function ( $c ) {
-				return new \NdvReviews\Importers\Csv( $c->get( 'reviews' ), $c->get( 'rating_cache' ) );
+				return new \NdvReviews\Importers\Csv( $c->get( 'reviews' ), $c->get( 'rating_cache' ), $c->get( 'criteria' ) );
 			}
 		);
 
@@ -437,6 +462,7 @@ final class Plugin {
 		$services = array(
 			new \NdvReviews\Support\Assets(), // Serve .min assets in production (free + Pro handles).
 			$this->container->get( 'review_form' ),
+			$this->container->get( 'admin_dashboard_page' ),
 			$this->container->get( 'admin_criteria_page' ),
 			$this->container->get( 'admin_assets' ),
 			$this->container->get( 'admin_design_page' ),
@@ -450,6 +476,8 @@ final class Plugin {
 			$this->container->get( 'landing' ),
 			$this->container->get( 'unsubscribe' ),
 			$this->container->get( 'health_check' ),
+			$this->container->get( 'admin_notify' ),
+			$this->container->get( 'review_link_focus' ),
 			$this->container->get( 'admin_requests_page' ),
 			$this->container->get( 'shortcodes' ),
 			$this->container->get( 'blocks' ),

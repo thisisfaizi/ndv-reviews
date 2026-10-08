@@ -120,3 +120,15 @@ were empirically verified (not just code-reviewed) — noted per item.
 | T-QA2b | Run the full opt-in uninstall flow on a disposable install (not this shared staging site) | @qa | todo | uninstall dry-run confirmed: tables/options/transients/AS jobs/review comments all removed on opt-in, left intact otherwise |
 | T-IMP1 | Pro: CSV import from other review platforms — extend `ProImporter.php`'s column-mapping/product-matching to handle raw-WordPress/ReviewX-style exports (no SKU, title-only matching), add a manual-resolution step for unmatched rows, real de-dup, batching for large files, and sub-criteria mapping. Full research + phased design in `PRODUCTION-PLAN.md` Part E — plan only, not yet built | pro/@spec | todo | see PRODUCTION-PLAN.md Part E acceptance criteria per sub-phase (E1–E5) |
 | T-SEC6 | AntiSpam rate-limit TOCTOU race (see Phase 9 note above) — needs a dedicated atomic-counter table to fix properly | @be | todo | concurrent-request burst test no longer exceeds the configured hourly ceiling |
+
+## Release 1.0.0 — 2026-10-08 (WP.org submission + Freemius)
+| id | title | evidence |
+|---|---|---|
+| R-1 | Plugin Check: 13 errors → 0 (escaping, prepared query, readme headers, dist excludes, plugin name) | `wp plugin check` on git-archive of working tree: 0 errors; remaining warnings = frozen `ndv-reviews/` hook prefix + custom-table SQL |
+| R-2 | Full feature/logic/UX audit (5 agents, live site) → ~90 findings; fixed by 5 owner-scoped agents | `.agents/AUDIT-2026-10.md` (status per item) |
+| R-3 | Overview dashboard + task-ordered menu; Criteria moved to `ndv-reviews-criteria` | browser screenshot |
+| R-4 | Storefront rebuild: Write-a-review CTA, card hierarchy, clickable bars, a11y contrast/focus, mobile, initials avatars, live design preview | before/after screenshots |
+| R-5 | Reminder email editor + preview + real test send; admin new-review notification; guest magic link | browser + `pre_wp_mail` captures |
+| R-6 | Readme rewritten for 1.0.0 incl. External services; versions 1.0.0; WC headers | readme.txt |
+| R-7 | Filterable admin capability `Support\Caps::manage()` | php -l |
+| T-L1 | Licensing → Freemius in Pro (SDK 2.13.4, placeholders) | done in Pro |

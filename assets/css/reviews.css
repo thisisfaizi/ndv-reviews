@@ -5,6 +5,7 @@
 /* Design tokens: see tokens.css (:root, shared front-end source). */
 .ndvr-fields {
 	font-family: var(--ndvr-font);
+	font-size: var(--ndvr-text);
 	color: var(--ndvr-ink);
 	max-width: 620px;
 }
@@ -22,7 +23,7 @@
 .ndvr-criterion { border: 0; margin: 0; padding: 0; min-width: 0; }
 .ndvr-criterion-label {
 	display: block;
-	font-size: 11px;
+	font-size: 0.733em;
 	font-weight: 700;
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
@@ -35,9 +36,9 @@
 .ndvr-stars .ndvr-star-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .ndvr-stars .ndvr-star-label {
 	cursor: pointer;
-	font-size: 34px;
+	font-size: 2.267em;
 	line-height: 1;
-	color: #dde0e6;
+	color: var(--ndvr-star-empty);
 	padding: 0 2px;
 	transition: color 0.12s ease, transform 0.1s ease;
 }
@@ -46,11 +47,11 @@
 .ndvr-stars .ndvr-star-label:hover,
 .ndvr-stars .ndvr-star-label:hover ~ .ndvr-star-label { color: var(--ndvr-gold); }
 .ndvr-stars .ndvr-star-label:hover { transform: scale(1.14); }
-.ndvr-stars .ndvr-star-input:focus-visible + .ndvr-star-label { outline: 2px solid var(--ndvr-verdant); outline-offset: 2px; border-radius: 4px; }
+.ndvr-stars .ndvr-star-input:focus-visible + .ndvr-star-label { outline: 2px solid var(--ndvr-accent); outline-offset: 2px; border-radius: 4px; }
 
 /* ── Fields ──────────────────────────────────────────────────────────────── */
 .ndvr-field { margin: 0 0 18px; }
-.ndvr-field > label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 7px; color: var(--ndvr-ink); }
+.ndvr-field > label { display: block; font-weight: 600; font-size: 0.933em; margin-bottom: 7px; color: var(--ndvr-ink); }
 .ndvr-field .required { color: var(--ndvr-rose); }
 .ndvr-fields input[type="text"],
 .ndvr-fields input[type="email"],
@@ -59,7 +60,7 @@
 	width: 100%;
 	max-width: 100%;
 	font-family: inherit;
-	font-size: 15px;
+	font-size: 1em;
 	color: var(--ndvr-ink);
 	background: var(--ndvr-haze);
 	border: 1.5px solid transparent;
@@ -71,14 +72,14 @@
 .ndvr-fields textarea:focus {
 	outline: none;
 	background: var(--ndvr-paper);
-	border-color: var(--ndvr-verdant);
-	box-shadow: 0 0 0 3px var(--ndvr-verdant-soft);
+	border-color: var(--ndvr-accent);
+	box-shadow: 0 0 0 1px var(--ndvr-accent);
 }
 .ndvr-fields textarea { min-height: 110px; resize: vertical; }
 
 /* ── Recommend pills ─────────────────────────────────────────────────────── */
 .ndvr-field-recommend { border: 0; padding: 0; margin: 0 0 20px; }
-.ndvr-field-recommend legend { font-weight: 600; font-size: 14px; margin-bottom: 10px; padding: 0; color: var(--ndvr-ink); }
+.ndvr-field-recommend legend { font-weight: 600; font-size: 0.933em; margin-bottom: 10px; padding: 0; color: var(--ndvr-ink); }
 .ndvr-field-recommend label {
 	display: inline-flex;
 	align-items: center;
@@ -89,7 +90,7 @@
 	border: 1.5px solid var(--ndvr-line);
 	border-radius: 999px;
 	cursor: pointer;
-	font-size: 14px;
+	font-size: 0.933em;
 	font-weight: 500;
 	color: var(--ndvr-slate);
 	background: var(--ndvr-haze);
@@ -97,7 +98,7 @@
 	user-select: none;
 }
 .ndvr-field-recommend label:hover {
-	border-color: var(--ndvr-verdant);
+	border-color: var(--ndvr-accent);
 	color: var(--ndvr-ink);
 }
 .ndvr-field-recommend input[type="radio"] {
@@ -109,21 +110,31 @@
 }
 /* Selected state — CSS :has (modern browsers) */
 .ndvr-field-recommend label:has(input[type="radio"]:checked) {
-	border-color: var(--ndvr-verdant);
-	background: var(--ndvr-verdant-soft);
-	color: var(--ndvr-verdant);
+	border-color: var(--ndvr-accent);
+	background: var(--ndvr-accent);
+	color: var(--ndvr-accent-ink);
 	font-weight: 600;
+}
+/* Keyboard focus ring: the radio itself is invisible, so ring the pill. */
+.ndvr-field-recommend label:has(input[type="radio"]:focus-visible) {
+	outline: 2px solid var(--ndvr-accent);
+	outline-offset: 2px;
 }
 /* JS fallback class */
 .ndvr-field-recommend label.is-checked {
-	border-color: var(--ndvr-verdant);
-	background: var(--ndvr-verdant-soft);
-	color: var(--ndvr-verdant);
+	border-color: var(--ndvr-accent);
+	background: var(--ndvr-accent);
+	color: var(--ndvr-accent-ink);
 	font-weight: 600;
 }
 
+.ndvr-field-recommend label.has-focus {
+	outline: 2px solid var(--ndvr-accent);
+	outline-offset: 2px;
+}
+
 /* ── Photo upload zone ───────────────────────────────────────────────────── */
-.ndvr-field-photos > label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 7px; color: var(--ndvr-ink); }
+.ndvr-field-photos > label { display: block; font-weight: 600; font-size: 0.933em; margin-bottom: 7px; color: var(--ndvr-ink); }
 
 .ndvr-upload-wrapper {
 	position: relative;
@@ -158,30 +169,30 @@
 	transition: color 0.15s;
 }
 .ndvr-upload-text {
-	font-size: 14px;
+	font-size: 0.933em;
 	font-weight: 600;
 	color: var(--ndvr-slate);
 }
 .ndvr-upload-hint {
-	font-size: 12px;
+	font-size: 0.8em;
 	color: var(--ndvr-faint);
 }
 .ndvr-upload-count {
-	font-size: 13px;
+	font-size: 0.867em;
 	font-weight: 600;
 	color: var(--ndvr-verdant);
 	min-height: 1.2em;
 }
 .ndvr-upload-wrapper:hover .ndvr-upload-zone,
 .ndvr-upload-wrapper:focus-within .ndvr-upload-zone {
-	border-color: var(--ndvr-verdant);
-	background: var(--ndvr-verdant-soft);
+	border-color: var(--ndvr-accent);
+	background: var(--ndvr-paper);
 }
 .ndvr-upload-wrapper:hover .ndvr-upload-zone svg,
-.ndvr-upload-wrapper:focus-within .ndvr-upload-zone svg { color: var(--ndvr-verdant); }
+.ndvr-upload-wrapper:focus-within .ndvr-upload-zone svg { color: var(--ndvr-accent); }
 .ndvr-upload-wrapper.is-dragging .ndvr-upload-zone {
-	border-color: var(--ndvr-verdant);
-	background: var(--ndvr-verdant-soft);
+	border-color: var(--ndvr-accent);
+	background: var(--ndvr-paper);
 	border-style: solid;
 }
 
@@ -191,7 +202,7 @@
 	display: inline-flex;
 	align-items: flex-start;
 	gap: 10px;
-	font-size: 14px;
+	font-size: 0.933em;
 	color: var(--ndvr-slate);
 	font-weight: 400;
 	line-height: 1.45;
@@ -203,7 +214,7 @@
 	width: 18px;
 	height: 18px;
 	margin-top: 1px;
-	accent-color: var(--ndvr-verdant);
+	accent-color: var(--ndvr-accent);
 	cursor: pointer;
 }
 
@@ -212,7 +223,7 @@
 .ndvr-field-video input[type="text"] {
 	width: 100%;
 	font-family: inherit;
-	font-size: 15px;
+	font-size: 1em;
 	color: var(--ndvr-ink);
 	background: var(--ndvr-haze);
 	border: 1.5px solid transparent;
@@ -223,30 +234,31 @@
 .ndvr-field-video input:focus {
 	outline: none;
 	background: var(--ndvr-paper);
-	border-color: var(--ndvr-verdant);
-	box-shadow: 0 0 0 3px var(--ndvr-verdant-soft);
+	border-color: var(--ndvr-accent);
+	box-shadow: 0 0 0 1px var(--ndvr-accent);
 }
 
 /* ── Status / message ────────────────────────────────────────────────────── */
-.ndvr-form-message { margin: 14px 0 0; font-size: 14px; }
+.ndvr-form-message { margin: 14px 0 0; font-size: 0.933em; }
 .ndvr-form-message.is-error { color: var(--ndvr-rose); padding: 11px 14px; background: #fcf0ef; border-radius: var(--ndvr-r-sm); }
 .ndvr-form-message.is-success { color: var(--ndvr-verdant); padding: 11px 14px; background: var(--ndvr-verdant-soft); border-radius: var(--ndvr-r-sm); }
 
 /* ── WooCommerce review form wrapper ─────────────────────────────────────── */
 #ndvr-review-form {
 	font-family: var(--ndvr-font);
+	font-size: var(--ndvr-text);
 	max-width: 620px;
 }
 #ndvr-review-form .comment-reply-title,
 .ndvr-form-title {
-	font-size: 21px;
+	font-size: calc(var(--ndvr-text) * 1.4);
 	font-weight: 800;
 	letter-spacing: -0.01em;
 	color: var(--ndvr-ink);
 	display: block;
 	margin-bottom: 6px;
 }
-#ndvr-review-form .comment-notes { color: var(--ndvr-slate); font-size: 14px; margin-bottom: 20px; }
+#ndvr-review-form .comment-notes { color: var(--ndvr-slate); font-size: 0.933em; margin-bottom: 20px; }
 #ndvr-review-form .comment-form-author,
 #ndvr-review-form .comment-form-email,
 #ndvr-review-form .comment-form-url { margin: 0 0 16px; }
@@ -255,7 +267,7 @@
 #ndvr-review-form .comment-form-url label {
 	display: block;
 	font-weight: 600;
-	font-size: 14px;
+	font-size: 0.933em;
 	margin-bottom: 7px;
 	color: var(--ndvr-ink);
 }
@@ -265,7 +277,7 @@
 	width: 100%;
 	max-width: 100%;
 	font-family: inherit;
-	font-size: 15px;
+	font-size: 1em;
 	color: var(--ndvr-ink);
 	background: var(--ndvr-haze);
 	border: 1.5px solid transparent;
@@ -276,8 +288,8 @@
 #ndvr-review-form input:focus {
 	outline: none;
 	background: var(--ndvr-paper);
-	border-color: var(--ndvr-verdant);
-	box-shadow: 0 0 0 3px var(--ndvr-verdant-soft);
+	border-color: var(--ndvr-accent);
+	box-shadow: 0 0 0 1px var(--ndvr-accent);
 }
 #ndvr-review-form .form-submit { margin-top: 24px; }
 /* Themes (e.g. Astra) style input#submit with high specificity — override decisively. */
@@ -286,12 +298,12 @@
 #ndvr-review-form input[type="submit"] {
 	display: block !important;
 	width: 100% !important;
-	background: var(--ndvr-verdant) !important;
-	color: #fff !important;
+	background: var(--ndvr-accent) !important;
+	color: var(--ndvr-accent-ink) !important;
 	border: 0 !important;
 	border-radius: 999px !important;
 	padding: 15px 36px !important;
-	font-size: 16px !important;
+	font-size: 1.067em !important;
 	font-weight: 700 !important;
 	font-family: inherit !important;
 	letter-spacing: -0.01em !important;
@@ -299,20 +311,34 @@
 	transition: transform 0.1s ease, box-shadow 0.15s, opacity 0.15s;
 	-webkit-appearance: none;
 	appearance: none;
-	box-shadow: 0 4px 14px -4px rgba(15,125,91,.42);
+	box-shadow: none;
 }
 #ndvr-review-form .form-submit input#submit:hover,
 #ndvr-review-form input[type="submit"]:hover {
-	transform: translateY(-1px) !important;
-	box-shadow: 0 6px 20px -4px rgba(15,125,91,.52) !important;
-	background: #0c6b4e !important;
+	opacity: 0.9 !important;
 }
-#ndvr-review-form .form-submit input#submit:active,
-#ndvr-review-form input[type="submit"]:active {
-	transform: translateY(0) !important;
-	box-shadow: 0 2px 8px -2px rgba(15,125,91,.32) !important;
+#ndvr-review-form .form-submit input#submit:focus-visible,
+#ndvr-review-form input[type="submit"]:focus-visible {
+	outline: 2px solid var(--ndvr-accent) !important;
+	outline-offset: 3px !important;
 }
 .ndvr-review-form.is-submitting input[type="submit"] { opacity: 0.6 !important; pointer-events: none !important; }
+
+.ndvr-upload-wrapper:focus-within .ndvr-upload-zone { outline: 2px solid var(--ndvr-accent); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+	.ndvr-criteria-group { gap: 16px 24px; }
+	.ndvr-stars .ndvr-star-label { font-size: 2.4em; padding: 0 3px; }
+	.ndvr-field-recommend label { min-height: 44px; padding: 0 18px; }
+	.ndvr-fields input[type="text"],
+	.ndvr-fields input[type="email"],
+	.ndvr-fields input[type="url"],
+	.ndvr-fields textarea,
+	#ndvr-review-form input[type="text"],
+	#ndvr-review-form input[type="email"],
+	#ndvr-review-form input[type="url"] { font-size: 16px; } /* 16px stops iOS zooming on focus */
+	.ndvr-upload-zone { padding: 20px 14px 18px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
 	.ndvr-stars .ndvr-star-label { transition: none; }

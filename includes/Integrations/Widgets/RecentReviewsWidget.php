@@ -42,18 +42,18 @@ class RecentReviewsWidget extends \WP_Widget {
 			return;
 		}
 
-		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array( 'ndvr-tokens' ), NDVR_VERSION );
+		Plugin::instance()->container()->get( 'widgets' )->enqueue( 'stars' );
 
 		echo $args['before_widget']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		$title = ! empty( $instance['title'] ) ? $instance['title'] : __( 'Recent reviews', 'ndv-reviews' );
 		echo $args['before_title'] . esc_html( $title ) . $args['after_title']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
-		echo '<ul class="ndvr-recent-list" style="list-style:none;margin:0;padding:0;">';
+		echo '<ul class="ndvr-recent-list">';
 		foreach ( $items as $review ) {
-			echo '<li class="ndvr-recent-item" style="padding:10px 0;border-bottom:1px solid #eee;">';
+			echo '<li class="ndvr-recent-item">';
 			echo Html::stars( $review['overall'] ? $review['overall'] : $review['rating'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo '<div style="font-size:.9em;margin-top:4px;">' . esc_html( wp_trim_words( $review['content'], 14 ) ) . '</div>';
-			echo '<div style="font-size:.78em;color:#888;">— ' . esc_html( $review['author'] ) . '</div>';
+			echo '<div class="ndvr-recent-text">' . esc_html( wp_trim_words( $review['content'], 14 ) ) . '</div>';
+			echo '<div class="ndvr-recent-author">&mdash; ' . esc_html( $review['author'] ) . '</div>';
 			echo '</li>';
 		}
 		echo '</ul>';

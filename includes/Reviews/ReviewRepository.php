@@ -64,7 +64,12 @@ class ReviewRepository {
 	 *     @type string              $content    Review body.
 	 *     @type string              $title      Optional review title.
 	 *     @type string              $recommend  yes|neutral|no.
-	 *     @type array<int,float>    $criteria   Map of criteria_id => rating (0.5-5).
+	 *     @type array<int,float>    $criteria   Map of criteria_id => rating (0.5-5). Only active
+	 *                                           criteria count; at least one valid score is required
+	 *                                           unless `rating` is given.
+	 *     @type float               $rating     Overall rating (1-5) for callers with no criteria
+	 *                                           scores (CSV import). Used only when no valid
+	 *                                           criteria score is present.
 	 *     @type int[]               $media      Attachment ids for photos.
 	 *     @type int                 $user_id    Reviewer user id (0 guest).
 	 *     @type string              $source     Source tag (onsite|qr|form|...).
@@ -105,6 +110,18 @@ class ReviewRepository {
 			return new \WP_Error( 'ndvr_missing_email', __( 'Please enter a valid email address.', 'ndv-reviews' ) );
 		}
 
+		// A review without a rating would display but be left out of the product
+		// average, so it is rejected here — every caller (forms, landing, import)
+		// goes through this check before anything is stored.
+		$scores       = $this->valid_scores( isset( $data['criteria'] ) ? (array) $data['criteria'] : array() );
+		$plain_rating = 0.0;
+		if ( empty( $scores ) ) {
+			$plain_rating = isset( $data['rating'] ) && is_numeric( $data['rating'] ) ? (float) $data['rating'] : 0.0;
+			if ( $plain_rating < 1 || $plain_rating > 5 ) {
+				return new \WP_Error( 'ndvr_missing_rating', __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) );
+			}
+		}
+
 		/**
 		 * Filter whether a new review is auto-approved (Pro auto-approve rules).
 		 *
@@ -128,6 +145,10 @@ class ReviewRepository {
 			'comment_post_ID'      => $pool_id,
 			'comment_author'       => $author,
 			'comment_author_email' => $email,
+			'comment_author_url'   => '',
+			// Same as core comments: the submitter's IP aids spam moderation (erased by the GDPR eraser).
+			'comment_author_IP'    => isset( $_SERVER['REMOTE_ADDR'] ) ? preg_replace( '/[^0-9a-fA-F:., ]/', '', wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- stripped to IP characters, as core does.
+			'comment_agent'        => isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 254 ) : '',
 			'comment_content'      => $content,
 			'comment_type'         => 'review',
 			'comment_parent'       => 0,
@@ -142,8 +163,8 @@ class ReviewRepository {
 			return new \WP_Error( 'ndvr_insert_failed', __( 'Could not save your review. Please try again.', 'ndv-reviews' ) );
 		}
 
-		// Criteria scores.
-		$this->save_criteria_scores( $comment_id, isset( $data['criteria'] ) ? (array) $data['criteria'] : array() );
+		// Criteria scores (already validated above).
+		$this->save_criteria_scores( $comment_id, $scores );
 
 		// Media.
 		if ( ! empty( $data['media'] ) ) {
@@ -164,8 +185,8 @@ class ReviewRepository {
 		$source = isset( $data['source'] ) ? sanitize_key( $data['source'] ) : 'onsite';
 		update_comment_meta( $comment_id, '_ndvr_source', $source );
 
-		// Seed the helpful counter to 0 so "Most helpful" sorting (which JOINs on
-		// this meta) still includes reviews that have not been voted on yet.
+		// Seed the helpful counter to 0 so unvoted reviews sort as 0 under "Most
+		// helpful" rather than after every review that has the meta.
 		update_comment_meta( $comment_id, '_ndvr_helpful_up', 0 );
 
 		// Log consent (timestamp only — we don't store the raw IP) for GDPR.
@@ -183,8 +204,15 @@ class ReviewRepository {
 			update_comment_meta( $comment_id, 'verified', 1 );
 		}
 
-		// Compute caches (aggregate recalculated on the pool id).
-		$this->ratings->recalc_review( $comment_id );
+		// Compute caches (aggregate recalculated on the pool id). A plain overall
+		// rating is written directly: recalc_review() would fall back to the
+		// integer `rating` meta and lose a decimal value such as 4.5.
+		if ( empty( $scores ) ) {
+			update_comment_meta( $comment_id, 'rating', (int) max( 1, min( 5, round( $plain_rating ) ) ) );
+			update_comment_meta( $comment_id, '_ndvr_overall_rating', round( $plain_rating, 2 ) );
+		} else {
+			$this->ratings->recalc_review( $comment_id );
+		}
 		if ( $approved ) {
 			$this->ratings->recalc_product( $pool_id );
 		}
@@ -201,36 +229,54 @@ class ReviewRepository {
 	}
 
 	/**
-	 * Save per-criterion scores for a review, clamped and validated.
+	 * Keep only scores for active criteria within 0.5-5.
 	 *
-	 * @param int               $comment_id Review comment id.
-	 * @param array<int,mixed>  $scores     Map criteria_id => rating.
+	 * Public so the forms can reject a rating-less submission before storing
+	 * any uploaded photo.
+	 *
+	 * @param array<int|string,mixed> $scores Map criteria_id => rating (raw input).
+	 * @return array<int,float> Valid criteria_id => rating.
+	 */
+	public function valid_scores( array $scores ) {
+		$active = array();
+		foreach ( $this->criteria->get_active() as $criterion ) {
+			$active[ (int) $criterion->id ] = true;
+		}
+
+		$out = array();
+		foreach ( $scores as $criteria_id => $rating ) {
+			$criteria_id = absint( $criteria_id );
+			if ( ! isset( $active[ $criteria_id ] ) || ! is_numeric( $rating ) ) {
+				continue;
+			}
+			$rating = (float) $rating;
+			if ( $rating >= 0.5 && $rating <= 5 ) {
+				$out[ $criteria_id ] = round( $rating, 2 );
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Save per-criterion scores for a review.
+	 *
+	 * @param int              $comment_id Review comment id.
+	 * @param array<int,float> $scores     Map criteria_id => rating, from valid_scores().
 	 * @return void
 	 */
 	private function save_criteria_scores( $comment_id, array $scores ) {
 		global $wpdb;
 
-		$valid_ids = array();
-		foreach ( $this->criteria->get_active() as $criterion ) {
-			$valid_ids[ $criterion->id ] = true;
-		}
-
 		$table = Db::table( 'review_criteria' );
 
 		foreach ( $scores as $criteria_id => $rating ) {
-			$criteria_id = absint( $criteria_id );
-			$rating      = (float) $rating;
-
-			if ( ! isset( $valid_ids[ $criteria_id ] ) || $rating < 0.5 || $rating > 5 ) {
-				continue;
-			}
-
 			$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				$table,
 				array(
 					'comment_id'  => $comment_id,
-					'criteria_id' => $criteria_id,
-					'rating'      => round( $rating, 2 ),
+					'criteria_id' => (int) $criteria_id,
+					'rating'      => $rating,
 				),
 				array( '%d', '%d', '%f' )
 			);

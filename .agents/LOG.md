@@ -450,3 +450,11 @@ empirically verified rather than reasoned about. One item (AntiSpam race) delibe
 reasoning recorded rather than rushed. See Pro's own LOG.md for the matching Pro-plugin fixes from the
 same pass (SSRF in GoogleLinkFetch, ManualReviews criteria storage, ndvr_translate lang allowlist, Q&A
 N+1, share-icon redesign already shipped earlier this session).
+
+## 2026-10-08 — Release 1.0.0 pass (lead + 10 agents)
+CHANGED: see TASKS.md "Release 1.0.0" and AUDIT-2026-10.md. Local disposable test site (portable PHP 8.3,
+WP 7.1, WC 11.2, SQLite, Plugin Check 2.1) replaced the shared Local staging site for verification.
+OBSERVED: Plugin Check free dist 0 errors (was 13). All PHP lint clean, all JS `node --check` clean. Dashboard,
+Reminders, email preview, product page, Design preview verified in browser.
+NOT VERIFIED: Elementor runtime (not installed); real reCAPTCHA/AI/ESP/Google/Facebook network calls (mocked);
+opt-in uninstall run end-to-end (selection query verified only).

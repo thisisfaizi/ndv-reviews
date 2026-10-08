@@ -8,6 +8,7 @@
 namespace NdvReviews\Collection;
 
 use NdvReviews\Support\Db;
+use NdvReviews\Support\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -19,6 +20,23 @@ defined( 'ABSPATH' ) || exit;
  * the customer's address. Tokens are revocable and can expire.
  */
 class TokenRepository {
+
+	/**
+	 * Settings (for the merchant's link-expiry choice). Optional so existing
+	 * `new TokenRepository()` callers keep working.
+	 *
+	 * @var Settings|null
+	 */
+	private $settings;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param Settings|null $settings Settings.
+	 */
+	public function __construct( ?Settings $settings = null ) {
+		$this->settings = $settings;
+	}
 
 	/**
 	 * Create a per-order token covering the given reviewable products.
@@ -46,21 +64,48 @@ class TokenRepository {
 	}
 
 	/**
+	 * Create a short-lived token for an admin test email. The link opens the
+	 * real landing page for a real order, but Collection\Landing refuses to
+	 * save reviews from it, so whoever opens a test email cannot post a
+	 * verified review in the customer's name.
+	 *
+	 * @param int    $order_id    Order id.
+	 * @param string $email       Order billing email.
+	 * @param int[]  $product_ids Product ids to show.
+	 * @return string The raw token.
+	 */
+	public function create_test_token( $order_id, $email, array $product_ids ) {
+		return $this->create( 'test', $order_id, null, $email, $product_ids, DAY_IN_SECONDS );
+	}
+
+	/**
 	 * Internal token creation.
 	 *
-	 * @param string   $type        order|customer.
+	 * @param string   $type        order|customer|test.
 	 * @param int|null $order_id    Order id.
 	 * @param int|null $customer_id Customer id.
 	 * @param string   $email       Email.
 	 * @param int[]    $product_ids Product ids.
+	 * @param int      $lifetime    Fixed lifetime in seconds (0 = use the expiry setting).
 	 * @return string Raw token.
 	 */
-	private function create( $type, $order_id, $customer_id, $email, array $product_ids ) {
+	private function create( $type, $order_id, $customer_id, $email, array $product_ids, $lifetime = 0 ) {
 		global $wpdb;
 
-		$raw     = wp_generate_password( 40, false );
-		$expiry  = (int) apply_filters( 'ndv-reviews/token_expiry_days', 60 );
-		$expires = $expiry > 0 ? gmdate( 'Y-m-d H:i:s', time() + ( $expiry * DAY_IN_SECONDS ) ) : null;
+		$raw = wp_generate_password( 40, false );
+		if ( $lifetime > 0 ) {
+			$expires = gmdate( 'Y-m-d H:i:s', time() + (int) $lifetime );
+		} else {
+			$default = $this->settings ? (int) $this->settings->get( 'token_expiry_days', 60 ) : 60;
+
+			/**
+			 * Filter the review-link lifetime in days (0 = never expires).
+			 *
+			 * @param int $days Default: the "Link expiry" setting.
+			 */
+			$expiry  = (int) apply_filters( 'ndv-reviews/token_expiry_days', $default );
+			$expires = $expiry > 0 ? gmdate( 'Y-m-d H:i:s', time() + ( $expiry * DAY_IN_SECONDS ) ) : null;
+		}
 
 		$products = array();
 		foreach ( array_map( 'absint', $product_ids ) as $pid ) {
@@ -75,15 +120,15 @@ class TokenRepository {
 		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			Db::table( 'review_tokens' ),
 			array(
-				'type'       => 'customer' === $type ? 'customer' : 'order',
-				'order_id'   => $order_id ? absint( $order_id ) : null,
+				'type'        => in_array( $type, array( 'customer', 'test' ), true ) ? $type : 'order',
+				'order_id'    => $order_id ? absint( $order_id ) : null,
 				'customer_id' => $customer_id ? absint( $customer_id ) : null,
-				'email_hash' => $this->hash_email( $email ),
-				'token_hash' => $this->hash_token( $raw ),
-				'products'   => wp_json_encode( $products ),
-				'status'     => 'active',
-				'expires_at' => $expires,
-				'created_at' => current_time( 'mysql', true ),
+				'email_hash'  => $this->hash_email( $email ),
+				'token_hash'  => $this->hash_token( $raw ),
+				'products'    => wp_json_encode( $products ),
+				'status'      => 'active',
+				'expires_at'  => $expires,
+				'created_at'  => current_time( 'mysql', true ),
 			),
 			array( '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
@@ -98,6 +143,29 @@ class TokenRepository {
 	 * @return object|null Row, or null if invalid/expired/used/revoked.
 	 */
 	public function resolve( $raw ) {
+		$row = $this->lookup( $raw );
+
+		if ( ! $row || 'active' !== $row->status ) {
+			return null;
+		}
+
+		if ( ! empty( $row->expires_at ) && strtotime( $row->expires_at . ' UTC' ) < time() ) {
+			$this->set_status( (int) $row->id, 'expired' );
+			return null;
+		}
+
+		return $row;
+	}
+
+	/**
+	 * Find a token row by raw token, whatever its status. Used to tell a fully
+	 * reviewed ("used") link apart from an expired or unknown one; never use it
+	 * to authorize a submission — that is resolve()'s job.
+	 *
+	 * @param string $raw Raw token from the URL.
+	 * @return object|null
+	 */
+	public function lookup( $raw ) {
 		global $wpdb;
 
 		$raw = is_string( $raw ) ? trim( $raw ) : '';
@@ -110,16 +178,19 @@ class TokenRepository {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM `{$table}` WHERE token_hash = %s", $this->hash_token( $raw ) ) );
 
-		if ( ! $row || 'active' !== $row->status ) {
-			return null;
-		}
+		return $row ? $row : null;
+	}
 
-		if ( ! empty( $row->expires_at ) && strtotime( $row->expires_at . ' UTC' ) < time() ) {
-			$this->set_status( (int) $row->id, 'expired' );
-			return null;
-		}
+	/**
+	 * Delete every token issued to an email address (GDPR erasure).
+	 *
+	 * @param string $email Email.
+	 * @return int Rows deleted.
+	 */
+	public function delete_for_email( $email ) {
+		global $wpdb;
 
-		return $row;
+		return (int) $wpdb->delete( Db::table( 'review_tokens' ), array( 'email_hash' => $this->hash_email( $email ) ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	}
 
 	/**

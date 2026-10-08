@@ -10,6 +10,7 @@ namespace NdvReviews\Forms;
 use NdvReviews\Support\Registerable;
 use NdvReviews\Support\Settings;
 use NdvReviews\Reviews\CriteriaRepository;
+use NdvReviews\Reviews\PostTypes;
 use NdvReviews\Reviews\ReviewRepository;
 
 defined( 'ABSPATH' ) || exit;
@@ -109,10 +110,45 @@ class TestimonialForm implements Registerable {
 			$product_id = (int) get_the_ID();
 		}
 
+		// Without an open, reviewable target every submission would be refused,
+		// so show nothing to visitors and tell editors what is missing.
+		if ( ! $this->accepts_reviews( $product_id ) ) {
+			if ( current_user_can( 'edit_posts' ) ) {
+				return '<p class="ndvr-form-notice">' . esc_html__( 'Review form: set product_id to a published product (or reviewable post) with reviews open. This notice is shown to editors only.', 'ndv-reviews' ) . '</p>';
+			}
+			return '';
+		}
+
+		if ( ! $this->settings->get( 'allow_guest_reviews', true ) && ! is_user_logged_in() ) {
+			return '<p class="must-log-in">' . sprintf(
+				/* translators: %s: login URL */
+				wp_kses( __( 'You must be <a href="%s">logged in</a> to post a review.', 'ndv-reviews' ), array( 'a' => array( 'href' => array() ) ) ),
+				esc_url( wp_login_url( (string) get_permalink() ) )
+			) . '</p>';
+		}
+
+		if ( ! wp_style_is( 'ndvr-tokens', 'registered' ) ) {
+			wp_register_style( 'ndvr-tokens', NDVR_URL . 'assets/css/tokens.css', array(), NDVR_VERSION );
+		}
+		wp_enqueue_style( 'ndvr-collect', NDVR_URL . 'assets/css/collect.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 		wp_enqueue_script( 'ndvr-collect', NDVR_URL . 'assets/js/collect.js', array(), NDVR_VERSION, true );
 
 		return $this->render( $product_id, $atts['title'] );
+	}
+
+	/**
+	 * Whether a post can receive a review through this form (same rules the
+	 * submit handler enforces).
+	 *
+	 * @param int $product_id Post id.
+	 * @return bool
+	 */
+	private function accepts_reviews( $product_id ) {
+		return $product_id
+			&& PostTypes::is_reviewable( $product_id )
+			&& 'publish' === get_post_status( $product_id )
+			&& comments_open( $product_id );
 	}
 
 	/**
@@ -124,10 +160,12 @@ class TestimonialForm implements Registerable {
 	 */
 	private function render( $product_id, $title ) {
 		$criteria = $this->criteria->get_active();
+		// Per-instance prefix so two forms on one page don't share element ids.
+		$prefix = wp_unique_id( 'ndvr-t' ) . '-';
 
 		ob_start();
 		?>
-		<div class="ndvr-collect" data-ajax-url="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" data-action="<?php echo esc_attr( self::AJAX_ACTION ); ?>">
+		<div class="ndvr-collect" data-ajax-url="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" data-action="<?php echo esc_attr( self::AJAX_ACTION ); ?>"<?php if ( $this->settings->get( 'recaptcha_enabled' ) && '' !== (string) $this->settings->get( 'recaptcha_site_key' ) ) : ?> data-recaptcha-key="<?php echo esc_attr( (string) $this->settings->get( 'recaptcha_site_key' ) ); ?>"<?php endif; ?>>
 			<form class="ndvr-collect-card ndvr-collect-form" data-product="<?php echo esc_attr( $product_id ); ?>">
 				<?php if ( $title ) : ?>
 					<h3 class="ndvr-collect-name"><?php echo esc_html( $title ); ?></h3>
@@ -140,7 +178,7 @@ class TestimonialForm implements Registerable {
 									<legend class="ndvr-criterion-label"><?php echo esc_html( $c->name ); ?></legend>
 									<div class="ndvr-stars" role="radiogroup" aria-label="<?php echo esc_attr( $c->name ); ?>">
 										<?php for ( $s = 5; $s >= 1; $s-- ) : ?>
-											<?php $fid = 't-c' . (int) $c->id . '-s' . $s; ?>
+											<?php $fid = $prefix . 'c' . (int) $c->id . '-s' . $s; ?>
 											<input class="ndvr-star-input" type="radio" id="<?php echo esc_attr( $fid ); ?>" name="ndvr_criteria[<?php echo esc_attr( $c->id ); ?>]" value="<?php echo esc_attr( $s ); ?>" />
 											<label class="ndvr-star-label" for="<?php echo esc_attr( $fid ); ?>"><span class="screen-reader-text"><?php echo esc_html( $s ); ?></span></label>
 										<?php endfor; ?>
@@ -189,6 +227,10 @@ class TestimonialForm implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Session expired. Please reload.', 'ndv-reviews' ) ), 403 );
 		}
 
+		if ( ! $this->settings->get( 'allow_guest_reviews', true ) && ! is_user_logged_in() ) {
+			wp_send_json_error( array( 'message' => __( 'You must be logged in to submit a review.', 'ndv-reviews' ) ), 403 );
+		}
+
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- verified above.
 		$input = wp_unslash( $_POST );
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
@@ -204,32 +246,16 @@ class TestimonialForm implements Registerable {
 
 		$product_id = isset( $input['product_id'] ) ? absint( $input['product_id'] ) : 0;
 
-		// This form is intentionally open (no login/purchase requirement — see
-		// class docblock), but it must still respect a product being unpublished
-		// or having reviews explicitly closed; `PostTypes::is_reviewable()`
-		// (checked later inside `create()`) only validates post *type*, not status.
-		if ( 'publish' !== get_post_status( $product_id ) || ! comments_open( $product_id ) ) {
+		// No purchase requirement (see class docblock), but the target must be a
+		// published, reviewable post with reviews open.
+		if ( ! $this->accepts_reviews( $product_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'ndv-reviews' ) ), 403 );
 		}
 
-		$criteria = array();
-		if ( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ) {
-			foreach ( $input['ndvr_criteria'] as $cid => $val ) {
-				$criteria[ absint( $cid ) ] = (float) $val;
-			}
-		}
-
-		// Require at least one star rating — same rule as ReviewForm, for the
-		// same reason: a rating-less review displays but is silently excluded
-		// from the WooCommerce product average.
-		$has_rating = false;
-		foreach ( $criteria as $criterion_rating ) {
-			if ( (float) $criterion_rating > 0 ) {
-				$has_rating = true;
-				break;
-			}
-		}
-		if ( ! $has_rating ) {
+		// Require at least one valid star rating — same rule as ReviewForm, checked
+		// before any upload is stored.
+		$criteria = $this->reviews->valid_scores( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ? $input['ndvr_criteria'] : array() );
+		if ( empty( $criteria ) ) {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
 		}
 
@@ -268,6 +294,6 @@ class TestimonialForm implements Registerable {
 
 		$this->antispam->record();
 
-		wp_send_json_success( array( 'message' => __( 'Thank you! Your review is awaiting moderation.', 'ndv-reviews' ) ) );
+		wp_send_json_success( array( 'message' => __( 'Thank you. Your review is awaiting moderation.', 'ndv-reviews' ) ) );
 	}
 }

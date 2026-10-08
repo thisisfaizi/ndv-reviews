@@ -7,17 +7,17 @@
 
 namespace NdvReviews\Admin;
 
+use NdvReviews\Support\Caps;
 use NdvReviews\Support\Registerable;
 use NdvReviews\Reviews\CriteriaRepository;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Registers the top-level NDV Reviews menu and the Rating Criteria screen.
+ * Registers the Rating Criteria screen (under the NDV Reviews menu owned by DashboardPage).
  */
 class CriteriaPage implements Registerable {
 
-	const CAPABILITY = 'manage_woocommerce';
 	const MENU_SLUG  = 'ndv-reviews';
 	const PAGE_SLUG  = 'ndv-reviews-criteria';
 	const NONCE      = 'ndvr_criteria_action';
@@ -56,27 +56,17 @@ class CriteriaPage implements Registerable {
 	}
 
 	/**
-	 * Add the menu and the Criteria subpage.
+	 * Add the Criteria subpage.
 	 *
 	 * @return void
 	 */
 	public function register_menu() {
-		add_menu_page(
-			__( 'NDV Reviews', 'ndv-reviews' ),
-			__( 'NDV Reviews', 'ndv-reviews' ),
-			self::CAPABILITY,
-			self::MENU_SLUG,
-			array( $this, 'render' ),
-			'dashicons-star-filled',
-			56
-		);
-
 		add_submenu_page(
 			self::MENU_SLUG,
 			__( 'Rating Criteria', 'ndv-reviews' ),
 			__( 'Rating Criteria', 'ndv-reviews' ),
-			self::CAPABILITY,
-			self::MENU_SLUG,
+			Caps::manage( 'criteria' ),
+			self::PAGE_SLUG,
 			array( $this, 'render' )
 		);
 	}
@@ -91,7 +81,7 @@ class CriteriaPage implements Registerable {
 			return;
 		}
 
-		if ( ! current_user_can( self::CAPABILITY ) ) {
+		if ( ! current_user_can( Caps::manage( 'criteria' ) ) ) {
 			wp_die( esc_html__( 'You are not allowed to manage review criteria.', 'ndv-reviews' ) );
 		}
 
@@ -105,11 +95,11 @@ class CriteriaPage implements Registerable {
 			$this->push_result( $result, __( 'Criterion added.', 'ndv-reviews' ) );
 		} elseif ( 'delete' === $do ) {
 			$id = isset( $_POST['ndvr_id'] ) ? absint( $_POST['ndvr_id'] ) : 0;
-			$this->criteria->delete( $id );
-			$this->notices[] = array(
-				'type'    => 'success',
-				'message' => __( 'Criterion deleted.', 'ndv-reviews' ),
-			);
+			$result = $this->criteria->delete( $id );
+			if ( false === $result ) {
+				$result = new \WP_Error( 'ndvr_criteria_missing', __( 'That criterion no longer exists.', 'ndv-reviews' ) );
+			}
+			$this->push_result( $result, __( 'Criterion deleted.', 'ndv-reviews' ) );
 		} elseif ( 'toggle' === $do ) {
 			$id      = isset( $_POST['ndvr_id'] ) ? absint( $_POST['ndvr_id'] ) : 0;
 			$status  = isset( $_POST['ndvr_status'] ) && 'active' === $_POST['ndvr_status'] ? 'active' : 'inactive';
@@ -145,7 +135,7 @@ class CriteriaPage implements Registerable {
 	 * @return void
 	 */
 	public function render() {
-		if ( ! current_user_can( self::CAPABILITY ) ) {
+		if ( ! current_user_can( Caps::manage( 'criteria' ) ) ) {
 			return;
 		}
 
@@ -224,7 +214,7 @@ class CriteriaPage implements Registerable {
 							<?php
 							printf(
 								/* translators: %d: max criteria. */
-								esc_html__( 'The free version supports up to %d active criteria. Upgrade to NDV Reviews Pro for unlimited criteria and per-category templates.', 'ndv-reviews' ),
+								esc_html__( 'The free version supports up to %d active criteria. NDV Reviews Pro removes this limit.', 'ndv-reviews' ),
 								(int) $max
 							);
 							?>

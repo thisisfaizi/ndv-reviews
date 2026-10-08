@@ -55,6 +55,35 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 	}
 
 	/**
+	 * Stylesheets Elementor must load wherever this widget appears (including
+	 * cached element output, where render() does not run).
+	 *
+	 * @return string[]
+	 */
+	public function get_style_depends() {
+		return array( 'ndvr-display', 'ndvr-marquee' );
+	}
+
+	/**
+	 * Scripts Elementor must load wherever this widget appears.
+	 *
+	 * @return string[]
+	 */
+	public function get_script_depends() {
+		return array( 'ndvr-marquee' );
+	}
+
+	/**
+	 * Output depends on live review data and carries per-visitor nonces, so it
+	 * must never be served from Elementor's element cache.
+	 *
+	 * @return bool
+	 */
+	protected function is_dynamic_content(): bool {
+		return true;
+	}
+
+	/**
 	 * Controls.
 	 *
 	 * @return void
@@ -249,7 +278,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$category    = isset( $settings['category'] ) ? (string) $settings['category'] : '';
 		$category    = is_numeric( $category ) ? (int) $category : sanitize_title( $category );
 
-		echo Plugin::instance()->container()->get( 'widgets' )->marquee( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$html = Plugin::instance()->container()->get( 'widgets' )->marquee(
 			array(
 				'source'     => $source,
 				'category'   => $category,
@@ -264,5 +293,6 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 				'rows'       => isset( $settings['rows'] ) ? (int) $settings['rows'] : 1,
 			)
 		);
+		echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- widget output is escaped at source.
 	}
 }

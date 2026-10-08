@@ -12,7 +12,7 @@ use NdvReviews\Integrations\Elementor\Module;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Outputs the current/loop product's average rating (reads cached meta — no
+ * Outputs the current/loop product's average rating (reads the cached aggregate via AggregateStore, pool-aware — no
  * per-card query, so it is safe inside Loop Grids).
  */
 class RatingValue extends \Elementor\Core\DynamicTags\Tag {
@@ -60,7 +60,8 @@ class RatingValue extends \Elementor\Core\DynamicTags\Tag {
 	 */
 	public function render() {
 		$product_id = Module::current_product_id();
-		$value      = (float) get_post_meta( $product_id, '_wc_average_rating', true );
+		$agg        = \NdvReviews\Reviews\AggregateStore::get( \NdvReviews\Reviews\Pool::resolve_id( $product_id ) );
+		$value      = (float) $agg['average'];
 		echo esc_html( $value > 0 ? number_format_i18n( $value, 2 ) : '0' );
 	}
 }

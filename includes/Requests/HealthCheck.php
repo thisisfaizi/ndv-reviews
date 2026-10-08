@@ -7,16 +7,27 @@
 
 namespace NdvReviews\Requests;
 
+use NdvReviews\Support\Caps;
 use NdvReviews\Support\Registerable;
 use NdvReviews\Support\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Surfaces the usual root cause of "reminders never arrive": a misconfigured
- * server cron so Action Scheduler never runs. We warn instead of failing silently.
+ * Warns when review reminders are actually stuck: reminders past their send
+ * time that the background queue has not run. A disabled WP-Cron alone is not
+ * a problem (many hosts run a real server cron), so it is only mentioned as a
+ * likely cause once reminders are overdue.
  */
 class HealthCheck implements Registerable {
+
+	const DISMISS_META = 'ndvr_health_notice_dismissed';
+	const NONCE        = 'ndvr_health_dismiss';
+
+	/**
+	 * How late a pending reminder must be before it counts as stuck.
+	 */
+	const GRACE = HOUR_IN_SECONDS;
 
 	/**
 	 * Settings.
@@ -41,15 +52,30 @@ class HealthCheck implements Registerable {
 	 */
 	public function register() {
 		add_action( 'admin_notices', array( $this, 'maybe_warn' ) );
+		add_action( 'admin_init', array( $this, 'maybe_dismiss' ) );
 	}
 
 	/**
-	 * Show a warning when reminders are enabled but delivery looks unreliable.
+	 * Whether the current admin screen is a plugin screen or the Plugins list.
+	 *
+	 * @return bool
+	 */
+	private function on_relevant_screen() {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen ) {
+			return false;
+		}
+
+		return 'plugins' === $screen->id || false !== strpos( (string) $screen->id, 'ndv-reviews' );
+	}
+
+	/**
+	 * Show a warning when reminders are enabled and delivery is stuck.
 	 *
 	 * @return void
 	 */
 	public function maybe_warn() {
-		if ( ! current_user_can( 'manage_woocommerce' ) || ! $this->settings->get( 'reminder_enabled' ) ) {
+		if ( ! current_user_can( Caps::manage( 'reminders' ) ) || ! $this->settings->get( 'reminder_enabled' ) || ! $this->on_relevant_screen() ) {
 			return;
 		}
 
@@ -58,44 +84,80 @@ class HealthCheck implements Registerable {
 			return;
 		}
 
-		echo '<div class="notice notice-warning"><p><strong>' . esc_html__( 'NDV Reviews — review reminders may not send reliably:', 'ndv-reviews' ) . '</strong></p><ul style="list-style:disc;margin-left:20px;">';
+		// A dismissal hides this set of issues only; a different problem shows again.
+		$signature = md5( implode( '|', $issues ) );
+		if ( get_user_meta( get_current_user_id(), self::DISMISS_META, true ) === $signature ) {
+			return;
+		}
+
+		$dismiss = wp_nonce_url( add_query_arg( 'ndvr_health_dismiss', $signature ), self::NONCE );
+
+		echo '<div class="notice notice-warning"><p><strong>' . esc_html__( 'NDV Reviews: review reminders are not being sent on time.', 'ndv-reviews' ) . '</strong></p><ul style="list-style:disc;margin-left:20px;">';
 		foreach ( $issues as $issue ) {
 			echo '<li>' . esc_html( $issue ) . '</li>';
 		}
-		echo '</ul></div>';
+		echo '</ul><p><a href="' . esc_url( admin_url( 'admin.php?page=ndv-reviews-reminders' ) ) . '">' . esc_html__( 'Open the reminder log', 'ndv-reviews' ) . '</a> · <a href="' . esc_url( $dismiss ) . '">' . esc_html__( 'Dismiss', 'ndv-reviews' ) . '</a></p></div>';
 	}
 
 	/**
-	 * Collect any reliability issues.
+	 * Store a dismissal for the current user.
+	 *
+	 * @return void
+	 */
+	public function maybe_dismiss() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- verified below.
+		if ( empty( $_GET['ndvr_health_dismiss'] ) ) {
+			return;
+		}
+		check_admin_referer( self::NONCE );
+		if ( ! current_user_can( Caps::manage( 'reminders' ) ) ) {
+			return;
+		}
+
+		update_user_meta( get_current_user_id(), self::DISMISS_META, sanitize_key( wp_unslash( $_GET['ndvr_health_dismiss'] ) ) );
+		wp_safe_redirect( remove_query_arg( array( 'ndvr_health_dismiss', '_wpnonce' ) ) );
+		exit;
+	}
+
+	/**
+	 * Collect reliability issues, based on what the queue is actually doing.
 	 *
 	 * @return string[]
 	 */
 	private function issues() {
-		$issues = array();
-
-		if ( ! function_exists( 'as_schedule_single_action' ) ) {
-			$issues[] = __( 'Action Scheduler is not available. Ensure WooCommerce is active.', 'ndv-reviews' );
+		if ( ! function_exists( 'as_get_scheduled_actions' ) ) {
+			return array( __( 'Action Scheduler is not available, so reminders cannot be queued. Make sure WooCommerce is active.', 'ndv-reviews' ) );
 		}
+
+		$overdue = as_get_scheduled_actions(
+			array(
+				'hook'         => Scheduler::SEND_HOOK,
+				'status'       => 'pending',
+				'date'         => gmdate( 'Y-m-d H:i:s', time() - self::GRACE ),
+				'date_compare' => '<',
+				'per_page'     => 100,
+			),
+			'ids'
+		);
+		if ( empty( $overdue ) ) {
+			return array();
+		}
+
+		$issues = array(
+			sprintf(
+				/* translators: %d: number of reminders. */
+				_n(
+					'%d review reminder is more than an hour past its send time. The background queue (Action Scheduler, run by WP-Cron) does not appear to be running.',
+					'%d review reminders are more than an hour past their send time. The background queue (Action Scheduler, run by WP-Cron) does not appear to be running.',
+					count( $overdue ),
+					'ndv-reviews'
+				),
+				count( $overdue )
+			),
+		);
 
 		if ( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) {
-			$issues[] = __( 'WP-Cron is disabled (DISABLE_WP_CRON). Make sure a real server cron triggers wp-cron.php, or reminders will not fire on time.', 'ndv-reviews' );
-		}
-
-		// Overdue scheduled actions are a strong signal the queue is not running.
-		if ( function_exists( 'as_get_scheduled_actions' ) ) {
-			$overdue = as_get_scheduled_actions(
-				array(
-					'hook'         => Scheduler::SEND_HOOK,
-					'status'       => 'pending',
-					'date'         => gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS ),
-					'date_compare' => '<',
-					'per_page'     => 1,
-				),
-				'ids'
-			);
-			if ( ! empty( $overdue ) ) {
-				$issues[] = __( 'Some review reminders are more than a day overdue — the background queue does not appear to be running.', 'ndv-reviews' );
-			}
+			$issues[] = __( 'WP-Cron is disabled on this site (DISABLE_WP_CRON). A server cron job must request wp-cron.php regularly, for example every 5 minutes.', 'ndv-reviews' );
 		}
 
 		return $issues;

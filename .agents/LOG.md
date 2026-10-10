@@ -823,3 +823,15 @@ no new sniffs in edited ones.
 EVIDENCE (QA site): `.agents/qa/rr-12.php` 16/16 — AC1 (create + three AJAX handlers), AC2 emoji/CJK, AC3 whitespace,
 AC4 tags/entities, AC5 import exempt, AC6 off state, AC7 markup on all three forms, AC8 list_link, AC9 filter. AC10 core
 flows 49/49; all suites green; debug.log empty; phpcs clean. Manual screen-reader timing check still to do (not a gate).
+
+## 2026-10-10 — RR-13 captcha providers built (in_review)
+- Build spike verified against official docs (results in the PRD build notes): Turnstile explicit render and
+  `response-field`, hCaptcha invisible + `execute( id, { async: true } )` + `recaptchacompat=off`, form-encoded
+  siteverify for hCaptcha (+ sitekey), test keys and dummy tokens, all legal URLs.
+- `AntiSpam` provider resolver, per-provider site keys, script registration, one `verify_captcha()`; settings card
+  (select + three key groups, JS show/hide, secrets kept on blank); product and standalone forms render widgets
+  explicitly, provider handle as a script dependency; reviews.js `withCaptcha()` / collect.js `captchaToken()` with
+  reset after every response; collect.js no longer injects a script; dashboard checklist; readme services + FAQ.
+EVIDENCE (QA site): `.agents/qa/rr-13.php` 23/23 — AC1–AC11 with pre_http_request stubs (wp_safe_remote_post /
+reject_unsafe_urls, 5 s, no remoteip), upgrade from the checkbox, secret kept, checklist, readme. AC12 core flows 49/49;
+all suites green; debug.log empty; phpcs clean on new code. Manual browser check with test keys still to do (not a gate).

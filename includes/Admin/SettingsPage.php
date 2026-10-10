@@ -102,25 +102,35 @@ class SettingsPage implements Registerable {
 			$schema_mode = 'auto';
 		}
 
+		// One captcha provider (RR-13); `recaptcha_enabled` is no longer written.
+		$provider = isset( $_POST['captcha_provider'] ) ? sanitize_key( wp_unslash( $_POST['captcha_provider'] ) ) : 'none';
+		if ( ! in_array( $provider, \NdvReviews\Forms\AntiSpam::PROVIDERS, true ) ) {
+			$provider = 'none';
+		}
+
 		$values = array(
 			'enable_reviews'           => ! empty( $_POST['enable_reviews'] ),
 			'reviewable_post_types'    => $cpts,
 			'allow_guest_reviews'      => ! empty( $_POST['allow_guest_reviews'] ),
 			'photo_uploads'            => ! empty( $_POST['photo_uploads'] ),
 			'max_photos'               => isset( $_POST['max_photos'] ) ? min( self::MAX_PHOTOS, absint( $_POST['max_photos'] ) ) : 5,
-			'recaptcha_enabled'        => ! empty( $_POST['recaptcha_enabled'] ),
+			'captcha_provider'         => $provider,
 			'recaptcha_site_key'       => isset( $_POST['recaptcha_site_key'] ) ? sanitize_text_field( wp_unslash( $_POST['recaptcha_site_key'] ) ) : '',
+			'turnstile_site_key'       => isset( $_POST['turnstile_site_key'] ) ? sanitize_text_field( wp_unslash( $_POST['turnstile_site_key'] ) ) : '',
+			'hcaptcha_site_key'        => isset( $_POST['hcaptcha_site_key'] ) ? sanitize_text_field( wp_unslash( $_POST['hcaptcha_site_key'] ) ) : '',
 			'schema_mode'              => $schema_mode,
 			'remove_data_on_uninstall' => ! empty( $_POST['remove_data_on_uninstall'] ),
 		);
 
-		// The secret is never printed back, so an empty field keeps the saved
+		// Secrets are never printed back, so an empty field keeps the saved
 		// one; the "Remove" box clears it.
-		$secret = isset( $_POST['recaptcha_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['recaptcha_secret'] ) ) : '';
-		if ( ! empty( $_POST['recaptcha_secret_remove'] ) ) {
-			$values['recaptcha_secret'] = '';
-		} elseif ( '' !== $secret ) {
-			$values['recaptcha_secret'] = $secret;
+		foreach ( array( 'recaptcha_secret', 'turnstile_secret', 'hcaptcha_secret' ) as $key ) {
+			$secret = isset( $_POST[ $key ] ) ? sanitize_text_field( wp_unslash( $_POST[ $key ] ) ) : '';
+			if ( ! empty( $_POST[ $key . '_remove' ] ) ) {
+				$values[ $key ] = '';
+			} elseif ( '' !== $secret ) {
+				$values[ $key ] = $secret;
+			}
 		}
 
 		// Keys features registered for this page (RR-00 F6); other pages' keys
@@ -223,21 +233,43 @@ class SettingsPage implements Registerable {
 				<?php // ── Card: Spam protection ── ?>
 				<div class="ndvr-card">
 					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Spam Protection', 'rosette-reviews' ); ?></h2></div>
+					<?php
+					$ndvr_provider  = \NdvReviews\Forms\AntiSpam::provider();
+					$ndvr_providers = array(
+						'recaptcha' => array( __( 'Google reCAPTCHA v3', 'rosette-reviews' ), 'https://www.google.com/recaptcha/admin', '6Lcxxx...' ),
+						'turnstile' => array( __( 'Cloudflare Turnstile', 'rosette-reviews' ), 'https://dash.cloudflare.com/?to=/:account/turnstile', '0x4AAAAAAA...' ),
+						'hcaptcha'  => array( __( 'hCaptcha', 'rosette-reviews' ), 'https://dashboard.hcaptcha.com/sites', '10000000-ffff-...' ),
+					);
+					?>
 					<div class="ndvr-field">
-						<label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:14px;">
-							<input type="checkbox" name="recaptcha_enabled" value="1" <?php checked( (bool) $s->get( 'recaptcha_enabled' ) ); ?> />
-							<?php esc_html_e( 'Enable reCAPTCHA v3 (your own keys)', 'rosette-reviews' ); ?>
-						</label>
-						<div class="ndvr-field-row">
-							<div class="ndvr-field">
-								<label><?php esc_html_e( 'Site key', 'rosette-reviews' ); ?></label>
-								<input type="text" name="recaptcha_site_key" value="<?php echo esc_attr( $s->get( 'recaptcha_site_key' ) ); ?>" placeholder="6Lcxxx..." />
-							</div>
-							<div class="ndvr-field">
-								<?php SettingsFields::render_secret_input( 'recaptcha_secret', __( 'Secret key', 'rosette-reviews' ), '' !== (string) $s->get( 'recaptcha_secret' ) ); ?>
-							</div>
-						</div>
+						<label for="ndvr-captcha-provider" style="font-weight:600;"><?php esc_html_e( 'Captcha', 'rosette-reviews' ); ?></label>
+						<select id="ndvr-captcha-provider" name="captcha_provider">
+							<option value="none" <?php selected( 'none', $ndvr_provider ); ?>><?php esc_html_e( 'None', 'rosette-reviews' ); ?></option>
+							<?php foreach ( $ndvr_providers as $ndvr_key => $ndvr_def ) : ?>
+								<option value="<?php echo esc_attr( $ndvr_key ); ?>" <?php selected( $ndvr_key, $ndvr_provider ); ?>><?php echo esc_html( $ndvr_def[0] ); ?></option>
+							<?php endforeach; ?>
+						</select>
+						<p class="description"><?php esc_html_e( 'A captcha loads a script from the provider on pages that show a review form. It\'s off by default. Choose one only if you get spam.', 'rosette-reviews' ); ?></p>
 					</div>
+					<?php foreach ( $ndvr_providers as $ndvr_key => $ndvr_def ) : ?>
+						<fieldset class="ndvr-field ndvr-captcha-keys" data-provider="<?php echo esc_attr( $ndvr_key ); ?>" style="margin-top:14px;">
+							<legend style="font-weight:600;"><?php echo esc_html( $ndvr_def[0] ); ?></legend>
+							<p class="description"><a href="<?php echo esc_url( $ndvr_def[1] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Get your keys from the provider', 'rosette-reviews' ); ?></a></p>
+							<div class="ndvr-field-row">
+								<div class="ndvr-field">
+									<label for="ndvr-<?php echo esc_attr( $ndvr_key ); ?>-site-key"><?php esc_html_e( 'Site key', 'rosette-reviews' ); ?></label>
+									<input type="text" id="ndvr-<?php echo esc_attr( $ndvr_key ); ?>-site-key" name="<?php echo esc_attr( $ndvr_key ); ?>_site_key" value="<?php echo esc_attr( (string) $s->get( $ndvr_key . '_site_key' ) ); ?>" placeholder="<?php echo esc_attr( $ndvr_def[2] ); ?>" />
+								</div>
+								<div class="ndvr-field">
+									<?php SettingsFields::render_secret_input( $ndvr_key . '_secret', __( 'Secret key', 'rosette-reviews' ), '' !== (string) $s->get( $ndvr_key . '_secret' ) ); ?>
+								</div>
+							</div>
+						</fieldset>
+					<?php endforeach; ?>
+					<?php
+					// Without JS every key group shows; with JS only the chosen one.
+					wp_print_inline_script_tag( "(function(){var s=document.getElementById('ndvr-captcha-provider');if(!s){return;}function t(){document.querySelectorAll('.ndvr-captcha-keys').forEach(function(g){g.style.display=g.getAttribute('data-provider')===s.value?'':'none';});}s.addEventListener('change',t);t();})();" );
+					?>
 				</div>
 
 				<?php

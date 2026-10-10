@@ -49,6 +49,13 @@ class Settings {
 			'recaptcha_enabled'   => false,
 			'recaptcha_site_key'  => '',
 			'recaptcha_secret'    => '',
+			// No `captcha_provider` default on purpose: update() writes defaults into
+			// the option, and an absent key must keep meaning "reCAPTCHA when
+			// recaptcha_enabled" until the RR-00 step has run (AntiSpam::provider()).
+			'turnstile_site_key'  => '',
+			'turnstile_secret'    => '',
+			'hcaptcha_site_key'   => '',
+			'hcaptcha_secret'     => '',
 			'reminder_enabled'    => false,
 			'reminder_status'     => 'completed',
 			'reminder_delay_days' => 7,

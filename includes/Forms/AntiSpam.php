@@ -1,6 +1,7 @@
 <?php
 /**
- * Anti-spam stack: honeypot, per-IP rate limiting, optional reCAPTCHA v3.
+ * Anti-spam stack: honeypot, per-IP rate limiting, optional captcha
+ * (Google reCAPTCHA v3, Cloudflare Turnstile or hCaptcha).
  *
  * @package NdvReviews
  */
@@ -20,6 +21,29 @@ class AntiSpam {
 	 * Honeypot field name (must remain empty).
 	 */
 	const HONEYPOT = 'ndvr_hp_url';
+
+	/**
+	 * Captcha providers (RR-13).
+	 */
+	const PROVIDERS = array( 'none', 'recaptcha', 'turnstile', 'hcaptcha' );
+
+	/**
+	 * Verify endpoints.
+	 */
+	const VERIFY_URLS = array(
+		'recaptcha' => 'https://www.google.com/recaptcha/api/siteverify',
+		'turnstile' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+		'hcaptcha'  => 'https://api.hcaptcha.com/siteverify',
+	);
+
+	/**
+	 * Provider script URLs (enqueued only where a form renders).
+	 */
+	const SCRIPT_URLS = array(
+		'turnstile' => 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+		// recaptchacompat=off: no window.grecaptcha hook clashing with real reCAPTCHA plugins.
+		'hcaptcha'  => 'https://js.hcaptcha.com/1/api.js?render=explicit&recaptchacompat=off',
+	);
 
 	/**
 	 * Settings accessor.
@@ -67,10 +91,17 @@ class AntiSpam {
 			return $rate;
 		}
 
-		// 3. reCAPTCHA v3 (only if enabled with the site owner's keys).
-		if ( $this->settings->get( 'recaptcha_enabled' ) ) {
-			$token   = isset( $input['ndvr_recaptcha_token'] ) ? sanitize_text_field( $input['ndvr_recaptcha_token'] ) : '';
-			$captcha = $this->verify_recaptcha( $token );
+		// 3. Captcha (only the chosen provider, with the site owner's keys).
+		$provider = self::provider();
+		if ( 'none' !== $provider ) {
+			$token = '';
+			// Ours first, then the old reCAPTCHA field, then the widgets' own inputs.
+			foreach ( array( 'ndvr_captcha_token', 'ndvr_recaptcha_token', 'cf-turnstile-response', 'h-captcha-response' ) as $field ) {
+				if ( '' === $token && isset( $input[ $field ] ) && is_string( $input[ $field ] ) ) {
+					$token = sanitize_text_field( $input[ $field ] );
+				}
+			}
+			$captcha = $this->verify_captcha( $provider, $token );
 			if ( is_wp_error( $captcha ) ) {
 				return $captcha;
 			}
@@ -194,40 +225,135 @@ class AntiSpam {
 	}
 
 	/**
-	 * Verify a reCAPTCHA v3 token with Google using the site owner's secret.
+	 * The chosen captcha provider. Reads the raw option, so a site upgraded from
+	 * the reCAPTCHA checkbox keeps its captcha even before the settings step
+	 * has run (an absent key with `recaptcha_enabled` on means reCAPTCHA).
 	 *
-	 * @param string $token Client token.
+	 * @return string none|recaptcha|turnstile|hcaptcha
+	 */
+	public static function provider() {
+		$raw = get_option( NDVR_OPTION_SETTINGS, array() );
+		$raw = is_array( $raw ) ? $raw : array();
+		if ( isset( $raw['captcha_provider'] ) && in_array( $raw['captcha_provider'], self::PROVIDERS, true ) ) {
+			return (string) $raw['captcha_provider'];
+		}
+
+		return ! empty( $raw['recaptcha_enabled'] ) ? 'recaptcha' : 'none';
+	}
+
+	/**
+	 * A provider's site key ('' when none).
+	 *
+	 * @param string $provider Provider.
+	 * @return string
+	 */
+	public static function site_key( $provider ) {
+		if ( ! in_array( $provider, array( 'recaptcha', 'turnstile', 'hcaptcha' ), true ) ) {
+			return '';
+		}
+
+		return (string) \NdvReviews\Plugin::instance()->container()->get( 'settings' )->get( $provider . '_site_key', '' );
+	}
+
+	/**
+	 * The provider the forms render: the chosen one when it has a site key.
+	 *
+	 * @return string none|recaptcha|turnstile|hcaptcha
+	 */
+	public static function active() {
+		$provider = self::provider();
+
+		return 'none' !== $provider && '' !== self::site_key( $provider ) ? $provider : 'none';
+	}
+
+	/**
+	 * Register the active provider's script handle (none for reCAPTCHA-less
+	 * stores). Returns the handle, or '' when there is none.
+	 *
+	 * @return string
+	 */
+	public static function register_script() {
+		$provider = self::active();
+		if ( 'none' === $provider ) {
+			return '';
+		}
+		$handle = 'ndvr-' . $provider;
+		if ( ! wp_script_is( $handle, 'registered' ) ) {
+			$src = 'recaptcha' === $provider
+				? 'https://www.google.com/recaptcha/api.js?render=' . rawurlencode( self::site_key( 'recaptcha' ) )
+				: self::SCRIPT_URLS[ $provider ];
+			// The provider serves its own versioned script; no version query.
+			wp_register_script( $handle, $src, array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		}
+
+		return $handle;
+	}
+
+	/**
+	 * Verify a captcha token with its provider, using the site owner's secret.
+	 *
+	 * @param string $provider recaptcha|turnstile|hcaptcha.
+	 * @param string $token    Client token.
 	 * @return true|\WP_Error
 	 */
-	private function verify_recaptcha( $token ) {
-		$secret = (string) $this->settings->get( 'recaptcha_secret' );
+	private function verify_captcha( $provider, $token ) {
+		$secret = (string) $this->settings->get( 'recaptcha' === $provider ? 'recaptcha_secret' : $provider . '_secret', '' );
 
-		if ( '' === $secret ) {
-			// Misconfiguration: do not block legitimate users over a missing key.
+		// Misconfiguration (no secret, or no site key so no widget renders):
+		// don't block legitimate customers over a missing key.
+		if ( '' === $secret || '' === self::site_key( $provider ) || ! isset( self::VERIFY_URLS[ $provider ] ) ) {
 			return true;
 		}
 
 		if ( '' === $token ) {
-			return new \WP_Error( 'ndvr_spam_captcha', __( 'Captcha verification failed. Please reload and try again.', 'rosette-reviews' ) );
+			return new \WP_Error( 'ndvr_spam_captcha', __( 'Captcha verification failed. Please try again.', 'rosette-reviews' ) );
 		}
 
-		$response = wp_remote_post(
-			'https://www.google.com/recaptcha/api/siteverify',
+		/**
+		 * Filter a captcha provider's verify URL.
+		 *
+		 * @param string $url      Endpoint.
+		 * @param string $provider recaptcha|turnstile|hcaptcha.
+		 */
+		$url = (string) apply_filters( 'ndv-reviews/captcha_verify_url', self::VERIFY_URLS[ $provider ], $provider );
+
+		// No visitor IP is sent (less personal data).
+		$response = wp_safe_remote_post(
+			$url,
 			array(
 				'timeout' => 5,
-				'body'    => array(
-					'secret'   => $secret,
-					'response' => $token,
+				// Form-encoded (hCaptcha accepts nothing else). hCaptcha also checks the
+				// site key, so a token issued for another site is refused.
+				'body'    => array_merge(
+					array(
+						'secret'   => $secret,
+						'response' => $token,
+					),
+					'hcaptcha' === $provider ? array( 'sitekey' => self::site_key( 'hcaptcha' ) ) : array()
 				),
 			)
 		);
 
 		if ( is_wp_error( $response ) ) {
-			// Network hiccup shouldn't lose a real review; allow but log.
+			/**
+			 * Fires when a captcha provider can't be reached. The submission is
+			 * allowed, so a network hiccup never loses a real review.
+			 *
+			 * @param string    $provider Provider.
+			 * @param \WP_Error $error    The request error.
+			 */
+			do_action( 'ndv-reviews/captcha_unreachable', $provider, $response );
 			return true;
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+		$body = is_array( $body ) ? $body : array();
+		if ( true !== ( $body['success'] ?? null ) ) {
+			return new \WP_Error( 'ndvr_spam_captcha', __( 'Captcha verification failed. Please try again.', 'rosette-reviews' ) );
+		}
+		if ( 'recaptcha' !== $provider ) {
+			return true;
+		}
 
 		/**
 		 * Filter the minimum acceptable reCAPTCHA v3 score.

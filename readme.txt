@@ -46,7 +46,7 @@ Rosette Reviews replaces the default WooCommerce reviews tab with a review secti
 
 * Review dashboard with the moderation queue, rating distribution, reminder statistics and your most and least reviewed products.
 * Approve, unapprove, spam, trash and **edit** reviews, including criteria scores, title, tags and photos.
-* Spam protection: honeypot and rate limiting by default, optional Google reCAPTCHA v3.
+* Spam protection: honeypot and rate limiting by default, optional captcha: Google reCAPTCHA v3, Cloudflare Turnstile or hCaptcha.
 * Import existing WooCommerce reviews or a CSV file. Export to CSV or JSON at any time.
 * GDPR: consent checkbox, and WordPress personal data export and erasure.
 * Review questions: answers to the questions you add are stored with the review, included in personal data exports and removed by erasure.
@@ -69,9 +69,13 @@ An optional paid add-on adds unlimited criteria, video reviews, admin replies, r
 
 == External services ==
 
-This plugin connects to one external service, and only if you turn it on.
+This plugin connects to an external service only if you choose a captcha, and then only to the one you choose.
 
 **Google reCAPTCHA v3** (off by default). When enabled under Rosette Reviews → Settings with your own site and secret keys, the review forms load Google's reCAPTCHA script (`https://www.google.com/recaptcha/api.js`) in the visitor's browser on pages that show a review form; that script sends browser and interaction data to Google. On submit, your server sends the resulting reCAPTCHA token and your secret key to `https://www.google.com/recaptcha/api/siteverify` to check whether the submission is automated. Google's [Terms of Service](https://policies.google.com/terms) and [Privacy Policy](https://policies.google.com/privacy) apply.
+
+**Cloudflare Turnstile** (off by default). When chosen under Rosette Reviews → Settings → Spam Protection with your own site and secret keys, the review forms load Cloudflare's Turnstile script (`https://challenges.cloudflare.com/turnstile/v0/api.js`) in the visitor's browser on pages that show a review form; the widget sends browser signals to Cloudflare. On submit, your server sends the resulting token and your secret key to `https://challenges.cloudflare.com/turnstile/v0/siteverify`. The visitor's IP address is not sent by the plugin. Cloudflare's [Website Terms](https://www.cloudflare.com/website-terms/), [Privacy Policy](https://www.cloudflare.com/privacypolicy/) and [Turnstile Privacy Addendum](https://www.cloudflare.com/turnstile-privacy-policy/) apply.
+
+**hCaptcha** (off by default). When chosen under Rosette Reviews → Settings → Spam Protection with your own site and secret keys, the review forms load the hCaptcha script (`https://js.hcaptcha.com/1/api.js`) in the visitor's browser on pages that show a review form; the widget sends browser and interaction data to hCaptcha (Intuition Machines, Inc.). On submit, your server sends the resulting token and your secret key to `https://api.hcaptcha.com/siteverify`. The visitor's IP address is not sent by the plugin. hCaptcha's [Terms of Service](https://www.hcaptcha.com/terms) and [Privacy Policy](https://www.hcaptcha.com/privacy) apply.
 
 No other data is sent anywhere. Avatars on review cards are generated locally from the reviewer's initials.
 
@@ -86,7 +90,7 @@ No other data is sent anywhere. Avatars on review cards are generated locally fr
 
 = Do I need an account or an API key? =
 
-No. Everything runs on your WordPress site. reCAPTCHA is the only optional feature that uses an outside service, with your own keys.
+No. Everything runs on your WordPress site. The optional captchas are the only features that use an outside service, with your own keys.
 
 = Are there limits on reviews or emails? =
 
@@ -161,6 +165,7 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 * New, off by default: one follow-up reminder a set number of days after the first email, only to customers who still have something to review. It has its own subject and text, and a preview.
 * New, off by default: a consent checkbox for review emails at checkout (classic checkout and the Checkout block), in opt-in or opt-out mode. The answer is saved on the order with the time and the wording shown, and every review email respects it.
 * Multilingual stores (WPML with WooCommerce Multilingual, or Polylang): review emails and the review page use the language of the order, and your own subject and text can be translated in the plugin's string translation.
+* Captcha choice: Google reCAPTCHA v3, Cloudflare Turnstile or hCaptcha (one, with your own keys; off by default). Stores that used reCAPTCHA keep it.
 * Minimum review length: ask for at least a set number of characters (off by default). Customers see a hint and a counter; imports are not affected.
 * Review questions: ask up to two questions on every review form (a choice such as "How does it fit?", short text, or yes/no), optional or required. Answers show on the review, can be edited by you, and are exported and imported with your reviews. Rosette Reviews → Review Questions.
 

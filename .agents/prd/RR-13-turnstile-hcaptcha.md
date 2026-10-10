@@ -1,8 +1,20 @@
 # RR-13: Cloudflare Turnstile and hCaptcha
 
-Status: prd-ok (rev 3) · Plan: F · Inherits PRD-00 + RR-00 · No schema change; the settings migration is RR-00's own `Installer::steps()` entry (its version number is provisional per PRD-00 §4) · No Pro-facing API, so no `NDVR_API` change
+Status: built, in review (rev 3) · Plan: F · Inherits PRD-00 + RR-00 · No schema change; the settings migration is RR-00's own `Installer::steps()` entry (its version number is provisional per PRD-00 §4) · No Pro-facing API, so no `NDVR_API` change
 
 Review findings applied: round 2 RR-13 item 1 (provider scripts enqueued, explicit render on load).
+
+Build notes (2026-10-10):
+- **Build spike** (against the official documentation, checked 2026-10-10):
+  - **Turnstile:** `render( el, { sitekey, callback, 'error-callback', 'expired-callback' } )` returns an id. `reset()` and `getResponse()` exist. `response-field` is a boolean (default `true`), and the hidden input it adds is named `cf-turnstile-response`. A token is single-use and valid for 300 s.
+  - **hCaptcha:** `render( el, { sitekey, size: 'invisible' } )`, and `execute( id, { async: true } )` returns a Promise of `{ response, key }`. The loader also adds `g-recaptcha-response` and a `window.grecaptcha` hook unless `recaptchacompat=off`, so we load it with that flag.
+  - **siteverify:** both endpoints are as stated. hCaptcha accepts a **form-encoded body only** (our `wp_safe_remote_post` array body is form-encoded), and we also send its recommended `sitekey`.
+  - **Test keys and dummy tokens:** confirmed (`XXXX.DUMMY.TOKEN.XXXX`, `10000000-aaaa-bbbb-cccc-000000000001`).
+  - **Legal links:** all five resolve (Turnstile Privacy Addendum `https://www.cloudflare.com/turnstile-privacy-policy/`).
+  - **Notes for the readme or FAQ later:** Turnstile may also contact `hagen.` and `brunhild.challenges.cloudflare.com` (CSP); its `api.js` must not be proxied or combined by optimisation plugins.
+- **`captcha_provider`** has no entry in `Settings::defaults()`. `update()` writes the defaults into the option, which would turn an upgraded site's absent key into `none` before the RR-00 step runs. `AntiSpam::provider()` reads the raw option.
+- **Token field:** the server also accepts the widgets' own fields (`cf-turnstile-response`, `h-captcha-response`), after `ndvr_captcha_token` and `ndvr_recaptcha_token`.
+- **Verify gate:** verification needs both the site key and the secret. Without the site key no widget renders, so requiring a token would block every customer.
 
 ## 1. Problem and who it's for
 reCAPTCHA v3 is our only captcha. Many EU merchants avoid Google for privacy reasons. Cloudflare Turnstile is free and widely used; hCaptcha is a common privacy-minded alternative. CusRev offers both (plus reCAPTCHA v2). This is for stores that get spam on guest review forms and don't want Google.

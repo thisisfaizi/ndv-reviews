@@ -260,3 +260,16 @@ Pro: `ndvr_qa`, `ndvr_admin_reply`, `ndvr_external`, `ndvr_qa_admin`.
   handlers. Markup: textarea `aria-describedby`, `data-ndvr-min-length`, `data-ndvr-count-format`,
   `data-ndvr-status-reached`, `data-ndvr-status-format`; `.ndvr-length-hint`, `.ndvr-length-count` (no live region),
   `.ndvr-length-status.screen-reader-text` (role status, polite). Counter code in `reviews.js` and `collect.js`.
+
+## Captcha providers (RR-13, no API change)
+- Settings `captcha_provider` (none|recaptcha|turnstile|hcaptcha; no default stored), `turnstile_site_key`,
+  `turnstile_secret`, `hcaptcha_site_key`, `hcaptcha_secret` (secrets never printed; blank keeps). `recaptcha_enabled`
+  is read for back-compat only. `AntiSpam::PROVIDERS`, `provider()` (raw option), `site_key( $provider )`, `active()`
+  (chosen + site key), `register_script()` → handle `ndvr-recaptcha|ndvr-turnstile|ndvr-hcaptcha` (explicit render;
+  hCaptcha `recaptchacompat=off`), a dependency of `ndvr-reviews` / `ndvr-collect` where a form renders.
+- Token field `ndvr_captcha_token` (fallbacks `ndvr_recaptcha_token`, `cf-turnstile-response`, `h-captcha-response`).
+  Verify: `wp_safe_remote_post`, 5 s, `secret` + `response` (+ `sitekey` for hCaptcha), no `remoteip`; filter
+  `ndv-reviews/captcha_verify_url` ( $url, $provider ); action `ndv-reviews/captcha_unreachable` ( $provider, $error ).
+- Markup: product form `.ndvr-captcha[data-provider][data-sitekey]` + hidden `ndvr_captcha_token`; testimonial root
+  `data-captcha-provider`, `data-captcha-key` (+ `data-recaptcha-key` for reCAPTCHA), `.ndvr-captcha` in the form.
+  `ndvrReviews.captcha = { provider, siteKey }` (`siteKey` kept as a reCAPTCHA-only alias for one release).

@@ -132,7 +132,17 @@ class TestimonialForm implements Registerable {
 		}
 		wp_enqueue_style( 'ndvr-collect', NDVR_URL . 'assets/css/collect.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array( 'ndvr-tokens' ), NDVR_VERSION );
-		wp_enqueue_script( 'ndvr-collect', NDVR_URL . 'assets/js/collect.js', array(), NDVR_VERSION, true );
+		// The captcha provider's script loads before collect.js (RR-13). The
+		// landing page enqueues collect.js too, but never a provider.
+		$captcha = AntiSpam::register_script();
+		wp_enqueue_script( 'ndvr-collect', NDVR_URL . 'assets/js/collect.js', $captcha ? array( $captcha ) : array(), NDVR_VERSION, true );
+		if ( $captcha ) {
+			$collect = wp_scripts()->query( 'ndvr-collect', 'registered' );
+			if ( $collect && ! in_array( $captcha, $collect->deps, true ) ) {
+				$collect->deps[] = $captcha;
+			}
+			wp_enqueue_script( $captcha );
+		}
 
 		return $this->render( $product_id, $atts['title'] );
 	}
@@ -167,9 +177,14 @@ class TestimonialForm implements Registerable {
 		?>
 		<div class="ndvr-collect" data-ajax-url="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" data-action="<?php echo esc_attr( self::AJAX_ACTION ); ?>"
 		<?php
-		if ( $this->settings->get( 'recaptcha_enabled' ) && '' !== (string) $this->settings->get( 'recaptcha_site_key' ) ) :
+		$captcha = AntiSpam::active();
+		if ( 'none' !== $captcha ) :
 			?>
-			data-recaptcha-key="<?php echo esc_attr( (string) $this->settings->get( 'recaptcha_site_key' ) ); ?>"<?php endif; ?>>
+			data-captcha-provider="<?php echo esc_attr( $captcha ); ?>" data-captcha-key="<?php echo esc_attr( AntiSpam::site_key( $captcha ) ); ?>"<?php endif; ?>
+			<?php
+			if ( 'recaptcha' === $captcha ) :
+				?>
+				data-recaptcha-key="<?php echo esc_attr( AntiSpam::site_key( 'recaptcha' ) ); ?>"<?php endif; ?>>
 			<form class="ndvr-collect-card ndvr-collect-form" data-product="<?php echo esc_attr( $product_id ); ?>">
 				<?php if ( $title ) : ?>
 					<h3 class="ndvr-collect-name"><?php echo esc_html( $title ); ?></h3>
@@ -218,6 +233,9 @@ class TestimonialForm implements Registerable {
 						<input type="text" name="<?php echo esc_attr( AntiSpam::HONEYPOT ); ?>" tabindex="-1" autocomplete="off" />
 					</p>
 
+					<?php if ( in_array( $captcha, array( 'turnstile', 'hcaptcha' ), true ) ) : ?>
+						<div class="ndvr-captcha" data-provider="<?php echo esc_attr( $captcha ); ?>" data-sitekey="<?php echo esc_attr( AntiSpam::site_key( $captcha ) ); ?>"></div>
+					<?php endif; ?>
 					<input type="hidden" name="product_id" value="<?php echo esc_attr( $product_id ); ?>" />
 					<input type="hidden" name="nonce" value="<?php echo esc_attr( wp_create_nonce( self::NONCE ) ); ?>" />
 

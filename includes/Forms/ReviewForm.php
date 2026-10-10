@@ -348,7 +348,10 @@ class ReviewForm implements Registerable {
 		}
 
 		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array( 'ndvr-tokens' ), NDVR_VERSION );
-		wp_enqueue_script( 'ndvr-reviews', NDVR_URL . 'assets/js/reviews.js', array(), NDVR_VERSION, true );
+		// The captcha provider's script loads first (RR-13); none by default.
+		$captcha = AntiSpam::register_script();
+		wp_enqueue_script( 'ndvr-reviews', NDVR_URL . 'assets/js/reviews.js', $captcha ? array( $captcha ) : array(), NDVR_VERSION, true );
+		$provider = AntiSpam::active();
 
 		wp_localize_script(
 			'ndvr-reviews',
@@ -357,7 +360,12 @@ class ReviewForm implements Registerable {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'action'  => self::AJAX_ACTION,
 				'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
-				'siteKey' => $this->settings->get( 'recaptcha_enabled' ) ? (string) $this->settings->get( 'recaptcha_site_key' ) : false,
+				'captcha' => array(
+					'provider' => $provider,
+					'siteKey'  => AntiSpam::site_key( $provider ),
+				),
+				// Kept for one release: older theme scripts read it.
+				'siteKey' => 'recaptcha' === $provider ? AntiSpam::site_key( 'recaptcha' ) : false,
 				'i18n'    => array(
 					'submitting' => __( 'Submitting…', 'rosette-reviews' ),
 					'thanks'     => __( 'Thank you. Your review has been submitted and is awaiting moderation.', 'rosette-reviews' ),
@@ -366,14 +374,8 @@ class ReviewForm implements Registerable {
 			)
 		);
 
-		if ( $this->settings->get( 'recaptcha_enabled' ) && $this->settings->get( 'recaptcha_site_key' ) ) {
-			wp_enqueue_script(
-				'ndvr-recaptcha',
-				'https://www.google.com/recaptcha/api.js?render=' . rawurlencode( $this->settings->get( 'recaptcha_site_key' ) ),
-				array(),
-				NDVR_VERSION,
-				true
-			);
+		if ( $captcha ) {
+			wp_enqueue_script( $captcha );
 		}
 	}
 
@@ -404,8 +406,8 @@ class ReviewForm implements Registerable {
 	 * @return string
 	 */
 	private function render_fields() {
-		$criteria  = $this->criteria->get_active();
-		$recaptcha = $this->settings->get( 'recaptcha_enabled' ) && $this->settings->get( 'recaptcha_site_key' );
+		$criteria = $this->criteria->get_active();
+		$captcha  = AntiSpam::active();
 
 		ob_start();
 		?>
@@ -499,7 +501,12 @@ class ReviewForm implements Registerable {
 				<input type="text" id="<?php echo esc_attr( AntiSpam::HONEYPOT ); ?>" name="<?php echo esc_attr( AntiSpam::HONEYPOT ); ?>" tabindex="-1" autocomplete="off" />
 			</p>
 
-			<input type="hidden" name="ndvr_recaptcha_token" value="" <?php echo $recaptcha ? 'data-recaptcha="1"' : ''; ?> />
+			<?php if ( 'none' !== $captcha ) : ?>
+				<?php if ( 'recaptcha' !== $captcha ) : ?>
+					<div class="ndvr-captcha" data-provider="<?php echo esc_attr( $captcha ); ?>" data-sitekey="<?php echo esc_attr( AntiSpam::site_key( $captcha ) ); ?>"></div>
+				<?php endif; ?>
+				<input type="hidden" name="ndvr_captcha_token" value="" data-provider="<?php echo esc_attr( $captcha ); ?>" />
+			<?php endif; ?>
 			<?php wp_nonce_field( self::NONCE_ACTION, 'ndvr_nonce' ); ?>
 
 			<div class="ndvr-form-message" role="status" aria-live="polite"></div>

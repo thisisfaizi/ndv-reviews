@@ -163,6 +163,11 @@ class Mailer {
 			return new \WP_Error( 'ndvr_unsubscribed', __( 'Recipient has unsubscribed.', 'rosette-reviews' ) );
 		}
 
+		// RR-05: the customer account has a role the store excludes.
+		if ( ! $is_list && $this->reviewable->is_excluded_customer( $order ) ) {
+			return new \WP_Error( 'ndvr_customer_excluded', __( 'Customer role is excluded from review requests.', 'rosette-reviews' ) );
+		}
+
 		$products = $is_list ? $this->list_products( $email, (array) $context['products'] ) : $this->reviewable->for_order( $order );
 		if ( empty( $products ) ) {
 			return new \WP_Error( 'ndvr_nothing_to_review', __( 'No reviewable products in this order.', 'rosette-reviews' ) );
@@ -205,7 +210,7 @@ class Mailer {
 			}
 		}
 
-		return $out;
+		return $this->reviewable->filter_excluded( $out );
 	}
 
 	/**
@@ -265,8 +270,8 @@ class Mailer {
 
 		$texts = $this->request_texts(
 			array(
-				'subject' => $this->subject( $order, $link ),
-				'body'    => $this->body( $order, $products, $link, $email ),
+				'subject' => $this->subject( $order, $link, array(), $variant ),
+				'body'    => $this->body( $order, $products, $link, $email, array(), 'order', $variant ),
 			),
 			$request_id,
 			$order
@@ -512,15 +517,17 @@ class Mailer {
 	 * Render the email for the admin preview, optionally with unsaved subject
 	 * and body text. Creates no token: the button links to the shop.
 	 *
-	 * @param array<string,string> $overrides Optional `subject` / `body`.
+	 * @param array<string,string> $overrides Optional `subject` / `body`; with `variant` = followup,
+	 *                                        `followup_subject` / `followup_body` (RR-06).
 	 * @return array{subject:string,html:string,sample:bool}
 	 */
 	public function preview( array $overrides = array() ) {
-		$sample = $this->sample();
+		$sample  = $this->sample();
+		$variant = isset( $overrides['variant'] ) && 'followup' === $overrides['variant'] ? 'followup' : 'first';
 
 		return array(
-			'subject' => $this->subject( $sample['order'], $sample['link'], $overrides ),
-			'html'    => $this->body( $sample['order'], $sample['products'], $sample['link'], (string) get_option( 'admin_email' ), $overrides ),
+			'subject' => $this->subject( $sample['order'], $sample['link'], $overrides, $variant ),
+			'html'    => $this->body( $sample['order'], $sample['products'], $sample['link'], (string) get_option( 'admin_email' ), $overrides, 'order', $variant ),
 			'sample'  => ! $sample['real'],
 		);
 	}
@@ -552,6 +559,9 @@ class Mailer {
 					$products[ $item->get_product_id() ] = $item->get_product_id();
 				}
 			}
+			// The preview and test email show what a customer would get (RR-05).
+			$kept     = $this->reviewable->filter_excluded( array_values( $products ) );
+			$products = $kept ? array_combine( $kept, $kept ) : array();
 			if ( $products ) {
 				return array(
 					'order'    => $order,
@@ -618,15 +628,22 @@ class Mailer {
 	 *
 	 * @param \WC_Order            $order     Order.
 	 * @param string               $link      Review link.
-	 * @param array<string,string> $overrides Optional unsaved `subject`.
+	 * @param array<string,string> $overrides Optional unsaved `subject` (or `followup_subject`).
+	 * @param string               $variant   first|followup.
 	 * @return string
 	 */
-	private function subject( $order, $link = '', array $overrides = array() ) {
-		$custom = isset( $overrides['subject'] ) ? $overrides['subject'] : (string) $this->settings->get( 'reminder_subject' );
+	private function subject( $order, $link = '', array $overrides = array(), $variant = 'first' ) {
+		$key    = 'followup' === $variant ? 'followup_subject' : 'subject';
+		$custom = isset( $overrides[ $key ] ) ? $overrides[ $key ] : (string) $this->settings->get( 'followup' === $variant ? 'followup_subject' : 'reminder_subject' );
 		$custom = trim( $custom );
 		if ( '' !== $custom ) {
 			// Subjects are plain text: keep merge-tag values off new lines.
 			return trim( preg_replace( '/[\r\n]+/', ' ', $this->replace_tokens( $custom, $order, $link, false ) ) );
+		}
+
+		if ( 'followup' === $variant ) {
+			/* translators: %s: store name. */
+			return sprintf( __( 'A quick reminder: how was your order from %s?', 'rosette-reviews' ), $this->store_name() );
 		}
 
 		/* translators: %s: store name. */
@@ -643,14 +660,21 @@ class Mailer {
 	 * @param string               $email     Recipient email.
 	 * @param array<string,string> $overrides Optional unsaved `body`.
 	 * @param string               $context   order|list (list recipients get their own footer line).
+	 * @param string               $variant   first|followup (a follow-up always has a non-empty intro,
+	 *                                        so a theme override without $is_followup still shows it).
 	 * @return string
 	 */
-	private function body( $order, $products, $link, $email, array $overrides = array(), $context = 'order' ) {
-		$custom = isset( $overrides['body'] ) ? $overrides['body'] : (string) $this->settings->get( 'reminder_body' );
-		$custom = trim( $custom );
-		$intro  = '' !== $custom
+	private function body( $order, $products, $link, $email, array $overrides = array(), $context = 'order', $variant = 'first' ) {
+		$followup = 'followup' === $variant;
+		$key      = $followup ? 'followup_body' : 'body';
+		$custom   = isset( $overrides[ $key ] ) ? $overrides[ $key ] : (string) $this->settings->get( $followup ? 'followup_body' : 'reminder_body' );
+		$custom   = trim( $custom );
+		$intro    = '' !== $custom
 			? wpautop( wp_kses_post( $this->replace_tokens( $custom, $order, $link, true ) ) )
 			: '';
+		if ( $followup && '' === $intro ) {
+			$intro = $this->default_followup_intro( $order );
+		}
 
 		$accent = sanitize_hex_color( (string) $this->settings->get( 'design_accent', '#181a1f' ) );
 		$accent = $accent ? $accent : '#181a1f';
@@ -670,6 +694,7 @@ class Mailer {
 				'accent_text'  => $this->readable_text_color( $accent ),
 				'store_address' => $this->store_address(),
 				'context'       => 'list' === $context ? 'list' : 'order',
+				'is_followup'   => $followup,
 			)
 		);
 
@@ -690,6 +715,23 @@ class Mailer {
 		);
 
 		return $body;
+	}
+
+	/**
+	 * The built-in follow-up intro: the first email's greeting rule ("Hi
+	 * {first name}," or "Hello,") and the default follow-up text.
+	 *
+	 * @param \WC_Order $order Order.
+	 * @return string HTML.
+	 */
+	private function default_followup_intro( $order ) {
+		$name     = trim( (string) $order->get_billing_first_name() );
+		/* translators: %s: customer first name. */
+		$greeting = '' !== $name ? sprintf( __( 'Hi %s,', 'rosette-reviews' ), $name ) : __( 'Hello,', 'rosette-reviews' );
+		/* translators: %s: store name. */
+		$text = sprintf( __( 'A few days ago we asked how your order from %s went. If you have a minute, your review helps other shoppers choose.', 'rosette-reviews' ), $this->store_name() );
+
+		return '<h1 style="margin:0 0 8px;font-size:22px;color:#111;">' . esc_html( $greeting ) . '</h1><p style="margin:0 0 16px;">' . esc_html( $text ) . '</p>';
 	}
 
 	/**

@@ -214,6 +214,17 @@ class RequestsPage implements Registerable {
 		if ( isset( $_POST['reminder_body'] ) ) {
 			$overrides['body'] = wp_kses_post( wp_unslash( $_POST['reminder_body'] ) );
 		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nonce checked above.
+		$variant = isset( $_GET['variant'] ) ? sanitize_key( wp_unslash( $_GET['variant'] ) ) : '';
+		if ( 'followup' === $variant ) {
+			$overrides['variant'] = 'followup';
+			if ( isset( $_POST['followup_subject'] ) ) {
+				$overrides['followup_subject'] = sanitize_text_field( wp_unslash( $_POST['followup_subject'] ) );
+			}
+			if ( isset( $_POST['followup_body'] ) ) {
+				$overrides['followup_body'] = wp_kses_post( wp_unslash( $_POST['followup_body'] ) );
+			}
+		}
 
 		$preview = $this->mailer->preview( $overrides );
 
@@ -358,6 +369,13 @@ class RequestsPage implements Registerable {
 								<p class="description"><?php esc_html_e( 'Merge tags: {customer_name} (billing first name), {store_name}, {order_number}, {review_link} (the customer\'s review page URL). Line breaks become paragraphs; basic HTML such as links and bold text is allowed.', 'rosette-reviews' ); ?></p>
 							</td>
 						</tr>
+						<?php
+						// RR-06 follow-up rows (card `followup`), then RR-05 exclusions
+						// (card `exclusions`); their save markers follow the table.
+						SettingsFields::render_card_fields( 'reminders', 'followup', $s->all(), false );
+						\NdvReviews\Requests\Exclusions::render_heading();
+						SettingsFields::render_card_fields( 'reminders', 'exclusions', $s->all(), false );
+						?>
 						<tr>
 							<th scope="row"><?php esc_html_e( 'From', 'rosette-reviews' ); ?></th>
 							<td>
@@ -374,10 +392,13 @@ class RequestsPage implements Registerable {
 							</td>
 						</tr>
 					</table>
+					<?php SettingsFields::markers( 'reminders', 'followup' ); ?>
+					<?php SettingsFields::markers( 'reminders', 'exclusions' ); ?>
 					<?php \NdvReviews\Requests\Tracking::render_section( $s->all() ); ?>
 					<p>
 						<button type="submit" name="ndvr_requests_do" value="save" class="button button-primary"><?php esc_html_e( 'Save settings', 'rosette-reviews' ); ?></button>
 						<button type="submit" class="button" formaction="<?php echo esc_url( admin_url( 'admin-post.php?action=' . self::PREVIEW_ACTION ) ); ?>" formtarget="_blank"><?php esc_html_e( 'Preview email', 'rosette-reviews' ); ?></button>
+						<button type="submit" class="button" formaction="<?php echo esc_url( admin_url( 'admin-post.php?action=' . self::PREVIEW_ACTION . '&variant=followup' ) ); ?>" formtarget="_blank"><?php esc_html_e( 'Preview follow-up', 'rosette-reviews' ); ?></button>
 					</p>
 				</form>
 			</div>

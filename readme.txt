@@ -146,6 +146,9 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 * New, off by default: a "How reviews work" note under your ratings, built from your settings (how you collect reviews, what the verified label means, how you moderate), as EU and UK consumer law expect from stores that show reviews. Switch it on under Settings → Reviews and trust after reading it. Also available as the `[ndvr-transparency]` shortcode and block for a policy page.
 * Reviews posted through WordPress's own comment form, WooCommerce's review-request form or other plugins now always wait for moderation, even when comment moderation is off. A reply that carries a star rating waits too.
 * The standalone review form now follows WooCommerce's "verified owners only" setting for products.
+* Send a review request by hand: "Send review request" in an order's Order actions, or as a bulk action on the orders list (up to 200 at a time). It works with automatic reminders off, uses your saved email, and never emails a customer twice within 20 hours.
+* Leave products out of review requests by category (child categories included) or one by one, and skip customers with chosen roles such as wholesale. Excluded items also leave review links sent earlier.
+* New, off by default: one follow-up reminder a set number of days after the first email, only to customers who still have something to review. It has its own subject and text, and a preview.
 
 = 1.0.0 =
 * Initial public release.

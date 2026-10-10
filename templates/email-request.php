@@ -15,6 +15,8 @@
  * @var string    $accent_text   Button text color with readable contrast.
  * @var string    $store_address Store address on one line, or ''.
  * @var string    $context       order|list (a recipient from an uploaded list has no order).
+ * @var bool      $is_followup   Whether this is the follow-up reminder (RR-06). A follow-up always
+ *                               passes a non-empty $intro_html, so overrides that don't read this still work.
  *
  * @package NdvReviews
  */

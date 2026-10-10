@@ -119,6 +119,30 @@ class Scheduler implements Registerable {
 	}
 
 	/**
+	 * Whether another sender (an add-on, an ESP) already asked this order's
+	 * customer for a review. Free never sets it; manual bulk sends skip such
+	 * orders and single sends say so (RR-04), follow-ups aren't scheduled
+	 * (RR-06).
+	 *
+	 * @param \WC_Order $order Order.
+	 * @return bool
+	 */
+	public function order_already_requested( $order ) {
+		if ( ! $order instanceof \WC_Order ) {
+			return false;
+		}
+
+		/**
+		 * Filter whether an order's customer was already asked for a review by
+		 * another sender.
+		 *
+		 * @param bool      $requested Default false.
+		 * @param \WC_Order $order     Order.
+		 */
+		return (bool) apply_filters( 'ndv-reviews/order_already_requested', false, $order );
+	}
+
+	/**
 	 * Queue a review request for an order: the only way to create an order row.
 	 *
 	 * @param int                 $order_id Order id.

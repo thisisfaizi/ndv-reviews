@@ -214,7 +214,8 @@ class Landing implements Registerable {
 			}
 		}
 
-		return $out;
+		// Exclusions apply to links sent before they were set (RR-05).
+		return \NdvReviews\Plugin::instance()->container()->get( 'reviewable' )->filter_excluded( $out );
 	}
 
 	/**
@@ -234,7 +235,7 @@ class Landing implements Registerable {
 			}
 		}
 
-		return $out;
+		return \NdvReviews\Plugin::instance()->container()->get( 'reviewable' )->filter_excluded( $out );
 	}
 
 	/**

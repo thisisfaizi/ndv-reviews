@@ -56,6 +56,7 @@ final class Uninstall {
 			'transient_prefixes' => array(
 				'ndvr_rl_',
 				'ndvr_request_stats_',
+				'ndvr_order_action_notice_',
 			),
 			'comment_meta'       => array(
 				'_ndvr_overall_rating',

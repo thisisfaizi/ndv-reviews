@@ -11,9 +11,164 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Resolves reviewable products for an order or a customer, excluding products
- * the customer has already reviewed (no duplicate review per order+product).
+ * the customer has already reviewed (no duplicate review per order+product)
+ * and products the store excluded from review requests (RR-05: categories,
+ * with their children, and single products). Every sender reads for_order(),
+ * so exclusions apply to automatic, manual, follow-up and add-on sends.
  */
 class Reviewable {
+
+	/**
+	 * Exclusion settings for this request: cats (expanded), products, roles.
+	 * Reset when the settings change.
+	 *
+	 * @var array{cats:int[],products:int[],roles:string[]}|null
+	 */
+	private static $rules = null;
+
+	/**
+	 * Forget the cached exclusion settings.
+	 *
+	 * @return void
+	 */
+	public static function reset_cache() {
+		self::$rules = null;
+	}
+
+	/**
+	 * The exclusion settings, with excluded categories expanded to their
+	 * children (once per request).
+	 *
+	 * @return array{cats:int[],products:int[],roles:string[]}
+	 */
+	private function rules() {
+		if ( null !== self::$rules ) {
+			return self::$rules;
+		}
+		$settings = \NdvReviews\Plugin::instance()->container()->get( 'settings' );
+		$cats     = array_values( array_filter( array_map( 'absint', (array) $settings->get( 'reminder_exclude_cats', array() ) ) ) );
+		$all      = $cats;
+		foreach ( $cats as $term_id ) {
+			$children = get_term_children( $term_id, 'product_cat' );
+			if ( is_array( $children ) ) {
+				$all = array_merge( $all, array_map( 'absint', $children ) );
+			}
+		}
+
+		self::$rules = array(
+			'cats'     => array_values( array_unique( $all ) ),
+			'products' => array_values( array_filter( array_map( 'absint', (array) $settings->get( 'reminder_exclude_products', array() ) ) ) ),
+			'roles'    => array_values( array_filter( array_map( 'sanitize_key', (array) $settings->get( 'reminder_exclude_roles', array() ) ) ) ),
+		);
+
+		return self::$rules;
+	}
+
+	/**
+	 * Whether a product is left out of review requests: it is excluded itself,
+	 * or one of its categories is an excluded category or a child of one.
+	 * Variations follow their parent product.
+	 *
+	 * @param int $product_id Product id.
+	 * @return bool
+	 */
+	public function is_excluded_product( $product_id ) {
+		$product_id = absint( $product_id );
+		if ( $product_id && 'product_variation' === get_post_type( $product_id ) ) {
+			$product_id = (int) wp_get_post_parent_id( $product_id );
+		}
+		$rules    = $this->rules();
+		$excluded = in_array( $product_id, $rules['products'], true );
+		if ( ! $excluded && $rules['cats'] && $product_id ) {
+			$terms = get_the_terms( $product_id, 'product_cat' );
+			foreach ( is_array( $terms ) ? $terms : array() as $term ) {
+				if ( in_array( (int) $term->term_id, $rules['cats'], true ) ) {
+					$excluded = true;
+					break;
+				}
+			}
+		}
+
+		/**
+		 * Filter whether a product is left out of review requests.
+		 *
+		 * @param bool $excluded   Excluded by the settings.
+		 * @param int  $product_id Product id.
+		 */
+		return (bool) apply_filters( 'ndv-reviews/request_excluded_product', $excluded, $product_id );
+	}
+
+	/**
+	 * Drop excluded products from a list.
+	 *
+	 * @param int[] $product_ids Product ids.
+	 * @return int[]
+	 */
+	public function filter_excluded( array $product_ids ) {
+		$product_ids = array_values( array_filter( array_map( 'absint', $product_ids ) ) );
+		if ( $product_ids && $this->rules()['cats'] ) {
+			update_object_term_cache( $product_ids, 'product' );
+		}
+
+		return array_values(
+			array_filter(
+				$product_ids,
+				function ( $id ) {
+					return ! $this->is_excluded_product( $id );
+				}
+			)
+		);
+	}
+
+	/**
+	 * Load the categories of an order's products in one query (only when a
+	 * category is excluded).
+	 *
+	 * @param \WC_Order $order Order.
+	 * @return void
+	 */
+	private function prime_terms( $order ) {
+		if ( ! $this->rules()['cats'] ) {
+			return;
+		}
+		$ids = array();
+		foreach ( $order->get_items() as $item ) {
+			if ( $item instanceof \WC_Order_Item_Product && $item->get_product_id() ) {
+				$ids[] = (int) $item->get_product_id();
+			}
+		}
+		if ( $ids ) {
+			update_object_term_cache( array_unique( $ids ), 'product' );
+		}
+	}
+
+	/**
+	 * Whether an order's customer account has an excluded role. A guest
+	 * order has no roles, so it is never role-excluded.
+	 *
+	 * @param \WC_Order $order Order.
+	 * @return bool
+	 */
+	public function is_excluded_customer( $order ) {
+		if ( ! $order instanceof \WC_Order ) {
+			return false;
+		}
+		$roles    = $this->rules()['roles'];
+		$excluded = false;
+		$user_id  = (int) $order->get_customer_id();
+		if ( $roles && $user_id ) {
+			$user     = get_userdata( $user_id );
+			$excluded = $user && array_intersect( $roles, (array) $user->roles );
+		}
+
+		/**
+		 * Filter whether an order's customer is left out of review requests.
+		 *
+		 * @param bool      $excluded Excluded by the role settings.
+		 * @param \WC_Order $order    Order.
+		 */
+		return (bool) apply_filters( 'ndv-reviews/request_excluded_customer', (bool) $excluded, $order );
+	}
 
 	/**
 	 * Reviewable product ids for an order.
@@ -29,6 +184,7 @@ class Reviewable {
 		$email = $order->get_billing_email();
 		$ids   = array();
 		$seen  = array();
+		$this->prime_terms( $order );
 
 		foreach ( $order->get_items() as $item ) {
 			if ( ! $item instanceof \WC_Order_Item_Product ) {
@@ -36,6 +192,12 @@ class Reviewable {
 			}
 			$product_id = $item->get_product_id();
 			if ( ! $product_id || 'product' !== get_post_type( $product_id ) ) {
+				continue;
+			}
+
+			// An excluded product never claims its pool: another product that
+			// shares the reviews can still be asked about (RR-05).
+			if ( $this->is_excluded_product( $product_id ) ) {
 				continue;
 			}
 
@@ -52,7 +214,18 @@ class Reviewable {
 			}
 		}
 
-		return array_values( $ids );
+		$ids = array_values( $ids );
+
+		/**
+		 * Filter the products an order's review request asks about, after
+		 * already-reviewed and excluded products were removed.
+		 *
+		 * @param int[]     $product_ids Product ids.
+		 * @param \WC_Order $order       Order.
+		 */
+		$filtered = apply_filters( 'ndv-reviews/reviewable_order_products', $ids, $order );
+
+		return is_array( $filtered ) ? array_values( array_filter( array_map( 'absint', $filtered ) ) ) : $ids;
 	}
 
 	/**

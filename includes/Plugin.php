@@ -308,6 +308,20 @@ final class Plugin {
 		);
 
 		$c->set(
+			'followups',
+			static function ( $c ) {
+				return new \NdvReviews\Requests\Followups( $c->get( 'settings' ), $c->get( 'scheduler' ) );
+			}
+		);
+
+		$c->set(
+			'order_actions',
+			static function ( $c ) {
+				return new \NdvReviews\Requests\OrderActions( $c->get( 'scheduler' ), $c->get( 'request_repository' ) );
+			}
+		);
+
+		$c->set(
 			'landing',
 			static function ( $c ) {
 				return new \NdvReviews\Collection\Landing(
@@ -492,6 +506,9 @@ final class Plugin {
 			$this->container->get( 'moderation_actions' ),
 			$this->container->get( 'moderation_page' ),
 			$this->container->get( 'scheduler' ),
+			$this->container->get( 'order_actions' ),
+			$this->container->get( 'followups' ),
+			new \NdvReviews\Requests\Exclusions(),
 			$this->container->get( 'request_tracking' ),
 			$this->container->get( 'transparency' ),
 			$this->container->get( 'landing' ),

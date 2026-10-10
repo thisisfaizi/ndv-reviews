@@ -1,0 +1,80 @@
+# PRD review round 1, batch B: forms and trust (RR-11..16, RR-20..25)
+Reviewer: independent adversarial subagent, 2026-10-10. Verdict: every PRD in this batch needs CHANGES REQUIRED, with blockers in RR-11, 12, 14, 16, 20 and 22.
+Response: the cross-PRD findings (X1–X10) move into `RR-00-foundations.md`; each PRD is revised in place.
+
+## Cross-PRD findings
+- **X1 BLOCKER: invented `source` values.** The real values are `onsite` (ReviewForm.php:427), `form` (TestimonialForm.php:281), `magic_link` (Landing.php:295) and `import` (Csv.php:150, WooNative.php:74, Pro ProImporter.php:31). Pro ManualReviews uses `admin` and inserts with `wp_insert_comment` directly (ManualReviews.php:170-188). Pro External uses provider slugs (google, facebook…), also through `wp_insert_comment` (ExternalReviews.php:858-874). Neither goes through `create()`. `csv`, `woo_import`, `pro_import`, `external`, `qr`, `testimonial` and `manual` don't exist. `create()` defaults a missing source to `onsite` (ReviewRepository.php:185). Fix: an `interactive_sources` allowlist.
+- **X2: uninstall never drops new tables.** `uninstall.php:21-35` hardcodes the tables and never calls `Installer::table_names()`, and it sweeps only `ndvr_rl_` transients (:103).
+- **X3: there is no migration mechanism.** `maybe_upgrade()` only re-runs `install()` (Installer.php:25-34), and only on admin_init (Plugin.php:455). Front-end and nopriv code would hit missing tables after an auto-update. The versions are unordered. Fix: assign the versions, add a per-version step dispatcher, run on init or guard reads.
+- **X4: moderation views are whitelisted** in `ListTable::current_status()`/`get_views()` (ListTable.php:54). RR-14, 21 and 22 each add a view, so add a filter once.
+- **X5: theme overrides lose features.** RR-11, 14 and 23 edit `review-item.php`, so overridden templates miss them. Add hook points and render through them.
+- **X6: there is no "Settings → Reviews" section.** The cards are Collection, Spam Protection and SEO & Advanced (SettingsPage.php:164/209/230). One save handler rebuilds a fixed key list (:101-113).
+- **X7 MAJOR LEGAL.** Pro `Plus::auto_approve` publishes only verified reviews at or above `auto_approve_min_stars` (Plus.php:52-73). With Pro active, approval depends on the rating, an exposure under 16 CFR 465.7; needs a paired Pro task. RR-15 sends an edited, published review back to pending, which together with the RR-22 invite becomes a way to hide a low review. Keep the approved version live, store a pending revision, and label it "Edited {date}".
+- **X8: RR-03 sentences become false** once RR-14 auto-hide, RR-21 holds, RR-15 re-moderation, the X7 Pro rule, or Pro external reviews (inserted approved and counted) ship. Each feature must add its own `transparency_sentences` entry.
+- **X9: missing PRD-00 sections.** RR-12, 16, 20, 23, 24 and 25 lack blast radius, security, privacy, compatibility or test plan.
+- **X10: the rate limiter can't be reused.** `AntiSpam` has one private bucket, `ndvr_rl_<hash>` at 5/h (AntiSpam.php:100-133), so RR-14 and RR-15 would eat the submission budget. Add a public `rate_limit($bucket,$max)`.
+
+## Per-PRD findings
+- **RR-11**
+  - BLOCKER: X1.
+  - MAJOR: on the landing page, each product is its own `<form>` with flat names (magic-landing.php:63,131) and `handle_submit` reads flat input. Use `ndvr_answers[fid]` per form with unique ids, not nested names.
+  - MAJOR: sanitize answers for every source, including CSV `q_<slug>`, and apply the required check only to interactive sources.
+  - MAJOR: the admin edit path is separate (`Moderation\Page::save_edit`, Page.php:241-300).
+  - MINOR: the §12 open question; there's no native no-JS path (`block_unrated_native_post` calls `wp_die`, ReviewForm.php:124), so the form is AJAX-only; uninstall (X2).
+- **RR-12**
+  - BLOCKER: `manual` doesn't exist, and Pro manual reviews never call `create()`.
+  - MAJOR: `minlength` counts UTF-16 units while `mb_strlen` counts code points. The JS must use `Array.from(text).length`, with the server authoritative.
+  - MAJOR: AC5 (no-JS) can't be tested.
+  - MINOR: the form scripts are `reviews.js`/`ndvrReviews` (ReviewForm.php:189-205) and `collect.js`.
+- **RR-13**
+  - MAJOR: SettingsPage.php:108-110 rewrites the secret on every save, so a blank field wipes it. The "never output" claim is false: the secret is echoed into `value` (:222).
+  - MAJOR: the defaults merge `captcha_provider=none` before any migration, so upgraded sites silently lose their captcha. Derive the provider from the raw option plus `recaptcha_enabled`.
+  - MAJOR: Turnstile and hCaptcha tokens are single-use, and the captcha check runs before rating validation (ReviewForm.php:367 vs 399), so the JS must reset the widget on every error. Implicit Turnstile render posts `cf-turnstile-response`, so use explicit render. The widget mode is set in the Cloudflare dashboard, not in markup.
+  - MINOR blast radius: DashboardPage.php:368 reads `recaptcha_enabled`; `collect.js:27` injects reCAPTCHA itself; readme.txt:49 and :85 ("only optional feature that uses an outside service"); Pro has no AntiSpam caller, so drop the PublicCta note; add Cloudflare's Turnstile privacy addendum URL.
+- **RR-14**
+  - BLOCKER: a UNIQUE key on `user_id NULL, ip_hash NULL` never dedups, because NULLs are distinct. Votes stores 0 and '' instead (Votes.php:79-86). Use NOT NULL with defaults.
+  - MAJOR: Votes has no rate limit or honeypot (Votes.php:38-60), so the "reuse" claim is false (X10).
+  - MAJOR abuse/legal: three rotated IPs can hide any review. Default auto-hide to 0, or count only logged-in or verified reporters.
+  - MINOR: B1 passes (`Actions::on_status_change` is global, Actions.php:44,58-69). Hook dismiss-on-approve on `transition_comment_status`. Delete report rows in the existing `delete_comment` listener (`on_delete`). Guest notes can't be erased, so state it in the readme. X2, X3, X4.
+- **RR-15**
+  - MAJOR: X7, since AC3 hides an edited review.
+  - MAJOR: refusing edits by denylist misses provider slugs; use the X1 allowlist plus `_ndvr_external_id`/`_ndvr_admin_created`.
+  - MAJOR: `update()` must replace criteria rows (delete then insert, as Page.php:348-366 does), then call `recalc_product(comment_post_ID)` explicitly when the status doesn't change. Validating against `get_active()` drops scores for criteria deactivated since; the admin path uses `get_all()` (Page.php:309). Plain-rating reviews have no editable `rating` key.
+  - MINOR:
+    - The `#ndvr-write-review` anchor doesn't exist. The form wrap is `ndvr-review-form-wrap`, and the focus helper triggers on `?ndvr_review=1` (ReviewLinkFocus.php).
+    - `for_customer` includes processing orders (Reviewable.php:57), but AC1 says completed.
+    - `has_reviewed` uses the product id rather than the pool, so pooled products stay "waiting" forever.
+    - Declare the RR-05 dependency.
+- **RR-16**
+  - BLOCKER: `WP_Comment_Query` caches results by query vars before `comments_clauses` runs (ReviewQuery.php:168-170). With a persistent object cache, results leak between search and non-search requests. The count query runs after `remove_filter` (:186-197), so the totals are wrong. Fix: a prepared id lookup passed as `comment__in`, like the tag filter (:112-118).
+  - MAJOR: `ajax_list` has no rate limit (Renderer.php:397-437) and accepts `product_id=0`, a site-wide LIKE. Require `product_id > 0`, check the minimum review count server-side, and add a per-IP limit.
+  - MAJOR: the filter bar is `Renderer::render_filter_bar()` (:314). `review-list.php` is the AJAX-swapped fragment, so a search box there loses focus.
+  - MAJOR: `esc_html` on stored kses'd HTML that's output via `wp_kses_post(wpautop())` (review-item.php:80) would display tags literally, and the highlight regex splits entities. Highlight text nodes of the kses output instead. The AJAX response must return the total for the live region.
+- **RR-20**
+  - BLOCKER: "no id returns globals only" isn't back-compatible. `valid_scores(…, 0)` drops scoped scores, and every handler pre-filters without a product (ReviewForm.php:399, TestimonialForm.php:257, Landing.php:278). Keep "no id = all active" and pass the product id everywhere.
+  - MAJOR: missing callers: TestimonialForm.php:162, Csv.php:96, Pro ManualReviews.php:265, Pro ProImporter.php:519.
+  - MAJOR: a product with only scoped (or no) criteria has zero criteria, so every submission fails with `ndvr_missing_rating`. Require at least one global active criterion (extend `is_last_active`, CriteriaRepository.php:265).
+  - MINOR: the summary reads stored scores (Summary.php:106-125), so AC4 passes trivially; define whose categories apply (the pool parent or the viewed product); X3, X9.
+- **RR-21**
+  - MAJOR: apply the hold inline in `create()` after `should_approve` (ReviewRepository.php:131), not through a filter that races Pro's `auto_approve`. `is_verified` runs after insert (:201).
+  - MAJOR: one customer reviewing several products from one landing order scores 40 (same IP + same email), so exclude reviews from the same order or token. Free forms always pass `approved=0` (ReviewForm.php:429), so AC1 and AC3 need Pro or a stub.
+  - MAJOR: `similar_text` is O(N³) and the timing is unmeasured. Add a benchmark acceptance criterion, or use shingle Jaccard.
+  - MINOR: `_ndvr_ip_hash` duplicates core's `comment_author_IP` (:150), and if kept must go in the eraser's fixed list (Privacy.php:304-308); page caching makes `ndvr_rt` stale; name the licence of the disposable-domain list; drop the rating from "extreme + short"; X8.
+- **RR-22**
+  - BLOCKER: `TokenRepository::create()` is private and coerces unknown types to `order` (TokenRepository.php:123). `Landing::maybe_render` shows the create form for any token, and `pending_products` expects id/status keys. This needs a new API and a separate Landing branch.
+  - MAJOR LEGAL:
+    - X7 makes AC1 and the §8 sentence false under Pro.
+    - §8 asserts legality; replace it with a neutral description.
+    - Inviting only low raters with "We've tried to put things right" ties a remedy to the request, which is implied conditioning under 465.4 and conflicts with platform policies. Fix: invite only after the review is marked Resolved, use neutral copy, show a public "Edited" label, and get legal sign-off.
+  - MAJOR: this duplicates Pro's `Plus::low_rating_alert` (Plus.php:132-160), so both fire; paired Pro task.
+  - MAJOR: it depends on RR-15's `update()` and on `Mailer::send_notice`, which isn't free.
+  - MINOR: an unverified guest email was typed by the reviewer, so the edit link may reach someone else; `ReviewForm`'s success message is fixed (:444-448).
+- **RR-23**
+  - MAJOR: "earliest qualifying order" contradicts "newest first, limit 20", and repeat buyers would get misleading spans. Use the most recent paid order containing the product before the review date. `billing_email` and `customer` in one `wc_get_orders` call is an AND, so run two queries.
+  - MINOR: customer tokens have no `order_id` (TokenRepository.php:62); define the month length and rounding; unschedule the backfill on deactivate and uninstall; X5.
+- **RR-24**
+  - MAJOR: 500 order ids means up to 500 order loads, and a busy store gets silently truncated results. Use `wc_order_product_lookup` with a date bound, or a cached Action Scheduler job.
+  - MINOR: define "purchasable"; native replies (`comment_parent`) exist in free, so the response rate is measurable without Pro; the query var must check the main query, the post type and the capability; AC5 approval comes through the transition, not `review_created`.
+- **RR-25**
+  - MAJOR: a local WooCommerce 11.2 copy already outputs `gtin` from `global_unique_id` (including variations; class-wc-structured-data.php:253-286) and `brand` from `product_brand` (class-wc-brands.php:49,454-479) at priority 20, the same as ours (JsonLd.php:73). The automatic sources are therefore no-ops on recent WooCommerce. Re-scope to custom meta, `pa_brand` and MPN. Hook at priority above 20. Guard `method_exists( get_global_unique_id )` for the 8.0–9.1 floor.
+  - MINOR: §6 rule 3 is false, because `enrich_woo_product` never checks `seo_plugin_active` (JsonLd.php:109-127; only the standalone path defers, :214); match WooCommerce's validation and add the GS1 check digit; the section is called "SEO & Advanced".

@@ -273,3 +273,11 @@ Pro: `ndvr_qa`, `ndvr_admin_reply`, `ndvr_external`, `ndvr_qa_admin`.
 - Markup: product form `.ndvr-captcha[data-provider][data-sitekey]` + hidden `ndvr_captcha_token`; testimonial root
   `data-captcha-provider`, `data-captcha-key` (+ `data-recaptcha-key` for reCAPTCHA), `.ndvr-captcha` in the form.
   `ndvrReviews.captcha = { provider, siteKey }` (`siteKey` kept as a reCAPTCHA-only alias for one release).
+- RR-11 rev 4: marker `ndvr_answers_present` = rendered ids "12,15" ("1" = all, old overrides);
+  `ReviewFieldRepository::parse_present()`; `create()` `answers_present` int[]|bool, default **false**. Soft delete
+  (`status = deleted`; `defined()` returns every row, `get_all()` the live ones). `reindex_filter_keys( $id )` + Action
+  Scheduler `ndvr_review_field_reindex` keep `_ndvr_ans_<id>` in line with `filterable` (backfill / clear; delete clears).
+  `count_answers()`, `answers_for_export()`, `clean_text()`. Storefront: `Renderer::ajax_list` reads `answers[<id>]`;
+  chips `[data-ndvr-answer-field="<id>"][data-value="<text>"]` inside a list instance (display.js toggles them); event
+  `ndvr:list-request` ( detail: { body: FormData, state } ) before each list fetch. `Exporter::write_csv( $stream )`.
+  `show_answers` / `review_field_answers` change the card only (view-model, REST and exports keep every answer).

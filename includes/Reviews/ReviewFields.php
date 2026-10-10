@@ -45,6 +45,7 @@ class ReviewFields implements Registerable {
 		add_action( 'ndv-reviews/review_body_after', array( $this, 'render_card' ), 10, 1 );
 		add_action( 'ndv-reviews/moderation_edit_fields', array( $this, 'render_edit_row' ), 10, 1 );
 		add_action( 'ndv-reviews/moderation_edit_save', array( $this, 'save_edit' ), 10, 1 );
+		add_action( ReviewFieldRepository::REINDEX_HOOK, array( $this->fields, 'reindex_filter_keys' ), 10, 2 );
 	}
 
 	/**
@@ -160,15 +161,22 @@ class ReviewFields implements Registerable {
 		}
 		$raw = isset( $_POST['ndvr_answers'] ) && is_array( $_POST['ndvr_answers'] ) ? wp_unslash( $_POST['ndvr_answers'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitize() cleans each value.
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
-		$stored = $this->fields->stored( (int) $comment_id );
-		$clean  = $this->fields->sanitize( (array) $raw );
-		// A choice answer the merchant left untouched survives an options edit.
+		// Only the rendered questions change; answers to deleted questions stay.
+		$answers = $this->fields->stored( (int) $comment_id );
+		$clean   = $this->fields->sanitize( (array) $raw );
 		foreach ( (array) $raw as $id => $value ) {
 			$id = absint( $id );
-			if ( ! isset( $clean[ $id ] ) && isset( $stored[ $id ] ) && is_scalar( $value ) && (string) $value === $stored[ $id ] ) {
-				$clean[ $id ] = $stored[ $id ];
+			if ( ! $id ) {
+				continue;
+			}
+			if ( isset( $clean[ $id ] ) ) {
+				$answers[ $id ] = $clean[ $id ];
+			} elseif ( isset( $answers[ $id ] ) && is_scalar( $value ) && ReviewFieldRepository::clean_text( $value ) === $answers[ $id ] ) {
+				continue; // An old choice the merchant left untouched survives an options edit.
+			} else {
+				unset( $answers[ $id ] );
 			}
 		}
-		$this->fields->save_answers( (int) $comment_id, $clean );
+		$this->fields->save_answers( (int) $comment_id, $answers );
 	}
 }

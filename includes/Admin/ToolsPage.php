@@ -193,6 +193,10 @@ class ToolsPage implements Registerable {
 			/* translators: %s: list of skip reasons with counts. */
 			$message .= ' ' . sprintf( __( 'Skipped rows: %s.', 'rosette-reviews' ), implode( '; ', $parts ) );
 		}
+		// Notes such as a skipped q_ column.
+		if ( ! empty( $res['errors'] ) ) {
+			$message .= ' ' . implode( ' ', $res['errors'] );
+		}
 
 		$this->notices[] = array(
 			'type'    => 0 === $res['imported'] && $res['skipped'] > 0 ? 'error' : 'success',

@@ -112,7 +112,7 @@ class Privacy implements Registerable {
 	 */
 	private function answer_rows( $comment_id ) {
 		$rows = array();
-		foreach ( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->answers_for_view( (int) $comment_id ) as $answer ) {
+		foreach ( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->answers_for_export( (int) $comment_id ) as $answer ) {
 			$rows[] = array(
 				/* translators: %s: review question. */
 				'name'  => sprintf( __( 'Question: %s', 'rosette-reviews' ), $answer['label'] ),

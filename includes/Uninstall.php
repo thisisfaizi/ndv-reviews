@@ -98,6 +98,7 @@ final class Uninstall {
 				'_wc_other/ndv-reviews/review-email-consent',
 			),
 			'scheduler_hooks'       => array(
+				'ndvr_review_field_reindex',
 				'ndvr_send_request',
 				'ndvr_requests_recover',
 				'ndvr_media_cleanup',
@@ -118,6 +119,7 @@ final class Uninstall {
 
 		$log      = array();
 		$registry = self::registry();
+		wp_cache_delete( 'review_fields', 'ndvr' );
 
 		// 1. Capture the reviews this plugin created, and their uploads.
 		$review_ids     = self::review_ids();

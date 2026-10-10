@@ -835,3 +835,12 @@ flows 49/49; all suites green; debug.log empty; phpcs clean. Manual screen-reade
 EVIDENCE (QA site): `.agents/qa/rr-13.php` 23/23 — AC1–AC11 with pre_http_request stubs (wp_safe_remote_post /
 reject_unsafe_urls, 5 s, no remoteip), upgrade from the checkbox, secret kept, checklist, readme. AC12 core flows 49/49;
 all suites green; debug.log empty; phpcs clean on new code. Manual browser check with test keys still to do (not a gate).
+
+## 2026-10-10 — RR-11 code review fixed → done
+- Review `.agents/prd/reviews/code-RR-11.md`: 0 blockers, 4 majors, 13 minors; decisions in PRD RR-11 rev 4.
+  M1 marker carries rendered ids (cached pages safe; answers_present default false); M2 yes/no display only for yes/no
+  values + retype warning; M3 storefront answer filter (ajax_list + display.js chips + ndvr:list-request); M4 filter keys
+  backfilled/cleared on filterable flips and delete. m1 soft delete, m2 over-cap marking, m3 edit-save merge, m4 export of
+  deleted questions answers, m5 slug cap + CSV column shown, m6 import notes shown, m7 cache expiry/no failed cache/
+  uninstall key, m8 unique ids, m9 decoded storage, m11 doc, m13 nits. m12 → TASKS RR-11-f1.
+EVIDENCE: rr-11 51/51 (17 new checks); all suites green; debug.log empty; phpcs clean (no new sniffs vs HEAD).

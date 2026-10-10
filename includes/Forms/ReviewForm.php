@@ -454,7 +454,7 @@ class ReviewForm implements Registerable {
 				<?php echo \NdvReviews\Reviews\ReviewLength::after_textarea( 'ndvr-length-hint', $ndvr_min ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the helper. ?>
 			</p>
 
-			<?php echo FieldRenderer::render( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_active(), 'ndvr-' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the renderer. ?>
+			<?php echo FieldRenderer::render( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_active(), wp_unique_id( 'ndvr-q' ) . '-' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the renderer. ?>
 
 			<fieldset class="ndvr-field ndvr-field-recommend">
 				<legend><?php esc_html_e( 'Would you recommend this product?', 'rosette-reviews' ); ?></legend>
@@ -593,7 +593,7 @@ class ReviewForm implements Registerable {
 		// Required questions, also before any upload (create() repeats it).
 		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
 		$answers = $fields->sanitize( isset( $input['ndvr_answers'] ) && is_array( $input['ndvr_answers'] ) ? $input['ndvr_answers'] : array() );
-		$present = ! empty( $input['ndvr_answers_present'] );
+		$present = \NdvReviews\Reviews\ReviewFieldRepository::parse_present( isset( $input['ndvr_answers_present'] ) ? $input['ndvr_answers_present'] : '' );
 		$checked = $fields->validate( $answers, 'onsite', $present );
 		if ( is_wp_error( $checked ) ) {
 			wp_send_json_error( array( 'message' => $checked->get_error_message() ), 400 );

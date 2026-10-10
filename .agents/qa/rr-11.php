@@ -89,6 +89,7 @@ final class NDVR_QA_RR11 {
 			$this->ac12();
 			$this->ac13_ac14();
 			$this->ac10();
+			$this->review_fixes();
 			$this->extras();
 		} catch ( \Throwable $e ) {
 			$this->ok( false, 'uncaught ' . get_class( $e ) . ': ' . $e->getMessage() . ' @ ' . basename( $e->getFile() ) . ':' . $e->getLine() );
@@ -444,7 +445,7 @@ final class NDVR_QA_RR11 {
 		$with = (string) self::call( $this->c()->get( 'review_form' ), 'render_fields' );
 		$this->c()->get( 'settings' )->update( array( 'photo_uploads' => false ) );
 		$this->ok( false !== $area && false !== $fit && false !== $used && $area < $fit && $fit < $used && false === $photo && strpos( $with, '>Used for' ) < strpos( $with, 'ndvr-photos' ), 'AC4: both questions render in order after the textarea and before the photos field' );
-		$this->ok( false !== strpos( $html, 'id="ndvr-f' . $this->q['fit'] . '-o2"' ) && false !== strpos( $html, 'name="ndvr_answers_present"' ) && false !== strpos( $html, 'required' ), 'AC4: option ids, the present marker and required attributes' );
+		$this->ok( 1 === preg_match( '/id="ndvr-q\d+-f' . $this->q['fit'] . '-o2"/', $html ) && 1 === preg_match( '/name="ndvr_answers_present" value="' . $this->q['fit'] . ',' . $this->q['used'] . '"/', $html ) && false !== strpos( $html, 'required' ), 'AC4: option ids, the present marker and required attributes' );
 	}
 
 	/**
@@ -739,7 +740,8 @@ final class NDVR_QA_RR11 {
 		global $wpdb;
 		$exporter = $this->c()->get( 'exporter' );
 		$columns  = (array) self::call( $exporter, 'columns' );
-		$this->ok( in_array( 'q_fit', $columns, true ) && in_array( 'q_used-for', $columns, true ), 'AC10: the export has q_fit and q_used-for columns' );
+		$fit_now  = $this->f()->find( $this->q['fit'] );
+		$this->ok( $fit_now && in_array( 'q_' . $fit_now['slug'], $columns, true ) && in_array( 'q_used-for', $columns, true ), 'AC10: the export has a q_<slug> column per question (' . implode( ',', array_slice( $columns, 13 ) ) . ')' );
 
 		// A file shaped like the export (header + rows), built from rows().
 		$path = wp_tempnam( 'rr11.csv' );
@@ -825,6 +827,294 @@ final class NDVR_QA_RR11 {
 				)
 			)
 		);
+	}
+
+	/**
+	 * Code review RR-11: M1–M4, m3, m4, m6 and harness gaps 1–4, 9.
+	 *
+	 * @return void
+	 */
+	private function review_fixes() {
+		global $wpdb;
+		$wpdb->query( 'DELETE FROM ' . \NdvReviews\Support\Db::table( 'review_fields' ) );
+		$this->f()->flush();
+		$fit  = (int) $this->f()->insert(
+			array(
+				'label'    => 'Fit',
+				'type'     => 'choice',
+				'options'  => "Runs small\nTrue to size\n< 1 month",
+				'required' => true,
+			)
+		);
+		$used = (int) $this->f()->insert(
+			array(
+				'label' => 'Used for',
+				'type'  => 'text',
+			)
+		);
+
+		// M1: a cached form (marker = the ids it rendered) isn't blocked by a newly required question.
+		$html = (string) self::call( $this->c()->get( 'review_form' ), 'render_fields' );
+		preg_match( '/name="ndvr_answers_present" value="([^"]*)"/', $html, $m );
+		$marker = isset( $m[1] ) ? $m[1] : '';
+		$ten    = static function () {
+			return 10;
+		};
+		add_filter( 'ndv-reviews/max_review_fields', $ten );
+		$skin = (int) $this->f()->insert(
+			array(
+				'label'    => 'Skin type',
+				'type'     => 'text',
+				'required' => true,
+			)
+		);
+		$res  = $this->product_submit(
+			array(
+				'ndvr_answers_present' => $marker,
+				'ndvr_answers'         => array( $fit => 'True to size' ),
+			)
+		);
+		$old  = $this->product_submit(
+			array(
+				'ndvr_answers_present' => '1',
+				'ndvr_answers'         => array( $fit => 'True to size' ),
+			)
+		);
+		$this->f()->delete( $skin );
+		remove_filter( 'ndv-reviews/max_review_fields', $ten );
+		$this->ok( $fit . ',' . $used === $marker && ! empty( $res['success'] ) && 'Skin type needs an answer.' === ( $old['data']['message'] ?? '' ), 'M1: the cached form\'s marker (' . $marker . ') passes; an old "1" marker still requires every active question' );
+
+		// M2: retyping to Yes/No keeps old text answers; the screen warns.
+		$res  = $this->product_submit(
+			array(
+				'ndvr_answers_present' => (string) $fit,
+				'ndvr_answers'         => array(
+					$fit  => 'True to size',
+					$used => 'Daily walks',
+				),
+			)
+		);
+		$cid  = $this->track_latest();
+		$r    = $this->questions_post(
+			array(
+				'ndvr_fields_do' => 'save',
+				'ndvr_id'        => (string) $used,
+				'ndvr_label'     => 'Used for',
+				'ndvr_type'      => 'yesno',
+			)
+		);
+		$view = wp_list_pluck( $this->f()->answers_for_view( $cid ), 'value', 'label' );
+		$this->ok( 'Daily walks' === ( $view['Used for'] ?? '' ) && ( false !== strpos( $r['html'], 'keep their text' ) || false !== strpos( $r['html'], 'keeps its text' ) ), 'M2: a question retyped to Yes/No keeps showing its old text answer, with a warning' );
+		$this->f()->update( $used, array( 'type' => 'text' ) );
+		$this->ok( 'Yes' === ReviewFieldRepository::display_value( array( 'type' => 'text' ), 'yes' ) && 'Weekly' === ReviewFieldRepository::display_value( array( 'type' => 'yesno' ), 'Weekly' ), 'M2: yes/no values read Yes/No on any type; other values stay as written' );
+
+		// M4: filter keys follow `filterable` on old reviews; delete clears them.
+		$key = ReviewFieldRepository::ANSWER_PREFIX . $fit;
+		$this->ok( '' === (string) get_comment_meta( $cid, $key, true ), 'M4 setup: no filter key before the question is filterable' );
+		$this->f()->update( $fit, array( 'filterable' => true ) );
+		wp_cache_delete( $cid, 'comment_meta' );
+		$on = (string) get_comment_meta( $cid, $key, true );
+		$this->f()->update( $fit, array( 'filterable' => false ) );
+		wp_cache_delete( $cid, 'comment_meta' );
+		$off = (string) get_comment_meta( $cid, $key, true );
+		$this->ok( 'True to size' === $on && '' === $off, 'M4: turning filterable on backfills an older review\'s key, off removes it' );
+
+		// M3: the storefront list reads `answers` (filterable questions).
+		$this->f()->update( $fit, array( 'filterable' => true ) );
+		wp_set_comment_status( $cid, 'approve' );
+		$list = function ( $value ) use ( $fit ) {
+			$_POST    = array(
+				'nonce'      => wp_create_nonce( \NdvReviews\Display\Renderer::NONCE ),
+				'product_id' => (string) $this->p[0],
+				'answers'    => array( $fit => $value ),
+			);
+			$_REQUEST = $_POST;
+			$r        = $this->capture( array( $this->c()->get( 'renderer' ), 'ajax_list' ) );
+			$_POST    = array();
+			$_REQUEST = array();
+			$json     = json_decode( $r['out'], true );
+
+			return (string) ( $json['data']['html'] ?? '' );
+		};
+		$hit  = $list( 'True to size' );
+		$miss = $list( 'Runs small' );
+		$this->ok( false !== strpos( $hit, 'data-review-id="' . $cid . '"' ) || false !== strpos( $hit, '<dd>True to size</dd>' ), 'M3: the list AJAX filters by an answer (match)' );
+		$this->ok( false === strpos( $miss, '<dd>Daily walks</dd>' ), 'M3: … and leaves out reviews with another answer' );
+		$this->f()->update( $fit, array( 'filterable' => false ) );
+
+		// m3: an edit save keeps answers to deleted questions, and an untouched removed option.
+		$gone = (int) $this->f()->insert(
+			array(
+				'label'  => 'Gone',
+				'type'   => 'text',
+				'status' => 'inactive',
+			)
+		);
+		$this->f()->save_answers(
+			$cid,
+			array(
+				$fit  => '< 1 month',
+				$used => 'Daily walks',
+				$gone => 'Old secret',
+			)
+		);
+		$this->f()->delete( $gone );
+		$this->f()->update( $fit, array( 'options' => "Runs small\nTrue to size\nRuns large" ) );
+		$page     = $this->c()->get( 'moderation_page' );
+		$_POST    = array(
+			'review'               => (string) $cid,
+			'ndvr_content'         => 'Fits well and looks good.',
+			'ndvr_title'           => '',
+			'ndvr_criteria'        => $this->scores(),
+			'ndvr_answers_present' => '1',
+			'ndvr_answers'         => array(
+				$fit  => '< 1 month',
+				$used => 'Hiking',
+			),
+		);
+		$_REQUEST = $_POST;
+		$throw    = static function () {
+			throw new NDVR_QA_11_Die();
+		};
+		add_filter( 'wp_redirect', $throw, 1 );
+		try {
+			self::call( $page, 'save_edit' );
+		} catch ( NDVR_QA_11_Die $e ) {
+			unset( $e );
+		}
+		remove_filter( 'wp_redirect', $throw, 1 );
+		$_POST    = array();
+		$_REQUEST = array();
+		$stored   = $this->f()->stored( $cid );
+		$this->ok( '< 1 month' === ( $stored[ $fit ] ?? '' ) && 'Hiking' === ( $stored[ $used ] ?? '' ) && 'Old secret' === ( $stored[ $gone ] ?? '' ), 'm3 / gap 9: the edit save keeps an untouched removed option ("< 1 month") and answers to deleted questions' );
+
+		// m4: the privacy export includes answers to deleted questions.
+		$rows = wp_list_pluck( $this->f()->answers_for_export( $cid ), 'value', 'label' );
+		$this->ok( 'Old secret' === ( $rows['Gone (deleted question)'] ?? '' ), 'm4: the privacy export lists answers to deleted questions' );
+
+		// m1: a deleted question's id is never reused.
+		$next = (int) $this->f()->insert(
+			array(
+				'label'  => 'Newcomer',
+				'type'   => 'text',
+				'status' => 'inactive',
+			)
+		);
+		$this->ok( $next > $gone && ! in_array( 'Newcomer', wp_list_pluck( $this->f()->answers_for_view( $cid ), 'label' ), true ), 'm1: deletion is soft; a new question never adopts old answers' );
+		$this->f()->delete( $next );
+
+		// Gap 4: reactivation at the cap, the over-cap slice, move().
+		$third = (int) $this->f()->insert(
+			array(
+				'label'  => 'Third',
+				'type'   => 'yesno',
+				'status' => 'inactive',
+			)
+		);
+		$r     = $this->questions_post(
+			array(
+				'ndvr_fields_do' => 'toggle',
+				'ndvr_id'        => (string) $third,
+				'ndvr_status'    => 'active',
+			)
+		);
+		$this->ok( 'inactive' === $this->f()->find( $third )['status'] && false !== strpos( $r['html'], 'You can have 2 active questions.' ), 'Gap 4: reactivating a third question at the cap is refused' );
+		$ten2 = static function () {
+			return 10;
+		};
+		add_filter( 'ndv-reviews/max_review_fields', $ten2 );
+		$this->f()->update( $third, array( 'status' => 'active' ) );
+		remove_filter( 'ndv-reviews/max_review_fields', $ten2 );
+		$live = array_keys( $this->f()->get_active() );
+		$r    = $this->questions_post( array() );
+		$this->ok( array( $fit, $used ) === $live && false !== strpos( $r['html'], 'not shown (over the limit)' ), 'Gap 4 / m2: over the cap only the first two are live, and the screen says which isn\'t shown' );
+		$this->f()->move( $third, 'up' );
+		$order = array_keys( $this->f()->get_all() );
+		$this->ok( array( $fit, $third, $used ) === $order, 'Gap 4: move() swaps a question with its neighbour' );
+		$this->f()->update( $third, array( 'status' => 'inactive' ) );
+		$this->f()->move( $third, 'down' );
+
+		// Gap 1 + 2: missing answers stop all three handlers before any upload.
+		$uploads = 0;
+		$count   = static function ( $file ) use ( &$uploads ) {
+			++$uploads;
+			return $file;
+		};
+		add_filter( 'wp_handle_upload_prefilter', $count );
+		$this->c()->get( 'settings' )->update( array( 'photo_uploads' => true ) );
+		$img = wp_tempnam( 'rr11.png' );
+		file_put_contents( $img, base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' ) );
+		$this->fx['files'][] = $img;
+		$_FILES              = array(
+			'ndvr_photos' => array(
+				'name'     => array( 'a.png' ),
+				'type'     => array( 'image/png' ),
+				'tmp_name' => array( $img ),
+				'error'    => array( 0 ),
+				'size'     => array( filesize( $img ) ),
+			),
+		);
+		$p1                  = $this->product_submit( array( 'ndvr_answers_present' => (string) $fit ) );
+		$_FILES              = array();
+		$t1                  = $this->testimonial_submit( array( 'ndvr_answers_present' => (string) $fit ), true );
+		$this->c()->get( 'settings' )->update( array( 'photo_uploads' => false ) );
+		remove_filter( 'wp_handle_upload_prefilter', $count );
+		$this->ok( 'Fit needs an answer.' === ( $p1['data']['message'] ?? '' ) && 'Fit needs an answer.' === ( $t1['data']['message'] ?? '' ) && 0 === $uploads, 'Gaps 1–2: the product and standalone forms refuse a missing required answer before touching the upload' );
+		$t2 = $this->testimonial_submit(
+			array(
+				'ndvr_answers_present' => (string) $fit,
+				'ndvr_answers'         => array( $fit => 'Runs small' ),
+			),
+			false
+		);
+		$this->ok( ! empty( $t2['success'] ), 'Gap 2: the standalone form saves with the answer (' . wp_json_encode( $t2 ) . ')' );
+		$testi = (string) do_shortcode( '[ndvr-form product_id="' . $this->p[0] . '"]' );
+		$this->ok( false !== strpos( $testi, 'ndvr-questions' ) && false !== strpos( $testi, '>Fit' ), 'Gap 2: the standalone form renders the questions' );
+
+		// Gap 3: the exporter's own output imports back.
+		$path = wp_tempnam( 'rr11-export.csv' );
+		$fh   = fopen( $path, 'w' );
+		$this->c()->get( 'exporter' )->write_csv( $fh );
+		fclose( $fh );
+		$this->fx['files'][] = $path;
+		$header              = str_getcsv( strtok( (string) file_get_contents( $path ), "\n" ) );
+		$before              = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \NdvReviews\Support\Db::table( 'review_fields' ) );
+		$res                 = $this->c()->get( 'csv_importer' )->import( $path );
+		$this->ok( in_array( 'q_fit', $header, true ) && 0 === (int) $res['imported'] && (int) $res['skipped'] > 0 && (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \NdvReviews\Support\Db::table( 'review_fields' ) ) === $before, 'Gap 3: the exporter\'s real file has q_ columns and re-imports cleanly (duplicates skipped, no new questions)' );
+	}
+
+	/**
+	 * Submit the standalone form.
+	 *
+	 * @param array<string,mixed> $extra Extra fields.
+	 * @param bool                $files Keep a staged $_FILES.
+	 * @return array JSON.
+	 */
+	private function testimonial_submit( array $extra, $files = false ) {
+		$prev = get_current_user_id();
+		wp_set_current_user( 0 );
+		$_SERVER['REMOTE_ADDR'] = '10.21.' . wp_rand( 1, 250 ) . '.' . wp_rand( 1, 250 );
+		$_POST                  = $extra + array(
+			'nonce'         => wp_create_nonce( \NdvReviews\Forms\TestimonialForm::NONCE ),
+			'product_id'    => (string) $this->p[0],
+			'ndvr_consent'  => '1',
+			'ndvr_criteria' => $this->scores(),
+			'comment'       => 'From the standalone form.',
+			'author'        => 'Testi',
+			'email'         => 'rr11-t-' . wp_generate_password( 5, false, false ) . '@example.invalid',
+		);
+		$_REQUEST               = $_POST;
+		unset( $files );
+		$r        = $this->capture( array( $this->c()->get( 'testimonial_form' ), 'handle_submit' ) );
+		$_POST    = array();
+		$_REQUEST = array();
+		wp_set_current_user( $prev );
+		$json = json_decode( $r['out'], true );
+		if ( is_array( $json ) && ! empty( $json['success'] ) ) {
+			$this->track_latest();
+		}
+
+		return is_array( $json ) ? $json : array();
 	}
 
 	/**

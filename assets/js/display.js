@@ -29,6 +29,7 @@
 				with_media: false,
 				orderby: wrap.getAttribute( 'data-orderby' ) || 'recent',
 				tag: '',
+				answers: {},
 				page: 1,
 				perPage: parseInt( wrap.getAttribute( 'data-per-page' ), 10 ) || 0
 			};
@@ -60,6 +61,16 @@
 		body.append( 'tag', state.tag );
 		body.append( 'page', state.page );
 		body.append( 'per_page', state.perPage );
+		Object.keys( state.answers || {} ).forEach( function ( field ) {
+			if ( state.answers[ field ] ) {
+				body.append( 'answers[' + field + ']', state.answers[ field ] );
+			}
+		} );
+
+		// Add-ons may add their own fields to the request.
+		if ( typeof window.CustomEvent === 'function' ) {
+			wrap.dispatchEvent( new window.CustomEvent( 'ndvr:list-request', { bubbles: true, detail: { body: body, state: state } } ) );
+		}
 
 		fetch( cfg.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
 			.then( function ( r ) { return r.json(); } )
@@ -141,6 +152,28 @@
 			state.page = 1;
 			syncStar( wrap, value );
 			fetchList( wrap, star.classList.contains( 'ndvr-bar-row' ) );
+			return;
+		}
+
+		// Answer chips (RR-11; markup from add-ons): data-ndvr-answer-field +
+		// data-value. Clicking the active chip again clears that question.
+		var chip = closest( target, '[data-ndvr-answer-field]' );
+		if ( chip ) {
+			var field  = chip.getAttribute( 'data-ndvr-answer-field' );
+			var answer = chip.getAttribute( 'data-value' ) || '';
+			if ( state.answers[ field ] === answer ) {
+				answer = '';
+			}
+			state.answers[ field ] = answer;
+			Array.prototype.forEach.call( wrap.querySelectorAll( '[data-ndvr-answer-field]' ), function ( c ) {
+				if ( c.getAttribute( 'data-ndvr-answer-field' ) === field ) {
+					var on = '' !== answer && c.getAttribute( 'data-value' ) === answer;
+					c.classList.toggle( 'is-current', on );
+					c.setAttribute( 'aria-pressed', on ? 'true' : 'false' );
+				}
+			} );
+			state.page = 1;
+			fetchList( wrap, false );
 			return;
 		}
 

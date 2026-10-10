@@ -76,9 +76,10 @@ class ReviewRepository {
 	 *     @type int                 $order_id   Optional originating order id.
 	 *     @type bool                $approved   Whether to approve immediately.
 	 *     @type array<int,string>   $answers    Review-question answers, field id => value (RR-11).
-	 *     @type bool                $answers_present Whether the form carried the questions
-	 *                                           (default true); required answers are checked
-	 *                                           only then, and only for customer-written sources.
+	 *     @type int[]|bool          $answers_present The question ids the form rendered, true for
+	 *                                           "all active", false (default) for none. Required
+	 *                                           answers are checked only for those, and only for
+	 *                                           customer-written sources.
 	 * }
 	 * @return int|\WP_Error New comment id, or WP_Error on failure.
 	 */
@@ -135,7 +136,7 @@ class ReviewRepository {
 		// for customer-written sources whose form rendered them.
 		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
 		$answers = $fields->sanitize( isset( $data['answers'] ) && is_array( $data['answers'] ) ? $data['answers'] : array() );
-		$checked = $fields->validate( $answers, isset( $data['source'] ) ? sanitize_key( (string) $data['source'] ) : 'onsite', ! array_key_exists( 'answers_present', $data ) || ! empty( $data['answers_present'] ) );
+		$checked = $fields->validate( $answers, isset( $data['source'] ) ? sanitize_key( (string) $data['source'] ) : 'onsite', isset( $data['answers_present'] ) ? ( is_array( $data['answers_present'] ) ? $data['answers_present'] : (bool) $data['answers_present'] ) : false );
 		if ( is_wp_error( $checked ) ) {
 			return $checked;
 		}

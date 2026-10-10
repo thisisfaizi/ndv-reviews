@@ -428,6 +428,16 @@ class Renderer implements Registerable {
 		$tag        = isset( $_POST['tag'] ) ? sanitize_title( wp_unslash( $_POST['tag'] ) ) : '';
 		$page       = isset( $_POST['page'] ) ? max( 1, absint( $_POST['page'] ) ) : 1;
 		$per_page   = self::per_page( isset( $_POST['per_page'] ) ? (int) $_POST['per_page'] : 0 );
+		// Review-question answers (RR-11): field id => value, for answer chips.
+		$answers = array();
+		if ( isset( $_POST['answers'] ) && is_array( $_POST['answers'] ) ) {
+			foreach ( wp_unslash( $_POST['answers'] ) as $field_id => $value ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- each value is sanitised below.
+				$value = is_scalar( $value ) ? sanitize_text_field( (string) $value ) : '';
+				if ( absint( $field_id ) && '' !== $value ) {
+					$answers[ absint( $field_id ) ] = $value;
+				}
+			}
+		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$result = $this->query->paginate(
@@ -438,6 +448,7 @@ class Renderer implements Registerable {
 				'with_media' => $with_media,
 				'orderby'    => $orderby,
 				'tag'        => $tag,
+				'answers'    => $answers,
 				'page'       => $page,
 				'per_page'   => $per_page,
 			)
@@ -448,7 +459,7 @@ class Renderer implements Registerable {
 			array(
 				'result'     => $result,
 				'vote_nonce' => wp_create_nonce( Votes::NONCE_ACTION ),
-				'filtered'   => $star || $verified || $with_media || '' !== $tag,
+				'filtered'   => $star || $verified || $with_media || '' !== $tag || ! empty( $answers ),
 			)
 		);
 

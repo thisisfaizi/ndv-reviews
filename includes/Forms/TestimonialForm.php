@@ -312,7 +312,7 @@ class TestimonialForm implements Registerable {
 
 		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
 		$answers = $fields->sanitize( isset( $input['ndvr_answers'] ) && is_array( $input['ndvr_answers'] ) ? $input['ndvr_answers'] : array() );
-		$present = ! empty( $input['ndvr_answers_present'] );
+		$present = \NdvReviews\Reviews\ReviewFieldRepository::parse_present( isset( $input['ndvr_answers_present'] ) ? $input['ndvr_answers_present'] : '' );
 		$checked = $fields->validate( $answers, 'form', $present );
 		if ( is_wp_error( $checked ) ) {
 			wp_send_json_error( array( 'message' => $checked->get_error_message() ), 400 );

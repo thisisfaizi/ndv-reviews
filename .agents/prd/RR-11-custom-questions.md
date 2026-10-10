@@ -1,8 +1,27 @@
 # RR-11: Custom questions on the review form
 
-Status: built, in review (rev 3) · Plan: F (2 active questions) + P (higher cap, filter chips) · Inherits PRD-00 + RR-00 · **Schema `Installer::V_FIELDS`** (planned v6; provisional per PRD-00 §4, the number is taken at merge) · Raises `NDVR_API` to **7** (RR-00 F3b; planned build order, final at merge)
+Status: done (rev 4) · Plan: F (2 active questions) + P (higher cap, filter chips) · Inherits PRD-00 + RR-00 · **Schema `Installer::V_FIELDS`** (planned v6; provisional per PRD-00 §4, the number is taken at merge) · Raises `NDVR_API` to **7** (RR-00 F3b; planned build order, final at merge)
 
 Review findings applied: round 2 RR-11 item 1 (unknown `q_<slug>` columns).
+
+Rev 4 (code review `reviews/code-RR-11.md`, 0 blockers, 4 majors, 13 minors):
+- **M1:** the marker `ndvr_answers_present` lists the rendered question ids ("12,15"). `validate()` requires only rendered ∩ active ∩ required, so a cached page that predates a newly required question isn't blocked. A bare "1" (an old override) still means "all active". `ReviewFieldRepository::parse_present()`. `create()` key `answers_present` is int[]|bool, **default false** (m10), so third-party callers are unaffected.
+- **M2:** `display_value()` maps only `yes`/`no`; any other stored value shows as written, so a question retyped to Yes/No keeps its text answers. Retyping an answered question shows "N reviews have answers to this question; they keep their text."
+- **M3:** the storefront list AJAX (`Renderer::ajax_list`) reads `answers[<id>]` into `paginate()` and counts it as a filter. `display.js` keeps `state.answers` and toggles chips `[data-ndvr-answer-field][data-value]` (`aria-pressed`, `is-current`). It also fires `ndvr:list-request` (`detail.body`, `detail.state`) before each fetch.
+- **M4:** `_ndvr_ans_<id>` follows `filterable`. Turning it on backfills every review that answered (500 per batch, then Action Scheduler `ndvr_review_field_reindex`); turning it off, or deleting, removes the keys. The question passed to `review_field_form_after` always has `filterable`, `slug`, `status` and `position`.
+- **m1:** deletion is soft (`status = deleted`), so ids are never reused. Slugs of deleted questions stay reserved.
+- **m2:** active questions past the cap are marked "Yes, but not shown (over the limit)".
+- **m3:** an admin edit save merges over the stored answers (deleted questions' answers stay). The untouched rule compares the cleaned value.
+- **m4:** the privacy export includes answers to deleted questions ("… (deleted question)").
+- **m5:** slugs are capped at 180 bytes, and the screen shows each question's CSV column.
+- **m6:** import notes, such as a skipped `q_` column, are appended to the Tools notice.
+- **m7:** the definitions cache expires after an hour, failed reads aren't cached, and uninstall deletes the cache key.
+- **m8:** the product form's question ids carry a unique prefix.
+- **m9:** text is stored decoded (sanitised, then entities decoded) and escaped on output, so `<` and `&` round-trip.
+- **m11:** documented (the filters change the card only).
+- **m13:** the Caps docblock is updated and the RTL margins fixed.
+- **m12:** translatable question labels are logged as an RR-08 follow-up.
+- **Harness:** gaps 1–4 and 9 closed. That covers the upload pre-check through the upload prefilter (product and standalone forms), the standalone form's markup and submit, the exporter's real file (`Exporter::write_csv()`, new public writer), the cap edges and `move()`, and the edit-save rules. The type change, the filter keys, the list filter, the cached marker, the soft delete and the export are also covered.
 
 Build notes (2026-10-10):
 - **Numbers at merge:** `Installer::V_FIELDS` = **6** (`NDVR_DB_VERSION` 6). **`NDVR_API` 8**: 7 went to the RR-10 review (list campaign cancel and counts), so RR-15's planned 8 becomes 9.

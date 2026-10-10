@@ -157,6 +157,18 @@ class Exporter {
 		header( 'Content-Disposition: attachment; filename="ndv-reviews-export-' . gmdate( 'Ymd' ) . '.csv"' );
 
 		$out = fopen( 'php://output', 'w' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		$this->write_csv( $out );
+		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		exit;
+	}
+
+	/**
+	 * Write the CSV export to a stream (header and every row).
+	 *
+	 * @param resource $out Writable stream.
+	 * @return void
+	 */
+	public function write_csv( $out ) {
 		fputcsv( $out, $this->columns(), ',', '"', '\\' );
 		foreach ( $this->rows() as $row ) {
 			$parts = array();
@@ -169,8 +181,6 @@ class Exporter {
 
 			fputcsv( $out, array_map( array( __CLASS__, 'csv_cell' ), array_values( $row ) ), ',', '"', '\\' );
 		}
-		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-		exit;
 	}
 
 	/**

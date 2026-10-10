@@ -95,7 +95,22 @@ class QuestionsPage implements Registerable {
 				'options'  => isset( $_POST['ndvr_options'] ) ? sanitize_textarea_field( wp_unslash( $_POST['ndvr_options'] ) ) : '',
 				'required' => ! empty( $_POST['ndvr_required'] ),
 			);
+			$before = $id ? $this->fields->find( $id ) : null;
 			$result = $id ? $this->fields->update( $id, $data ) : $this->fields->insert( $data );
+			// A retyped question keeps its old answers exactly as written.
+			if ( $before && ! is_wp_error( $result ) && $before['type'] !== $data['type'] ) {
+				$answered = $this->fields->count_answers( $id );
+				if ( $answered ) {
+					$this->notices[] = array(
+						'type'    => 'warning',
+						'message' => sprintf(
+							/* translators: %s: number of reviews. */
+							_n( '%s review has an answer to this question; it keeps its text.', '%s reviews have answers to this question; they keep their text.', $answered, 'rosette-reviews' ),
+							number_format_i18n( $answered )
+						),
+					);
+				}
+			}
 			if ( ! is_wp_error( $result ) ) {
 				$saved = $id ? $id : (int) $result;
 
@@ -167,11 +182,12 @@ class QuestionsPage implements Registerable {
 		$edit_id = isset( $_GET['edit'] ) ? absint( wp_unslash( $_GET['edit'] ) ) : 0;
 		$editing = $edit_id ? $this->fields->find( $edit_id ) : null;
 		$ids     = array_keys( $all );
+		$live    = $this->fields->get_active();
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Review Questions', 'rosette-reviews' ); ?></h1>
 			<?php foreach ( $this->notices as $notice ) : ?>
-				<div class="notice notice-<?php echo 'error' === $notice['type'] ? 'error' : 'success'; ?> is-dismissible"><p><?php echo esc_html( $notice['message'] ); ?></p></div>
+				<div class="notice notice-<?php echo esc_attr( in_array( $notice['type'], array( 'error', 'warning' ), true ) ? $notice['type'] : 'success' ); ?> is-dismissible"><p><?php echo esc_html( $notice['message'] ); ?></p></div>
 			<?php endforeach; ?>
 			<?php if ( ! $this->fields->ready() ) : ?>
 				<div class="notice notice-warning inline"><p><?php esc_html_e( 'Rosette Reviews is finishing a database update. Questions are available once it is done.', 'rosette-reviews' ); ?></p></div>
@@ -198,11 +214,12 @@ class QuestionsPage implements Registerable {
 						<th><?php esc_html_e( 'Options', 'rosette-reviews' ); ?></th>
 						<th><?php esc_html_e( 'Required', 'rosette-reviews' ); ?></th>
 						<th><?php esc_html_e( 'Active', 'rosette-reviews' ); ?></th>
+						<th><?php esc_html_e( 'CSV column', 'rosette-reviews' ); ?></th>
 						<th><?php esc_html_e( 'Actions', 'rosette-reviews' ); ?></th>
 					</tr></thead>
 					<tbody>
 					<?php if ( ! $all ) : ?>
-						<tr><td colspan="6"><?php esc_html_e( 'No questions yet.', 'rosette-reviews' ); ?></td></tr>
+						<tr><td colspan="7"><?php esc_html_e( 'No questions yet.', 'rosette-reviews' ); ?></td></tr>
 					<?php endif; ?>
 					<?php foreach ( $all as $id => $field ) : ?>
 						<?php $at = array_search( $id, $ids, true ); ?>
@@ -211,7 +228,18 @@ class QuestionsPage implements Registerable {
 							<td><?php echo esc_html( $types[ $field['type'] ] ?? $field['type'] ); ?></td>
 							<td><?php echo esc_html( implode( ', ', $field['options'] ) ); ?></td>
 							<td><?php echo esc_html( $field['required'] ? __( 'Yes', 'rosette-reviews' ) : __( 'No', 'rosette-reviews' ) ); ?></td>
-							<td><?php echo esc_html( 'active' === $field['status'] ? __( 'Yes', 'rosette-reviews' ) : __( 'No', 'rosette-reviews' ) ); ?></td>
+							<td>
+								<?php
+								if ( 'active' !== $field['status'] ) {
+									esc_html_e( 'No', 'rosette-reviews' );
+								} elseif ( isset( $live[ $id ] ) ) {
+									esc_html_e( 'Yes', 'rosette-reviews' );
+								} else {
+									esc_html_e( 'Yes, but not shown (over the limit)', 'rosette-reviews' );
+								}
+								?>
+							</td>
+							<td><code>q_<?php echo esc_html( $field['slug'] ); ?></code></td>
 							<td>
 								<form method="post" style="display:inline;">
 									<?php wp_nonce_field( self::NONCE ); ?>
@@ -268,11 +296,15 @@ class QuestionsPage implements Registerable {
 				<?php else : ?>
 					<?php
 					$field = $editing ? $editing : array(
-						'id'       => 0,
-						'label'    => '',
-						'type'     => 'choice',
-						'options'  => array(),
-						'required' => false,
+						'id'         => 0,
+						'label'      => '',
+						'type'       => 'choice',
+						'options'    => array(),
+						'required'   => false,
+						'filterable' => false,
+						'slug'       => '',
+						'status'     => 'active',
+						'position'   => 0,
 					);
 					?>
 					<form method="post">

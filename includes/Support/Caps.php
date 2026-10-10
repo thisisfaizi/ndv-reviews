@@ -27,7 +27,7 @@ class Caps {
 		 * Filter the capability required for an Rosette Reviews admin screen.
 		 *
 		 * @param string $capability Default 'manage_woocommerce'.
-		 * @param string $context    Screen: overview|criteria|design|reminders|settings|tools.
+		 * @param string $context    Screen: overview|criteria|questions|design|reminders|settings|tools.
 		 */
 		return (string) apply_filters( 'ndv-reviews/manage_capability', 'manage_woocommerce', $context );
 	}

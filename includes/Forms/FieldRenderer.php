@@ -17,7 +17,9 @@ defined( 'ABSPATH' ) || exit;
 final class FieldRenderer {
 
 	/**
-	 * Markup for the questions plus the `ndvr_answers_present` marker.
+	 * Markup for the questions plus the `ndvr_answers_present` marker, which
+	 * lists the rendered question ids ("12,15"), so a cached page that predates a
+	 * newly required question isn't blocked by it.
 	 *
 	 * @param array<int,array<string,mixed>> $fields    Active questions (id => field).
 	 * @param string                         $id_prefix Element id prefix.
@@ -73,7 +75,7 @@ final class FieldRenderer {
 			}
 			echo '</fieldset>';
 		}
-		echo '<input type="hidden" name="ndvr_answers_present" value="1" />';
+		echo '<input type="hidden" name="ndvr_answers_present" value="' . esc_attr( implode( ',', array_map( 'intval', array_keys( $fields ) ) ) ) . '" />';
 		echo '</div>';
 
 		return (string) ob_get_clean();

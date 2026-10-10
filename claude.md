@@ -34,7 +34,8 @@ repo `rosette-reviews-pro` and extends this plugin **only through documented hoo
   `to_view()` view-model + `review_items`/`review_author`/`review_query_args`), `Reviews\RatingCache` +
   `Reviews\AggregateStore` (Woo aggregate sync — the single source of truth for the product average),
   `Reviews\Pool` (`review_pool_id`), `Reviews\Criteria`/`CriteriaRepository`, `Reviews\PostTypes`
-  (`reviewable_post_types`), `Reviews\Votes` (helpful vote + dedup), `Reviews\ReviewTags`.
+  (`reviewable_post_types`), `Reviews\Votes` (helpful vote + dedup), `Reviews\ReviewTags`,
+  `Reviews\Sources` (the customer-written source allowlist; never use an "import" denylist).
 - **Forms:** `Forms\ReviewForm`, `Forms\TestimonialForm`, `Forms\AntiSpam` (nonce + honeypot + per-IP
   rate-limit + opt-in reCAPTCHA), `Forms\Upload`.
 - **Display:** `Display\Renderer` (Woo reviews tab + AJAX list `ndvr_list_reviews`), `Display\Widgets`
@@ -48,7 +49,10 @@ repo `rosette-reviews-pro` and extends this plugin **only through documented hoo
   loop-safe `Module::current_product_id()`/`is_edit_mode()` statics Pro reuses).
 - **Other:** `Schema\JsonLd` (Product/AggregateRating/Review + duplicate-avoidance), `Requests\*` +
   `Collection\*` (reminder queue on Action Scheduler group `ndv-reviews`, tokenized no-login collection
-  landing), `Moderation\*`, `Privacy\Privacy` (GDPR export/erase), `Installer`/`Activator`/`Deactivator`.
+  landing), `Moderation\*` (F4 views/columns/row and bulk actions via filters), `Privacy\Privacy` (GDPR
+  export/erase), `Installer` (locked upgrades, `steps()`, `is_current( Installer::V_* )`)/`Activator`/`Deactivator`,
+  `Uninstall` (`registry()` of everything stored; `uninstall.php` loads it without the plugin), `Admin\SettingsFields`
+  (settings keys features register, each owned by one page), `Requests\Mailer::send_notice()` (branded notice email).
 
 The full public surface (hooks, options, meta, tables, AJAX, shortcodes, handles, constants) is enumerated
 in `/.agents/CONTRACTS.md` — **that file is canonical.**
@@ -65,6 +69,12 @@ in `/.agents/CONTRACTS.md` — **that file is canonical.**
 - **`extract()` is banned** (WP.org) — `Support\View::render()` expands vars manually. Don't reintroduce it.
 - **Reminder actions are Action Scheduler** (`ndvr_send_request`, group `ndv-reviews`), not `wp_schedule_
   event`. Unschedule with the hook only — passing empty args exact-matches nothing.
+- **Upgrades are locked with raw `INSERT IGNORE`** (`Installer::acquire_lock()`), never `add_option()`, which
+  reads then upserts and lets two requests both "win". Schema versions only go up; a downgrade never lowers
+  `ndv_reviews_db_version`. Activation goes through `maybe_upgrade()`; never stamp the version directly.
+- **Every new option, transient, meta key or Action Scheduler hook goes into `Uninstall::registry()`.**
+  `Installer.php` and `Uninstall.php` must stay loadable without the autoloader: `uninstall.php` requires them directly.
+- **Add-ons gate on `NDVR_API`** (raise it when you add API an add-on may use), never on `method_exists()`.
 - **Uninstall keeps native WooCommerce reviews.** Only reviews with `_ndvr_recommend` or a `_ndvr_source`
   other than `import`/`erased` are deleted (opt-in). `RatingCache` writes `_ndvr_*` meta onto native reviews,
   so never select by `_ndvr_overall_rating`.

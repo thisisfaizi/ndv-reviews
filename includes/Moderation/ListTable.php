@@ -19,6 +19,11 @@ if ( ! class_exists( '\WP_List_Table' ) ) {
 class ListTable extends \WP_List_Table {
 
 	/**
+	 * Views the table always has.
+	 */
+	const BUILTIN_VIEWS = array( 'all', 'approved', 'moderated', 'spam', 'trash' );
+
+	/**
 	 * Page slug the table lives on (for building action URLs).
 	 *
 	 * @var string
@@ -43,7 +48,58 @@ class ListTable extends \WP_List_Table {
 	}
 
 	/**
-	 * Current status filter (approved|moderated|spam|trash|all).
+	 * Extra views registered by features, cached per request.
+	 *
+	 * @var array<string,array{label:string,count:int|null,query_args:callable|null}>|null
+	 */
+	private $extra_views = null;
+
+	/**
+	 * Extra views from `ndv-reviews/moderation_views` (RR-00 F4).
+	 *
+	 * Each entry is slug => array( 'label' => string, 'count' => int|callable|null,
+	 * 'query_args' => callable( array $args ): array ). A view lists every
+	 * status unless its query_args callable narrows it: the callable receives
+	 * the get_comments() args and returns them changed.
+	 *
+	 * @return array<string,array{label:string,count:int|null,query_args:callable|null}>
+	 */
+	private function extra_views() {
+		if ( null !== $this->extra_views ) {
+			return $this->extra_views;
+		}
+
+		/**
+		 * Filter the extra views on the All Reviews screen.
+		 *
+		 * @param array<string,array<string,mixed>> $views slug => {label, count, query_args}.
+		 */
+		$raw = apply_filters( 'ndv-reviews/moderation_views', array() );
+
+		$this->extra_views = array();
+		foreach ( (array) $raw as $slug => $view ) {
+			$slug = sanitize_key( (string) $slug );
+			if ( '' === $slug || in_array( $slug, self::BUILTIN_VIEWS, true ) || ! is_array( $view ) || empty( $view['label'] ) ) {
+				continue;
+			}
+
+			$count = isset( $view['count'] ) ? $view['count'] : null;
+			if ( is_callable( $count ) ) {
+				$count = call_user_func( $count );
+			}
+
+			$this->extra_views[ $slug ] = array(
+				'label'      => (string) $view['label'],
+				'count'      => null === $count ? null : max( 0, (int) $count ),
+				'query_args' => isset( $view['query_args'] ) && is_callable( $view['query_args'] ) ? $view['query_args'] : null,
+			);
+		}
+
+		return $this->extra_views;
+	}
+
+	/**
+	 * Current view (all|approved|moderated|spam|trash, or a registered extra view).
 	 *
 	 * @return string
 	 */
@@ -51,7 +107,13 @@ class ListTable extends \WP_List_Table {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$status = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : 'all';
 
-		return in_array( $status, array( 'all', 'approved', 'moderated', 'spam', 'trash' ), true ) ? $status : 'all';
+		if ( in_array( $status, self::BUILTIN_VIEWS, true ) ) {
+			return $status;
+		}
+
+		$extra = $this->extra_views();
+
+		return isset( $extra[ $status ] ) ? $status : 'all';
 	}
 
 	/**
@@ -81,7 +143,7 @@ class ListTable extends \WP_List_Table {
 	 * @return array<string,string>
 	 */
 	public function get_columns() {
-		return array(
+		$columns = array(
 			'cb'      => '<input type="checkbox" />',
 			'author'  => __( 'Author', 'rosette-reviews' ),
 			'rating'  => __( 'Rating', 'rosette-reviews' ),
@@ -90,6 +152,17 @@ class ListTable extends \WP_List_Table {
 			'media'   => __( 'Photos', 'rosette-reviews' ),
 			'date'    => __( 'Date', 'rosette-reviews' ),
 		);
+
+		/**
+		 * Filter the All Reviews columns (RR-00 F4). Render an added column with
+		 * the `ndv-reviews/moderation_column_{name}` filter.
+		 *
+		 * @param array<string,string> $columns Column id => label.
+		 */
+		$filtered = apply_filters( 'ndv-reviews/moderation_columns', $columns );
+
+		// The checkbox and the author column (which carries the row actions) stay.
+		return is_array( $filtered ) && isset( $filtered['cb'], $filtered['author'] ) ? $filtered : $columns;
 	}
 
 	/**
@@ -110,9 +183,17 @@ class ListTable extends \WP_List_Table {
 
 		$out = array();
 		foreach ( $views as $key => $label ) {
-			$url        = 'all' === $key ? $base : add_query_arg( 'status', $key, $base );
-			$class      = $current === $key ? ' class="current"' : '';
+			$url         = 'all' === $key ? $base : add_query_arg( 'status', $key, $base );
+			$class       = $current === $key ? ' class="current" aria-current="page"' : '';
 			$out[ $key ] = sprintf( '<a href="%s"%s>%s</a>', esc_url( $url ), $class, esc_html( $label ) );
+		}
+
+		foreach ( $this->extra_views() as $key => $view ) {
+			$url   = add_query_arg( 'status', $key, $base );
+			$class = $current === $key ? ' class="current" aria-current="page"' : '';
+			$count = null === $view['count'] ? '' : ' <span class="count">(' . esc_html( number_format_i18n( $view['count'] ) ) . ')</span>';
+
+			$out[ $key ] = sprintf( '<a href="%s"%s>%s%s</a>', esc_url( $url ), $class, esc_html( $view['label'] ), $count );
 		}
 
 		return $out;
@@ -129,21 +210,51 @@ class ListTable extends \WP_List_Table {
 			return array(
 				'untrash' => __( 'Restore', 'rosette-reviews' ),
 				'delete'  => __( 'Delete permanently', 'rosette-reviews' ),
-			);
+			) + self::extra_bulk_actions( $view );
 		}
 		if ( 'spam' === $view ) {
 			return array(
 				'unspam' => __( 'Not spam', 'rosette-reviews' ),
 				'delete' => __( 'Delete permanently', 'rosette-reviews' ),
-			);
+			) + self::extra_bulk_actions( $view );
 		}
 
-		return array(
+		$actions = array(
 			'approve'   => __( 'Approve', 'rosette-reviews' ),
 			'unapprove' => __( 'Unapprove', 'rosette-reviews' ),
 			'spam'      => __( 'Mark as spam', 'rosette-reviews' ),
 			'trash'     => __( 'Move to trash', 'rosette-reviews' ),
 		);
+
+		return $actions + self::extra_bulk_actions( $view );
+	}
+
+	/**
+	 * Bulk actions added by features (RR-00 F4). They're handled by the
+	 * `ndv-reviews/moderation_handle_action` action after the nonce and
+	 * capability checks; built-in keys can't be replaced.
+	 *
+	 * @param string $view Current view.
+	 * @return array<string,string> Action key => label.
+	 */
+	public static function extra_bulk_actions( $view ) {
+		/**
+		 * Filter the extra bulk actions on the All Reviews screen.
+		 *
+		 * @param array<string,string> $actions Action key => label.
+		 * @param string               $view    Current view.
+		 */
+		$raw = apply_filters( 'ndv-reviews/moderation_bulk_actions', array(), (string) $view );
+
+		$out = array();
+		foreach ( (array) $raw as $key => $label ) {
+			$key = sanitize_key( (string) $key );
+			if ( '' !== $key && ! in_array( $key, Page::BUILTIN_ACTIONS, true ) ) {
+				$out[ $key ] = (string) $label;
+			}
+		}
+
+		return $out;
 	}
 
 	/**
@@ -190,14 +301,15 @@ class ListTable extends \WP_List_Table {
 		$search  = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
+		$view = $this->current_status();
 		$args = array(
 			'type__in'  => array( 'review', 'comment' ),
 			'post_type' => \NdvReviews\Reviews\PostTypes::all(),
-			'status'    => $this->status_arg( $this->current_status() ),
-			'number'   => $per_page,
-			'offset'   => ( $paged - 1 ) * $per_page,
-			'orderby'  => 'comment_date_gmt',
-			'order'    => 'DESC',
+			'status'    => $this->status_arg( $view ),
+			'number'    => $per_page,
+			'offset'    => ( $paged - 1 ) * $per_page,
+			'orderby'   => 'comment_date_gmt',
+			'order'     => 'DESC',
 		);
 
 		if ( $product ) {
@@ -215,6 +327,16 @@ class ListTable extends \WP_List_Table {
 					'type'    => 'NUMERIC',
 				),
 			);
+		}
+
+		$extra = $this->extra_views();
+		if ( isset( $extra[ $view ] ) && $extra[ $view ]['query_args'] ) {
+			$narrowed = call_user_func( $extra[ $view ]['query_args'], $args );
+			if ( is_array( $narrowed ) ) {
+				// Paging, the review types and the reviewable post types stay ours,
+				// so a view can't list ordinary blog comments.
+				$args = array_merge( $narrowed, array_intersect_key( $args, array_flip( array( 'type__in', 'post_type', 'number', 'offset' ) ) ) );
+			}
 		}
 
 		$this->items = get_comments( $args );
@@ -266,7 +388,7 @@ class ListTable extends \WP_List_Table {
 			}
 			$actions['delete'] = $this->action_link( 'delete', $id, __( 'Delete permanently', 'rosette-reviews' ) );
 
-			return '<strong>' . esc_html( $name ) . '</strong><br><span class="ndvr-email">' . esc_html( $item->comment_author_email ) . '</span>' . $this->row_actions( $actions );
+			return '<strong>' . esc_html( $name ) . '</strong><br><span class="ndvr-email">' . esc_html( $item->comment_author_email ) . '</span>' . $this->row_actions( $this->filter_row_actions( $actions, $item ) );
 		}
 
 		if ( '1' !== $status ) {
@@ -278,7 +400,38 @@ class ListTable extends \WP_List_Table {
 		$actions['spam']  = $this->action_link( 'spam', $id, __( 'Spam', 'rosette-reviews' ) );
 		$actions['trash'] = $this->action_link( 'trash', $id, __( 'Trash', 'rosette-reviews' ) );
 
-		return '<strong>' . esc_html( $name ) . '</strong><br><span class="ndvr-email">' . esc_html( $item->comment_author_email ) . '</span>' . $this->row_actions( $actions );
+		return '<strong>' . esc_html( $name ) . '</strong><br><span class="ndvr-email">' . esc_html( $item->comment_author_email ) . '</span>' . $this->row_actions( $this->filter_row_actions( $actions, $item ) );
+	}
+
+	/**
+	 * Let features add row actions (RR-00 F4). Build the link URL with
+	 * Page::row_action_url(); the handler runs on
+	 * `ndv-reviews/moderation_handle_action` after the nonce and capability
+	 * checks. Added values are link HTML, passed through wp_kses_post().
+	 *
+	 * @param array<string,string> $actions Row actions.
+	 * @param \WP_Comment          $item    Comment.
+	 * @return array<string,string>
+	 */
+	private function filter_row_actions( array $actions, $item ) {
+		/**
+		 * Filter the row actions on the All Reviews screen.
+		 *
+		 * @param array<string,string> $actions Action key => link HTML.
+		 * @param \WP_Comment          $item    The review.
+		 */
+		$filtered = apply_filters( 'ndv-reviews/moderation_row_actions', $actions, $item );
+		if ( ! is_array( $filtered ) ) {
+			return $actions;
+		}
+
+		foreach ( $filtered as $key => $html ) {
+			if ( ! isset( $actions[ $key ] ) || $actions[ $key ] !== $html ) {
+				$filtered[ $key ] = wp_kses_post( (string) $html );
+			}
+		}
+
+		return $filtered;
 	}
 
 	/**
@@ -359,7 +512,14 @@ class ListTable extends \WP_List_Table {
 	 * @return string
 	 */
 	public function column_default( $item, $column ) {
-		return '';
+		/**
+		 * Filter the HTML of a column added through
+		 * `ndv-reviews/moderation_columns` (RR-00 F4). Passed through wp_kses_post().
+		 *
+		 * @param string      $html Column HTML.
+		 * @param \WP_Comment $item The review.
+		 */
+		return wp_kses_post( (string) apply_filters( 'ndv-reviews/moderation_column_' . sanitize_key( (string) $column ), '', $item ) );
 	}
 
 	/**

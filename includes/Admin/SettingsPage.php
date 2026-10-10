@@ -84,10 +84,14 @@ class SettingsPage implements Registerable {
 	 * @return void
 	 */
 	public function handle_save() {
-		if ( ! isset( $_POST['ndvr_settings_save'] ) || ! current_user_can( Caps::manage() ) ) {
+		if ( ! isset( $_POST['ndvr_settings_save'] ) ) {
 			return;
 		}
+		// Nonce first, then capability, then work (PRD-00 §2.2).
 		check_admin_referer( self::NONCE );
+		if ( ! current_user_can( Caps::manage() ) ) {
+			wp_die( esc_html__( 'You do not have permission to change these settings.', 'rosette-reviews' ), 403 );
+		}
 
 		// Only the public post types the screen offers may be stored.
 		$cpts = isset( $_POST['reviewable_post_types'] ) ? array_map( 'sanitize_key', (array) wp_unslash( $_POST['reviewable_post_types'] ) ) : array();
@@ -98,20 +102,32 @@ class SettingsPage implements Registerable {
 			$schema_mode = 'auto';
 		}
 
-		$this->settings->update(
-			array(
-				'enable_reviews'        => ! empty( $_POST['enable_reviews'] ),
-				'reviewable_post_types' => $cpts,
-				'allow_guest_reviews'   => ! empty( $_POST['allow_guest_reviews'] ),
-				'photo_uploads'         => ! empty( $_POST['photo_uploads'] ),
-				'max_photos'            => isset( $_POST['max_photos'] ) ? min( self::MAX_PHOTOS, absint( $_POST['max_photos'] ) ) : 5,
-				'recaptcha_enabled'     => ! empty( $_POST['recaptcha_enabled'] ),
-				'recaptcha_site_key'    => isset( $_POST['recaptcha_site_key'] ) ? sanitize_text_field( wp_unslash( $_POST['recaptcha_site_key'] ) ) : '',
-				'recaptcha_secret'      => isset( $_POST['recaptcha_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['recaptcha_secret'] ) ) : '',
-				'schema_mode'           => $schema_mode,
-				'remove_data_on_uninstall' => ! empty( $_POST['remove_data_on_uninstall'] ),
-			)
+		$values = array(
+			'enable_reviews'           => ! empty( $_POST['enable_reviews'] ),
+			'reviewable_post_types'    => $cpts,
+			'allow_guest_reviews'      => ! empty( $_POST['allow_guest_reviews'] ),
+			'photo_uploads'            => ! empty( $_POST['photo_uploads'] ),
+			'max_photos'               => isset( $_POST['max_photos'] ) ? min( self::MAX_PHOTOS, absint( $_POST['max_photos'] ) ) : 5,
+			'recaptcha_enabled'        => ! empty( $_POST['recaptcha_enabled'] ),
+			'recaptcha_site_key'       => isset( $_POST['recaptcha_site_key'] ) ? sanitize_text_field( wp_unslash( $_POST['recaptcha_site_key'] ) ) : '',
+			'schema_mode'              => $schema_mode,
+			'remove_data_on_uninstall' => ! empty( $_POST['remove_data_on_uninstall'] ),
 		);
+
+		// The secret is never printed back, so an empty field keeps the saved
+		// one; the "Remove" box clears it.
+		$secret = isset( $_POST['recaptcha_secret'] ) ? sanitize_text_field( wp_unslash( $_POST['recaptcha_secret'] ) ) : '';
+		if ( ! empty( $_POST['recaptcha_secret_remove'] ) ) {
+			$values['recaptcha_secret'] = '';
+		} elseif ( '' !== $secret ) {
+			$values['recaptcha_secret'] = $secret;
+		}
+
+		// Keys features registered for this page (RR-00 F6); other pages' keys
+		// are left as stored.
+		$values = array_merge( SettingsFields::sanitize_page( 'settings', $_POST ), $values );
+
+		$this->settings->update( $values );
 
 		$this->notice = __( 'Settings saved.', 'rosette-reviews' );
 	}
@@ -218,12 +234,21 @@ class SettingsPage implements Registerable {
 								<input type="text" name="recaptcha_site_key" value="<?php echo esc_attr( $s->get( 'recaptcha_site_key' ) ); ?>" placeholder="6Lcxxx..." />
 							</div>
 							<div class="ndvr-field">
-								<label><?php esc_html_e( 'Secret key', 'rosette-reviews' ); ?></label>
-								<input type="text" name="recaptcha_secret" value="<?php echo esc_attr( $s->get( 'recaptcha_secret' ) ); ?>" placeholder="6Lcxxx..." />
+								<?php SettingsFields::render_secret_input( 'recaptcha_secret', __( 'Secret key', 'rosette-reviews' ), '' !== (string) $s->get( 'recaptcha_secret' ) ); ?>
 							</div>
 						</div>
 					</div>
 				</div>
+
+				<?php
+				// ── Card: Reviews and trust (RR-00 F6) ── shown once a feature registers a field.
+				if ( SettingsFields::card_fields( 'settings', 'trust' ) ) :
+					?>
+					<div class="ndvr-card">
+						<div class="ndvr-card-header"><h2><?php esc_html_e( 'Reviews and trust', 'rosette-reviews' ); ?></h2></div>
+						<?php SettingsFields::render_card_fields( 'settings', 'trust', $s->all() ); ?>
+					</div>
+				<?php endif; ?>
 
 				<?php // ── Card: SEO & Advanced ── ?>
 				<div class="ndvr-card">

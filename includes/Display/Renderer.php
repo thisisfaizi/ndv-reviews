@@ -257,7 +257,7 @@ class Renderer implements Registerable {
 
 		if ( ! empty( $summary['count'] ) ) {
 			$this->render_topic_pills( $product_id );
-			$this->render_filter_bar();
+			$this->render_filter_bar( $product_id );
 
 			$result = $this->query->paginate(
 				array(
@@ -309,9 +309,10 @@ class Renderer implements Registerable {
 	/**
 	 * Render the filter and sort controls.
 	 *
+	 * @param int $product_id Product id.
 	 * @return void
 	 */
-	private function render_filter_bar() {
+	private function render_filter_bar( $product_id ) {
 		?>
 		<div class="ndvr-filter-bar" role="region" aria-label="<?php esc_attr_e( 'Filter reviews', 'rosette-reviews' ); ?>">
 			<div class="ndvr-filter-stars" role="group" aria-label="<?php esc_attr_e( 'Filter by star rating', 'rosette-reviews' ); ?>">
@@ -332,6 +333,14 @@ class Renderer implements Registerable {
 					<option value="lowest"><?php esc_html_e( 'Lowest rated', 'rosette-reviews' ); ?></option>
 				</select>
 			</label>
+			<?php
+			/**
+			 * Fires at the end of the filter bar (for example a review search field).
+			 *
+			 * @param int $product_id Product id.
+			 */
+			do_action( 'ndv-reviews/filter_bar_end', (int) $product_id );
+			?>
 		</div>
 		<?php
 	}

@@ -125,6 +125,13 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 
 == Changelog ==
 
+= Unreleased =
+* Database updates now run on any request, not only in the admin, under a lock, so scheduled emails never meet an old database. A failed update retries after an hour and shows a notice.
+* Reactivating after uploading a new version now runs pending database updates.
+* Uninstall (when you opt in to data removal) now removes every option, setting, meta key and scheduled job the plugin stores.
+* The reCAPTCHA secret key is no longer shown in the settings page; leave the field empty to keep it.
+* Developers: new template, moderation-screen and settings hooks for add-ons.
+
 = 1.0.0 =
 * Initial public release.
 

@@ -15,7 +15,11 @@
 	<arg value="sp"/>
 
 	<!-- WordPress standards. -->
-	<rule ref="WordPress"/>
+	<rule ref="WordPress">
+		<!-- PSR-4 class files (Support/Autoloader.php), not class-*.php. -->
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+	</rule>
 	<rule ref="WordPress-Extra"/>
 
 	<config name="minimum_wp_version" value="6.0"/>
@@ -38,6 +42,8 @@
 				<element value="ndvr"/>
 				<element value="NDVR"/>
 				<element value="NdvReviews"/>
+				<!-- Frozen hook prefix: ndv-reviews/{name} (AGENTS.md, CONTRACTS.md). -->
+				<element value="ndv-reviews"/>
 			</property>
 		</properties>
 	</rule>

@@ -147,6 +147,9 @@ class RequestsPage implements Registerable {
 		$do = sanitize_key( wp_unslash( $_POST['ndvr_requests_do'] ) );
 
 		if ( 'save' === $do ) {
+			// Keys features registered for the Reminders page (RR-00 F6) are
+			// saved with this form; other pages' keys are left as stored.
+			$registered = SettingsFields::sanitize_page( 'reminders', $_POST );
 			$this->settings->update(
 				array(
 					'reminder_enabled'    => ! empty( $_POST['reminder_enabled'] ),
@@ -157,7 +160,7 @@ class RequestsPage implements Registerable {
 					'from_name'           => isset( $_POST['from_name'] ) ? sanitize_text_field( wp_unslash( $_POST['from_name'] ) ) : '',
 					'from_email'          => isset( $_POST['from_email'] ) ? sanitize_email( wp_unslash( $_POST['from_email'] ) ) : '',
 					'token_expiry_days'   => isset( $_POST['token_expiry_days'] ) ? absint( $_POST['token_expiry_days'] ) : 60,
-				)
+				) + $registered
 			);
 			$this->notices[] = array(
 				'type'    => 'success',

@@ -26,6 +26,35 @@ class Page implements Registerable {
 	const PAGE_SLUG   = 'ndv-reviews-moderation';
 
 	/**
+	 * Status actions the page handles itself. Any other action key reaches
+	 * features through `ndv-reviews/moderation_handle_action` (RR-00 F4).
+	 */
+	const BUILTIN_ACTIONS = array( 'approve', 'unapprove', 'spam', 'trash', 'unspam', 'untrash', 'delete', 'edit' );
+
+	/**
+	 * Nonce-protected URL for a custom row action (RR-00 F4). Add it with
+	 * `ndv-reviews/moderation_row_actions`; handle it on
+	 * `ndv-reviews/moderation_handle_action`.
+	 *
+	 * @param string $action Action key (not a built-in one).
+	 * @param int    $id     Review comment id.
+	 * @return string Unescaped URL; escape at output.
+	 */
+	public static function row_action_url( $action, $id ) {
+		return wp_nonce_url(
+			add_query_arg(
+				array(
+					'page'        => self::PAGE_SLUG,
+					'ndvr_action' => sanitize_key( (string) $action ),
+					'review'      => absint( $id ),
+				),
+				admin_url( 'admin.php' )
+			),
+			'ndvr_review_action'
+		);
+	}
+
+	/**
 	 * Criteria repository.
 	 *
 	 * @var CriteriaRepository
@@ -130,9 +159,13 @@ class Page implements Registerable {
 		if ( $bulk ) {
 			check_admin_referer( 'bulk-ndvr_reviews' );
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$ids = isset( $_REQUEST['review'] ) ? array_map( 'absint', (array) wp_unslash( $_REQUEST['review'] ) ) : array();
-			foreach ( $ids as $id ) {
-				$this->apply_status( $id, $bulk );
+			$ids = isset( $_REQUEST['review'] ) ? array_values( array_filter( array_map( 'absint', (array) wp_unslash( $_REQUEST['review'] ) ) ) ) : array();
+			if ( in_array( $bulk, self::BUILTIN_ACTIONS, true ) ) {
+				foreach ( $ids as $id ) {
+					$this->apply_status( $id, $bulk );
+				}
+			} elseif ( $ids ) {
+				$this->dispatch_custom( $bulk, $ids );
 			}
 			$this->redirect_clean( $this->preserved_filters() );
 		}
@@ -145,9 +178,35 @@ class Page implements Registerable {
 				return; // Rendered by render().
 			}
 			check_admin_referer( 'ndvr_review_action' );
-			$this->apply_status( absint( wp_unslash( $_GET['review'] ) ), $action );
+			$id = absint( wp_unslash( $_GET['review'] ) );
+			if ( in_array( $action, self::BUILTIN_ACTIONS, true ) ) {
+				$this->apply_status( $id, $action );
+			} elseif ( '' !== $action && $id ) {
+				$this->dispatch_custom( $action, array( $id ) );
+			}
 			$this->redirect_clean( $this->preserved_filters() );
 		}
+	}
+
+	/**
+	 * Hand a custom row or bulk action to features. The caller has already
+	 * checked the nonce and `moderate_comments`.
+	 *
+	 * @param string $action Sanitized action key (not a built-in one).
+	 * @param int[]  $ids    Review comment ids (absint, non-zero).
+	 * @return void
+	 */
+	private function dispatch_custom( $action, array $ids ) {
+		/**
+		 * Fires for a custom All Reviews row or bulk action (RR-00 F4), after the
+		 * nonce and the `moderate_comments` capability were checked. Listeners
+		 * act only on their own action keys and must re-check any precondition.
+		 * The page redirects back to the list afterwards.
+		 *
+		 * @param string $action Action key.
+		 * @param int[]  $ids    Review comment ids.
+		 */
+		do_action( 'ndv-reviews/moderation_handle_action', $action, $ids );
 	}
 
 	/**
@@ -163,7 +222,21 @@ class Page implements Registerable {
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		return in_array( $action, array( 'approve', 'unapprove', 'spam', 'trash', 'unspam', 'untrash', 'delete' ), true ) ? $action : '';
+		if ( in_array( $action, array( 'approve', 'unapprove', 'spam', 'trash', 'unspam', 'untrash', 'delete' ), true ) ) {
+			return $action;
+		}
+
+		// A feature's bulk action (RR-00 F4), resolved for the view the form was
+		// submitted from as well as every built-in view, so whatever the
+		// dropdown offered is recognised here.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the nonce is checked by the caller once an action is resolved.
+		$submitted = isset( $_REQUEST['status'] ) ? sanitize_key( wp_unslash( $_REQUEST['status'] ) ) : 'all';
+		$extra     = array();
+		foreach ( array_unique( array_merge( ListTable::BUILTIN_VIEWS, array( $submitted ) ) ) as $view ) {
+			$extra += ListTable::extra_bulk_actions( $view );
+		}
+
+		return isset( $extra[ $action ] ) ? $action : '';
 	}
 
 	/**

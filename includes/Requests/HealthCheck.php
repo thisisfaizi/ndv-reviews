@@ -52,7 +52,36 @@ class HealthCheck implements Registerable {
 	 */
 	public function register() {
 		add_action( 'admin_notices', array( $this, 'maybe_warn' ) );
+		add_action( 'admin_notices', array( $this, 'maybe_warn_upgrade' ) );
 		add_action( 'admin_init', array( $this, 'maybe_dismiss' ) );
+	}
+
+	/**
+	 * Show the last database-update failure (RR-00 F3) on our screens and the
+	 * Plugins list. Not dismissible: it clears itself once an update succeeds.
+	 *
+	 * @return void
+	 */
+	public function maybe_warn_upgrade() {
+		if ( ! current_user_can( Caps::manage() ) || ! $this->on_relevant_screen() ) {
+			return;
+		}
+
+		$error = get_option( \NdvReviews\Installer::ERROR_OPTION, '' );
+		if ( ! is_string( $error ) || '' === $error ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-error"><p>%s</p></div>',
+			esc_html(
+				sprintf(
+					/* translators: %s: the database error message. */
+					__( 'Rosette Reviews couldn\'t finish a database update: %s. It will retry within an hour.', 'rosette-reviews' ),
+					rtrim( $error, '. ' )
+				)
+			)
+		);
 	}
 
 	/**

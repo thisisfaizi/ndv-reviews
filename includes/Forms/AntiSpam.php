@@ -53,7 +53,7 @@ class AntiSpam {
 	 */
 	public function check( array $input, $authenticated = false ) {
 		// 1. Honeypot — bots fill hidden fields.
-		if ( ! empty( $input[ self::HONEYPOT ] ) ) {
+		if ( ! $this->honeypot_ok( $input ) ) {
 			return new \WP_Error( 'ndvr_spam_honeypot', __( 'Your submission could not be processed.', 'rosette-reviews' ) );
 		}
 
@@ -104,38 +104,87 @@ class AntiSpam {
 		 */
 		$max = (int) apply_filters( 'ndv-reviews/rate_limit_per_hour', 5 );
 
-		if ( $max <= 0 ) {
+		return $this->rate_limit( 'submit', $max );
+	}
+
+	/**
+	 * Whether the honeypot field was left empty (a person, not a bot).
+	 *
+	 * @param array<string,mixed> $input Raw (already-unslashed) request data.
+	 * @return bool
+	 */
+	public function honeypot_ok( array $input ) {
+		return empty( $input[ self::HONEYPOT ] );
+	}
+
+	/**
+	 * Count one attempt in a per-IP hourly bucket and refuse once it is full
+	 * (RR-00 F7).
+	 *
+	 * Every attempt counts, pass or fail, so a stream of invalid requests can't
+	 * bypass the limit. Buckets are independent: `report` never touches
+	 * `submit`. Keys are `ndvr_rl_{bucket}_{hash}`; the `submit` bucket keeps
+	 * its original `ndvr_rl_{iphash}` key so existing counters carry over.
+	 *
+	 * @param string $bucket       Bucket slug (submit, report, edit, list, ...).
+	 * @param int    $max_per_hour Attempts allowed per hour; 0 or less disables.
+	 * @param string $subject      Optional key that replaces the visitor IP (for
+	 *                             example "user:42" for a per-user limit).
+	 * @return true|\WP_Error
+	 */
+	public function rate_limit( $bucket, $max_per_hour, $subject = '' ) {
+		$bucket       = sanitize_key( (string) $bucket );
+		$max_per_hour = (int) $max_per_hour;
+		if ( '' === $bucket || $max_per_hour <= 0 ) {
 			return true;
 		}
 
-		$key   = $this->rate_key();
+		$key   = $this->rate_key( $bucket, (string) $subject );
 		$count = (int) get_transient( $key );
-		if ( $count >= $max ) {
-			return new \WP_Error( 'ndvr_spam_rate', __( 'You are submitting reviews too quickly. Please try again later.', 'rosette-reviews' ) );
+		if ( $count >= $max_per_hour ) {
+			$message = 'submit' === $bucket
+				? __( 'You are submitting reviews too quickly. Please try again later.', 'rosette-reviews' )
+				: __( 'You are doing that too often. Please try again later.', 'rosette-reviews' );
+			return new \WP_Error( 'ndvr_spam_rate', $message );
 		}
 
-		// Count this attempt now — before body validation can fail — so failures
-		// are throttled the same as successes.
+		// Count this attempt now, before the caller's own validation can fail,
+		// so failures are throttled the same as successes.
 		set_transient( $key, $count + 1, HOUR_IN_SECONDS );
 
 		return true;
 	}
 
 	/**
-	 * Transient key for the current visitor's hashed IP.
+	 * Transient key for a bucket and the current visitor.
 	 *
+	 * @param string $bucket  Sanitized bucket slug.
+	 * @param string $subject Optional extra key part.
 	 * @return string
 	 */
-	private function rate_key() {
-		return 'ndvr_rl_' . $this->ip_hash();
+	private function rate_key( $bucket, $subject = '' ) {
+		if ( '' === $subject ) {
+			$hash = $this->ip_hash();
+			if ( 'submit' === $bucket ) {
+				return 'ndvr_rl_' . $hash;
+			}
+		} else {
+			// A subject (for example "user:42") replaces the IP, so a per-user
+			// limit holds when the user changes network.
+			$hash = wp_hash( 'subject|' . $subject );
+		}
+
+		// Transient names are capped at 172 characters; keep the slug short.
+		return 'ndvr_rl_' . substr( $bucket, 0, 20 ) . '_' . $hash;
 	}
 
 	/**
-	 * A salted hash of the visitor IP (we never store raw IPs — IP is PII).
+	 * A salted hash of the visitor IP (we never store raw IPs: an IP is
+	 * personal data). Public so features can key their own records by it.
 	 *
 	 * @return string
 	 */
-	private function ip_hash() {
+	public function ip_hash() {
 		$ip = '';
 		if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
 			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );

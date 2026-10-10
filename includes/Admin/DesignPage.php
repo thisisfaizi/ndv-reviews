@@ -127,7 +127,10 @@ class DesignPage implements Registerable {
 			}
 		}
 
-		$this->settings->update( $values );
+		// Keys features registered for the Design page (RR-00 F6): saved with
+		// the form, or back to their defaults on reset. Built-in keys win.
+		$registered = $save ? SettingsFields::sanitize_page( 'design', $_POST ) : SettingsFields::page_defaults( 'design' );
+		$this->settings->update( $values + $registered );
 
 		wp_safe_redirect(
 			add_query_arg(

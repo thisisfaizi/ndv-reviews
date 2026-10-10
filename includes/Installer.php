@@ -1,36 +1,353 @@
 <?php
 /**
- * Database installer (dbDelta schema + version tracking).
+ * Database installer (dbDelta schema, version tracking, upgrade steps).
+ *
+ * Loaded by uninstall.php without the rest of the plugin, so it must stay
+ * dependency-free at load time: other classes are only used inside methods.
  *
  * @package NdvReviews
  */
 
 namespace NdvReviews;
 
+use NdvReviews\Reviews\CriteriaRepository;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Creates and upgrades the plugin's custom tables.
+ * Creates and upgrades the plugin's custom tables (RR-00 F3).
  *
- * dbDelta is picky: two spaces after PRIMARY KEY, one column per line,
+ * The dbDelta() parser is picky: two spaces after PRIMARY KEY, one column per line,
  * lowercase types, named KEYs. Keep this formatting intact.
+ *
+ * Versions are integers numbered strictly upward at merge time. Each
+ * schema-changing feature adds a V_* constant; code checks is_current() with
+ * the constant, never a bare number.
  */
 class Installer {
 
 	/**
-	 * Run install/upgrade if the stored DB version is behind code.
+	 * RR-00 shared foundations: no schema, one step (captcha provider).
+	 */
+	const V_FOUNDATIONS = 3;
+
+	/**
+	 * Lock option (written by raw SQL only, never through add_option()).
+	 */
+	const LOCK_OPTION = 'ndv_reviews_upgrade_lock';
+
+	/**
+	 * Seconds after which a held lock counts as stale.
+	 */
+	const LOCK_TTL = 600;
+
+	/**
+	 * Last upgrade failure message (not autoloaded).
+	 */
+	const ERROR_OPTION = 'ndv_reviews_upgrade_error';
+
+	/**
+	 * Transient set for an hour after a failed upgrade.
+	 */
+	const BACKOFF_TRANSIENT = 'ndvr_upgrade_backoff';
+
+	/**
+	 * Whether the stored schema version has reached a feature's version.
 	 *
+	 * Front-end reads of a new table or column call this and treat the feature
+	 * as off until the upgrade has run.
+	 *
+	 * @param int $version An Installer::V_* constant.
+	 * @return bool
+	 */
+	public static function is_current( $version ) {
+		return (int) get_option( NDVR_OPTION_DB_VERSION, 0 ) >= (int) $version;
+	}
+
+	/**
+	 * Upgrade steps by version. Each returns true|\WP_Error, must be
+	 * idempotent, and migrates existing data only (a fresh install skips them).
+	 *
+	 * @return array<int,callable>
+	 */
+	public static function steps() {
+		$steps = array(
+			self::V_FOUNDATIONS => array( __CLASS__, 'step_foundations' ),
+		);
+
+		// Test seam only: the QA harness injects failing or extra steps. Never
+		// available on a normal site, so add-ons can't stamp free's version.
+		if ( defined( 'NDVR_QA' ) && NDVR_QA ) {
+			$steps = (array) apply_filters( 'ndv-reviews/qa_upgrade_steps', $steps );
+		}
+
+		return $steps;
+	}
+
+	/**
+	 * Run install/upgrade if the stored DB version is behind the code.
+	 *
+	 * Hooked on `init` (priority 5) and `admin_init`. The per-request cost is
+	 * one autoloaded option read and an integer compare.
+	 *
+	 * @param bool $from_activation Whether called by the activation hook: it
+	 *                              ignores the failure backoff and repairs
+	 *                              missing tables when the version is current.
 	 * @return void
 	 */
-	public static function maybe_upgrade() {
-		$installed = get_option( NDVR_OPTION_DB_VERSION );
+	public static function maybe_upgrade( $from_activation = false ) {
+		$from_activation = ( true === $from_activation );
+		$code            = (int) NDVR_DB_VERSION;
+		$stored          = get_option( NDVR_OPTION_DB_VERSION, false );
 
-		if ( (string) $installed === (string) NDVR_DB_VERSION ) {
+		if ( false !== $stored && '' !== $stored ) {
+			$stored = (int) $stored;
+			// A downgrade (stored above code) never runs an older schema and never
+			// lowers the stored version. Equal: nothing to do, except that an
+			// activation re-runs dbDelta to repair missing tables.
+			if ( $stored > $code || ( $stored === $code && ! $from_activation ) ) {
+				return;
+			}
+		}
+
+		if ( ! $from_activation && false !== get_transient( self::BACKOFF_TRANSIENT ) ) {
 			return;
 		}
 
+		$token = self::acquire_lock();
+		if ( false === $token ) {
+			return;
+		}
+
+		try {
+			$result = self::run_locked( $code, $from_activation );
+		} catch ( \Throwable $e ) {
+			$result = new \WP_Error( 'ndvr_upgrade_exception', $e->getMessage() );
+		} finally {
+			self::release_lock( $token );
+		}
+
+		if ( is_wp_error( $result ) ) {
+			update_option( self::ERROR_OPTION, $result->get_error_message(), false );
+			set_transient( self::BACKOFF_TRANSIENT, 1, HOUR_IN_SECONDS );
+			return;
+		}
+
+		delete_option( self::ERROR_OPTION );
+		delete_transient( self::BACKOFF_TRANSIENT );
+	}
+
+	/**
+	 * The upgrade itself, run while holding the lock.
+	 *
+	 * The stored version is re-read from the database: the autoloaded copy in
+	 * this request may predate a run another request just finished.
+	 *
+	 * @param int  $code   Code schema version.
+	 * @param bool $repair Whether an activation asked to re-run dbDelta on a
+	 *                     current version (to recreate missing tables).
+	 * @return true|\WP_Error
+	 */
+	private static function run_locked( $code, $repair ) {
+		$stored = self::stored_version_uncached();
+		$fresh  = ( null === $stored );
+
+		// Another request finished the upgrade while this one waited, or the
+		// stored version is newer (a downgrade): nothing to do.
+		if ( ! $fresh && ( $stored > $code || ( $stored === $code && ! $repair ) ) ) {
+			return true;
+		}
+
 		self::install();
-		update_option( NDVR_OPTION_DB_VERSION, NDVR_DB_VERSION );
+
+		$missing = self::missing_tables();
+		if ( $missing ) {
+			return new \WP_Error(
+				'ndvr_upgrade_tables',
+				/* translators: %s: comma-separated database table names. */
+				sprintf( __( 'These tables could not be created: %s', 'rosette-reviews' ), implode( ', ', $missing ) )
+			);
+		}
+
+		if ( $fresh ) {
+			( new CriteriaRepository() )->seed_defaults();
+			self::set_version( $code );
+			return true;
+		}
+
+		$steps = self::steps();
+		ksort( $steps, SORT_NUMERIC );
+		foreach ( $steps as $version => $step ) {
+			$version = (int) $version;
+			if ( $version <= $stored || $version > $code ) {
+				continue;
+			}
+
+			try {
+				$done = call_user_func( $step );
+			} catch ( \Throwable $e ) {
+				$done = new \WP_Error( 'ndvr_upgrade_step', $e->getMessage() );
+			}
+
+			if ( is_wp_error( $done ) ) {
+				return $done;
+			}
+			if ( true !== $done ) {
+				/* translators: %d: database version number. */
+				return new \WP_Error( 'ndvr_upgrade_step', sprintf( __( 'Update step %d did not finish.', 'rosette-reviews' ), $version ) );
+			}
+
+			// A finished step never reruns, even if a later one fails.
+			self::set_version( $version );
+		}
+
+		if ( $stored < $code ) {
+			self::set_version( $code );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Step 3 (RR-00, for RR-13): carry an enabled reCAPTCHA over to the
+	 * captcha provider setting. Reads the raw option so defaults don't mask a
+	 * missing key.
+	 *
+	 * @return true
+	 */
+	public static function step_foundations() {
+		$raw = get_option( NDVR_OPTION_SETTINGS, false );
+
+		if ( is_array( $raw ) && ! array_key_exists( 'captcha_provider', $raw ) && ! empty( $raw['recaptcha_enabled'] ) ) {
+			$raw['captcha_provider'] = 'recaptcha';
+			update_option( NDVR_OPTION_SETTINGS, $raw );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Take the upgrade lock. `add_option()` isn't atomic (it reads, then
+	 * upserts), so this uses INSERT IGNORE the way core's
+	 * WP_Upgrader::create_lock() does.
+	 *
+	 * @return string|false The owner token, or false when another run holds it.
+	 */
+	public static function acquire_lock() {
+		global $wpdb;
+
+		$token = time() . '|' . wp_generate_password( 12, false );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$inserted = $wpdb->query(
+			$wpdb->prepare(
+				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+				self::LOCK_OPTION,
+				$token
+			)
+		);
+		self::flush_lock_cache();
+
+		if ( 1 === (int) $inserted ) {
+			return $token;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$current = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::LOCK_OPTION ) );
+		if ( null === $current ) {
+			return false; // Released in between; a later request retries.
+		}
+
+		$since = (int) strtok( (string) $current, '|' );
+		if ( $since > time() - self::LOCK_TTL ) {
+			return false;
+		}
+
+		// Stale: take it over only if nobody else did first.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s",
+				$token,
+				self::LOCK_OPTION,
+				$current
+			)
+		);
+		self::flush_lock_cache();
+
+		return 1 === (int) $updated ? $token : false;
+	}
+
+	/**
+	 * Release the lock, only if this token still owns it.
+	 *
+	 * @param string $token Owner token from acquire_lock().
+	 * @return void
+	 */
+	public static function release_lock( $token ) {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value = %s", self::LOCK_OPTION, (string) $token ) );
+		self::flush_lock_cache();
+	}
+
+	/**
+	 * Keep the options cache from serving a stale lock state.
+	 *
+	 * @return void
+	 */
+	private static function flush_lock_cache() {
+		wp_cache_delete( self::LOCK_OPTION, 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+	}
+
+	/**
+	 * The stored version read straight from the database.
+	 *
+	 * @return int|null Null when absent (a fresh install).
+	 */
+	private static function stored_version_uncached() {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$value = $wpdb->get_var( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", NDVR_OPTION_DB_VERSION ) );
+
+		return ( null === $value || '' === $value ) ? null : (int) $value;
+	}
+
+	/**
+	 * Store the schema version (autoloaded: it's read on every request).
+	 *
+	 * @param int $version Version.
+	 * @return void
+	 */
+	private static function set_version( $version ) {
+		update_option( NDVR_OPTION_DB_VERSION, (string) (int) $version, true );
+	}
+
+	/**
+	 * Tables from table_names() that don't exist.
+	 *
+	 * @return string[]
+	 */
+	private static function missing_tables() {
+		global $wpdb;
+
+		// Probe each table directly rather than with SHOW TABLES LIKE, whose
+		// escaped-underscore and case rules differ between MySQL setups and the
+		// SQLite driver. A false negative here would hold every site in backoff.
+		$missing    = array();
+		$suppressed = $wpdb->suppress_errors( true );
+		foreach ( self::table_names() as $table ) {
+			// Table name is $wpdb->prefix + a hardcoded list; not user input.
+			if ( false === $wpdb->query( "SELECT 1 FROM `{$table}` LIMIT 0" ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$missing[] = $table;
+			}
+		}
+		$wpdb->suppress_errors( $suppressed );
+
+		return $missing;
 	}
 
 	/**

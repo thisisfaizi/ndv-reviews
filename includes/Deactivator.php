@@ -21,12 +21,15 @@ class Deactivator {
 	 * @return void
 	 */
 	public static function deactivate() {
-		// Cancel pending review-reminder jobs. These run on Action Scheduler (not
-		// wp-cron) — see Requests\Scheduler::SEND_HOOK, group 'ndv-reviews'. Pass the
-		// hook alone: with a group, Action Scheduler matches the (empty) args
-		// exactly and cancels nothing, since every job carries a request_id.
+		// Cancel pending jobs for every Action Scheduler hook the plugin owns
+		// (group 'ndv-reviews'). Pass the hook alone: with a group, Action
+		// Scheduler matches the (empty) args exactly and cancels nothing. Jobs
+		// left queued would fail anyway once their callback is gone; whatever
+		// they were for is re-queued after reactivation.
 		if ( function_exists( 'as_unschedule_all_actions' ) ) {
-			as_unschedule_all_actions( Requests\Scheduler::SEND_HOOK );
+			foreach ( Uninstall::registry()['scheduler_hooks'] as $hook ) {
+				as_unschedule_all_actions( $hook );
+			}
 		}
 
 		flush_rewrite_rules();

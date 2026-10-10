@@ -4,6 +4,15 @@
  *
  * Override: copy to yourtheme/ndv-reviews/review-item.php
  *
+ * Overrides should keep these hooks so features keep working (RR-00 F5):
+ * - action ndv-reviews/review_author_badges (disclosure pills render here)
+ * - action ndv-reviews/review_meta_after
+ * - filter ndv-reviews/review_title_html
+ * - filter ndv-reviews/review_body_html
+ * - action ndv-reviews/review_body_after
+ * - action ndv-reviews/review_foot_end
+ * - action ndv-reviews/review_item_after
+ *
  * @var array<string,mixed> $review     Review view-model from ReviewQuery.
  * @var string              $vote_nonce Nonce for the helpful-vote action.
  *
@@ -69,15 +78,52 @@ if ( empty( $review ) ) {
 					?>
 					<time class="ndvr-review-date" datetime="<?php echo esc_attr( mysql2date( 'c', $review['date'], false ) ); ?>"><?php echo esc_html( mysql2date( get_option( 'date_format' ), $review['date'] ) ); ?></time>
 				<?php endif; ?>
+				<?php
+				/**
+				 * Fires at the end of the meta line, after the date (for example "Edited").
+				 *
+				 * @param array<string,mixed> $review Review view-model.
+				 */
+				do_action( 'ndv-reviews/review_meta_after', $review );
+				?>
 			</div>
 		</div>
 	</div>
 
-	<?php if ( ! empty( $review['title'] ) ) : ?>
-		<h4 class="ndvr-review-title"><?php echo esc_html( $review['title'] ); ?></h4>
+	<?php
+	if ( ! empty( $review['title'] ) ) :
+		/**
+		 * Filter the escaped review title HTML (for example search highlighting).
+		 * The result is passed through wp_kses_post().
+		 *
+		 * @param string              $html   Escaped title.
+		 * @param array<string,mixed> $review Review view-model.
+		 */
+		$ndvr_title_html = (string) apply_filters( 'ndv-reviews/review_title_html', esc_html( $review['title'] ), $review );
+		?>
+		<h4 class="ndvr-review-title"><?php echo wp_kses_post( $ndvr_title_html ); ?></h4>
 	<?php endif; ?>
 
-	<div class="ndvr-review-body"><?php echo wp_kses_post( wpautop( $review['content'] ) ); ?></div>
+	<?php
+	/**
+	 * Filter the sanitized review body HTML (for example search highlighting).
+	 * The result is passed through wp_kses_post().
+	 *
+	 * @param string              $html   Body HTML.
+	 * @param array<string,mixed> $review Review view-model.
+	 */
+	$ndvr_body_html = (string) apply_filters( 'ndv-reviews/review_body_html', wp_kses_post( wpautop( $review['content'] ) ), $review );
+	?>
+	<div class="ndvr-review-body"><?php echo wp_kses_post( $ndvr_body_html ); ?></div>
+
+	<?php
+	/**
+	 * Fires after the review body, before the criteria list.
+	 *
+	 * @param array<string,mixed> $review Review view-model.
+	 */
+	do_action( 'ndv-reviews/review_body_after', $review );
+	?>
 
 	<?php
 	/**
@@ -141,6 +187,14 @@ if ( empty( $review ) ) {
 				<span class="ndvr-helpful-count">(<?php echo esc_html( number_format_i18n( $review['helpful_up'] ) ); ?>)</span>
 			</button>
 		<?php endif; ?>
+		<?php
+		/**
+		 * Fires at the end of the review footer (for example a "Report" link).
+		 *
+		 * @param array<string,mixed> $review Review view-model.
+		 */
+		do_action( 'ndv-reviews/review_foot_end', $review );
+		?>
 	</div>
 
 	<?php

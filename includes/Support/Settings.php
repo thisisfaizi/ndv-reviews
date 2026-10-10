@@ -86,8 +86,17 @@ class Settings {
 	 */
 	public function get( $key, $default = null ) {
 		$all = $this->all();
+		if ( array_key_exists( $key, $all ) ) {
+			return $all[ $key ];
+		}
+		if ( null !== $default ) {
+			return $default;
+		}
 
-		return array_key_exists( $key, $all ) ? $all[ $key ] : $default;
+		// A key a feature registered (RR-00 F6) but nobody has saved yet.
+		$registered = \NdvReviews\Admin\SettingsFields::defaults();
+
+		return array_key_exists( $key, $registered ) ? $registered[ $key ] : null;
 	}
 
 	/**
@@ -97,7 +106,11 @@ class Settings {
 	 * @return void
 	 */
 	public function update( array $values ) {
-		$merged = array_merge( $this->all(), $values );
+		// Merge over the stored option, not $this->cache: an upgrade step (or
+		// another writer) may have changed the option after the cache was
+		// filled, and a stale merge would silently undo it.
+		$stored = get_option( NDVR_OPTION_SETTINGS, array() );
+		$merged = array_merge( wp_parse_args( is_array( $stored ) ? $stored : array(), self::defaults() ), $values );
 		update_option( NDVR_OPTION_SETTINGS, $merged );
 		$this->cache = $merged;
 	}

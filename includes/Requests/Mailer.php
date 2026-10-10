@@ -113,6 +113,81 @@ class Mailer {
 	}
 
 	/**
+	 * Send a short branded notice email (RR-00 F9): a store reply, a Q&A
+	 * answer, a recovery invite, or a merchant alert.
+	 *
+	 * @param string              $to         Recipient.
+	 * @param string              $subject    Plain-text subject.
+	 * @param string              $inner_html Body HTML (passed through wp_kses_post()).
+	 * @param array<string,mixed> $args {
+	 *     Optional.
+	 *
+	 *     @type bool   $customer     Whether the recipient is a customer (default true).
+	 *                                Customer notices honour the unsubscribe list.
+	 *     @type bool   $marketing    Whether to add an unsubscribe link and the
+	 *                                List-Unsubscribe headers (default false; implies customer).
+	 *     @type string $preheader    Inbox preview text.
+	 *     @type string $button_url   Optional call-to-action URL.
+	 *     @type string $button_label Its label.
+	 *     @type string $footer_note  Optional line above the store address.
+	 * }
+	 * @return true|\WP_Error
+	 */
+	public function send_notice( $to, $subject, $inner_html, array $args = array() ) {
+		$args = wp_parse_args(
+			$args,
+			array(
+				'customer'     => true,
+				'marketing'    => false,
+				'preheader'    => '',
+				'button_url'   => '',
+				'button_label' => '',
+				'footer_note'  => '',
+			)
+		);
+
+		$to = sanitize_email( (string) $to );
+		if ( ! is_email( $to ) ) {
+			return new \WP_Error( 'ndvr_no_email', __( 'The notice has no valid recipient.', 'rosette-reviews' ) );
+		}
+
+		$marketing = ! empty( $args['marketing'] );
+		$customer  = $marketing || ! empty( $args['customer'] );
+		if ( $customer && $this->is_suppressed( $to ) ) {
+			return new \WP_Error( 'ndvr_unsubscribed', __( 'Recipient has unsubscribed.', 'rosette-reviews' ) );
+		}
+
+		// Subjects are plain text: no tags, no line breaks, no HTML entities.
+		$subject = trim( preg_replace( '/[\r\n]+/', ' ', html_entity_decode( wp_strip_all_tags( (string) $subject ), ENT_QUOTES, 'UTF-8' ) ) );
+		$accent  = sanitize_hex_color( (string) $this->settings->get( 'design_accent', '#181a1f' ) );
+		$accent  = $accent ? $accent : '#181a1f';
+
+		$body = View::render(
+			'email-notice.php',
+			array(
+				'inner_html'    => wp_kses_post( (string) $inner_html ),
+				'preheader'     => (string) $args['preheader'],
+				'button_url'    => (string) $args['button_url'],
+				'button_label'  => (string) $args['button_label'],
+				'footer_note'   => (string) $args['footer_note'],
+				'unsub_link'    => $marketing ? $this->unsubscribe_link( $to ) : '',
+				'store_name'    => $this->store_name(),
+				'logo_url'      => (string) get_option( 'woocommerce_email_header_image', '' ),
+				'accent'        => $accent,
+				'accent_text'   => $this->readable_text_color( $accent ),
+				'store_address' => $customer ? $this->store_address() : '',
+			)
+		);
+		if ( '' === $body ) {
+			$body = wp_kses_post( (string) $inner_html );
+		}
+
+		$sent = wp_mail( $to, $subject, $body, $this->headers( $marketing ? $to : '' ) );
+
+		return $sent ? true : new \WP_Error( 'ndvr_mail_failed', __( 'wp_mail() returned false.', 'rosette-reviews' ) );
+	}
+
+	/**
 	 * Send a test reminder to an address: the real template, built from the
 	 * most recent completed order when there is one. Its link is a short-lived
 	 * test token that opens the real landing page but cannot save reviews.

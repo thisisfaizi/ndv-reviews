@@ -8,30 +8,32 @@
 namespace NdvReviews;
 
 use NdvReviews\Support\Settings;
-use NdvReviews\Reviews\CriteriaRepository;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Runs once on plugin activation: creates tables and seeds default settings.
+ * Runs on plugin activation: seeds default settings, then creates or upgrades
+ * the tables through the same locked routine every request uses (RR-00 F3).
  */
 class Activator {
 
 	/**
 	 * Activate the plugin.
 	 *
+	 * The version is never written here: maybe_upgrade() stamps a fresh
+	 * install (and seeds the default criteria), runs pending steps for an
+	 * older one, and leaves a newer one alone. WordPress runs this hook before
+	 * it adds the plugin to `active_plugins`, so no other request is booting
+	 * the plugin during a fresh install.
+	 *
 	 * @return void
 	 */
 	public static function activate() {
-		Installer::install();
-		update_option( NDVR_OPTION_DB_VERSION, NDVR_DB_VERSION );
-
 		if ( false === get_option( NDVR_OPTION_SETTINGS, false ) ) {
 			add_option( NDVR_OPTION_SETTINGS, Settings::defaults() );
 		}
 
-		// Seed default rating criteria (Quality / Value / Service) on first install.
-		( new CriteriaRepository() )->seed_defaults();
+		Installer::maybe_upgrade( true );
 
 		set_transient( 'ndv_reviews_activated', 1, 60 );
 

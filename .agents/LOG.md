@@ -799,3 +799,8 @@ rr-06 36, rr-08 24, Pro rr-01 120, rr-02 111, rr-06p 28); debug.log empty; phpcs
   Open: Build spikes 1–5 with real plugins and the WP 6.0 repeat (Playground).
 EVIDENCE: rr-08 50/50; all suites green (core 49, rr-00 45, rr-09 62, rr-00b 58, rr-03 61, rr-04 38, rr-05 27,
 rr-06 36, rr-07 51, Pro rr-01 120, rr-02 111, rr-06p 28); debug.log empty; phpcs 0 errors on the three files.
+
+## 2026-10-10 — NDVR_API 7: list-campaign cancel and counts (for Pro RR-10 review M4/m5)
+- `RequestRepository::cancel_pending_for_campaign()` and `campaign_counts()` (dedupe-key prefix `c:{id}:`, unique index).
+  RR-11 (planned API 7) takes the next level at merge.
+EVIDENCE: exercised by Pro rr-10 (Stop cancels 2 unsent rows; counts); free suites green.

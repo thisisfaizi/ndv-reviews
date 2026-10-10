@@ -418,6 +418,65 @@ class RequestRepository {
 	}
 
 	/**
+	 * Cancel a list campaign's requests that haven't been sent (scheduled, and
+	 * failed ones a Retry would send). Matched on the campaign's dedupe-key
+	 * prefix, which uses the unique index. The key is kept, so a batch that runs
+	 * again for the campaign doesn't queue the address a second time.
+	 *
+	 * @param int    $campaign_id Campaign id.
+	 * @param string $message     Log text.
+	 * @return int Rows cancelled.
+	 */
+	public function cancel_pending_for_campaign( $campaign_id, $message ) {
+		global $wpdb;
+
+		$campaign_id = absint( $campaign_id );
+		if ( ! $campaign_id || ! Installer::is_current( Installer::V_PIPELINE ) ) {
+			return 0;
+		}
+		$table = Db::table( 'requests' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$changed = (int) $wpdb->query( $wpdb->prepare( "UPDATE `{$table}` SET status = 'cancelled', error = %s WHERE dedupe_key LIKE %s AND order_id = 0 AND status IN ('scheduled','failed')", sanitize_text_field( (string) $message ), $wpdb->esc_like( 'c:' . $campaign_id . ':' ) . '%' ) );
+		if ( $changed ) {
+			$this->flush_stats();
+		}
+
+		return $changed;
+	}
+
+	/**
+	 * A list campaign's request counts by state.
+	 *
+	 * @param int $campaign_id Campaign id.
+	 * @return array{pending:int,sent:int,reviewed:int}
+	 */
+	public function campaign_counts( $campaign_id ) {
+		global $wpdb;
+
+		$out         = array(
+			'pending'  => 0,
+			'sent'     => 0,
+			'reviewed' => 0,
+		);
+		$campaign_id = absint( $campaign_id );
+		if ( ! $campaign_id || ! Installer::is_current( Installer::V_PIPELINE ) ) {
+			return $out;
+		}
+		$table = Db::table( 'requests' );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT SUM( CASE WHEN status IN ('scheduled','sending','failed') THEN 1 ELSE 0 END ) AS pending, SUM( CASE WHEN sent_at IS NOT NULL THEN 1 ELSE 0 END ) AS sent, SUM( CASE WHEN reviewed_at IS NOT NULL THEN 1 ELSE 0 END ) AS reviewed FROM `{$table}` WHERE dedupe_key LIKE %s AND order_id = 0", $wpdb->esc_like( 'c:' . $campaign_id . ':' ) . '%' ) );
+		if ( $row ) {
+			$out = array(
+				'pending'  => (int) $row->pending,
+				'sent'     => (int) $row->sent,
+				'reviewed' => (int) $row->reviewed,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
 	 * Cancel every request to an email address that could still send (any
 	 * origin; scheduled, and failed ones a Retry would send), for example
 	 * after a privacy erasure.

@@ -447,7 +447,9 @@ class ReviewForm implements Registerable {
 
 			<p class="ndvr-field ndvr-field-comment comment-form-comment">
 				<label for="comment"><?php esc_html_e( 'Your review', 'rosette-reviews' ); ?>&nbsp;<span class="required">*</span></label>
-				<textarea id="comment" name="comment" cols="45" rows="6" required></textarea>
+				<?php $ndvr_min = \NdvReviews\Reviews\ReviewLength::min( array( 'source' => 'onsite' ) ); ?>
+				<textarea id="comment" name="comment" cols="45" rows="6" required<?php echo \NdvReviews\Reviews\ReviewLength::textarea_attrs( 'ndvr-length-hint', $ndvr_min ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the helper. ?>></textarea>
+				<?php echo \NdvReviews\Reviews\ReviewLength::after_textarea( 'ndvr-length-hint', $ndvr_min ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the helper. ?>
 			</p>
 
 			<?php echo FieldRenderer::render( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_active(), 'ndvr-' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the renderer. ?>
@@ -567,6 +569,18 @@ class ReviewForm implements Registerable {
 		$criteria = $this->reviews->valid_scores( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ? $input['ndvr_criteria'] : array() );
 		if ( empty( $criteria ) ) {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
+		}
+
+		// Minimum length, before any upload (create() repeats it).
+		$long_enough = ReviewRepository::check_length(
+			wp_kses_post( isset( $input['comment'] ) && is_string( $input['comment'] ) ? trim( $input['comment'] ) : '' ),
+			array(
+				'source'     => 'onsite',
+				'product_id' => $product_id,
+			)
+		);
+		if ( is_wp_error( $long_enough ) ) {
+			wp_send_json_error( array( 'message' => $long_enough->get_error_message() ), 400 );
 		}
 
 		// Required questions, also before any upload (create() repeats it).

@@ -534,6 +534,7 @@ final class Plugin {
 			$this->container->get( 'admin_criteria_page' ),
 			$this->container->get( 'admin_questions_page' ),
 			$this->container->get( 'review_field_hooks' ),
+			new \NdvReviews\Reviews\ReviewLength(),
 			$this->container->get( 'admin_assets' ),
 			$this->container->get( 'admin_design_page' ),
 			$this->container->get( 'admin_settings_page' ),

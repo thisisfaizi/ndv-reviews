@@ -96,6 +96,11 @@ class ReviewRepository {
 		if ( '' === $content ) {
 			return new \WP_Error( 'ndvr_empty_content', __( 'Please write your review.', 'rosette-reviews' ) );
 		}
+		// Minimum length (RR-12): customer-written sources only.
+		$long_enough = self::check_length( $content, $data );
+		if ( is_wp_error( $long_enough ) ) {
+			return $long_enough;
+		}
 
 		$user_id = isset( $data['user_id'] ) ? absint( $data['user_id'] ) : 0;
 		$author  = isset( $data['author'] ) ? sanitize_text_field( $data['author'] ) : '';
@@ -251,6 +256,27 @@ class ReviewRepository {
 		do_action( 'ndv-reviews/review_created', $comment_id, $data );
 
 		return $comment_id;
+	}
+
+	/**
+	 * Characters in review text as the minimum-length rule counts them (RR-12).
+	 *
+	 * @param string $html Review text (kses'd).
+	 * @return int
+	 */
+	public static function content_length( $html ) {
+		return ReviewLength::count( $html );
+	}
+
+	/**
+	 * The minimum-length rule for a submission (RR-12; interactive sources only).
+	 *
+	 * @param string              $content Review text (kses'd).
+	 * @param array<string,mixed> $data    Submission data (`source`, `product_id` …).
+	 * @return true|\WP_Error `ndvr_too_short` when below the minimum.
+	 */
+	public static function check_length( $content, array $data ) {
+		return ReviewLength::check( $content, $data );
 	}
 
 	/**

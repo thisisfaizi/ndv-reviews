@@ -110,3 +110,7 @@
 .ndvr-question label { margin-right: 14px; font-size: 0.933em; color: var(--ndvr-ink); }
 .ndvr-question input[type="radio"] { margin-right: 4px; accent-color: var(--ndvr-accent); }
 .ndvr-question-text input[type="text"] { width: 100%; max-width: 420px; }
+
+/* Minimum review length (RR-12). */
+.ndvr-length-hint { display: block; margin-top: 6px; font-size: 0.8em; color: var(--ndvr-slate); }
+.ndvr-length-count { display: block; margin-top: 2px; font-size: 0.8em; color: var(--ndvr-slate); font-variant-numeric: tabular-nums; }

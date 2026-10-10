@@ -334,6 +334,17 @@ class Landing implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
 		}
 
+		$long_enough = ReviewRepository::check_length(
+			wp_kses_post( isset( $input['comment'] ) && is_string( $input['comment'] ) ? trim( $input['comment'] ) : '' ),
+			array(
+				'source'     => 'list' === $row->type ? 'list_link' : 'magic_link',
+				'product_id' => $product_id,
+			)
+		);
+		if ( is_wp_error( $long_enough ) ) {
+			wp_send_json_error( array( 'message' => $long_enough->get_error_message() ), 400 );
+		}
+
 		// Required questions before any upload. An old template override without
 		// the questions sends no marker, and its submissions skip the check.
 		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );

@@ -195,7 +195,16 @@ class TestimonialForm implements Registerable {
 					<p class="ndvr-field"><label><?php esc_html_e( 'Your name', 'rosette-reviews' ); ?> <span class="required">*</span><input type="text" name="author" required /></label></p>
 					<p class="ndvr-field"><label><?php esc_html_e( 'Your email', 'rosette-reviews' ); ?> <span class="required">*</span><input type="email" name="email" required /></label></p>
 					<p class="ndvr-field"><label><?php esc_html_e( 'Review title (optional)', 'rosette-reviews' ); ?><input type="text" name="ndvr_title" maxlength="150" /></label></p>
-					<p class="ndvr-field"><label><?php esc_html_e( 'Your review', 'rosette-reviews' ); ?> <span class="required">*</span><textarea name="comment" rows="5" required></textarea></label></p>
+					<p class="ndvr-field"><label><?php esc_html_e( 'Your review', 'rosette-reviews' ); ?> <span class="required">*</span>
+					<?php
+					$ndvr_min = \NdvReviews\Reviews\ReviewLength::min(
+						array(
+							'source'     => 'form',
+							'product_id' => $product_id,
+						)
+					);
+					?>
+													<textarea name="comment" rows="5" required<?php echo \NdvReviews\Reviews\ReviewLength::textarea_attrs( $prefix . 'length', $ndvr_min ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the helper. ?>></textarea><?php echo \NdvReviews\Reviews\ReviewLength::after_textarea( $prefix . 'length', $ndvr_min ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the helper. ?></label></p>
 
 					<?php echo FieldRenderer::render( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_active(), $prefix ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the renderer. ?>
 
@@ -270,6 +279,17 @@ class TestimonialForm implements Registerable {
 		$criteria = $this->reviews->valid_scores( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ? $input['ndvr_criteria'] : array() );
 		if ( empty( $criteria ) ) {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
+		}
+
+		$long_enough = ReviewRepository::check_length(
+			wp_kses_post( isset( $input['comment'] ) && is_string( $input['comment'] ) ? trim( $input['comment'] ) : '' ),
+			array(
+				'source'     => 'form',
+				'product_id' => $product_id,
+			)
+		);
+		if ( is_wp_error( $long_enough ) ) {
+			wp_send_json_error( array( 'message' => $long_enough->get_error_message() ), 400 );
 		}
 
 		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );

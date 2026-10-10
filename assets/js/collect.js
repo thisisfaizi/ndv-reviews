@@ -116,8 +116,59 @@
 		} );
 	}
 
+	// Minimum review length (RR-12): a visible counter (no live region), and a
+	// quiet announcement only when the minimum is first reached or on blur
+	// below it, debounced and never repeated.
+	function lengthCounter( area ) {
+		if ( ! area ) {
+			return;
+		}
+		var min    = parseInt( area.getAttribute( 'data-ndvr-min-length' ) || '0', 10 );
+		var box    = area.parentNode;
+		var count  = box ? box.querySelector( '.ndvr-length-count' ) : null;
+		var status = box ? box.querySelector( '.ndvr-length-status' ) : null;
+		if ( ! min || ! count || ! status ) {
+			return;
+		}
+		var countFormat = area.getAttribute( 'data-ndvr-count-format' ) || '%1$d / %2$d';
+		var reachedText = area.getAttribute( 'data-ndvr-status-reached' ) || '';
+		var belowFormat = area.getAttribute( 'data-ndvr-status-format' ) || '';
+		var reached     = false;
+		var last        = '';
+		var timer       = null;
+		function length() {
+			return Array.from( area.value.replace( /\s+/g, ' ' ).trim() ).length;
+		}
+		function fill( format, n ) {
+			return format.replace( '%1$d', String( n ) ).replace( '%2$d', String( min ) );
+		}
+		function say( text ) {
+			clearTimeout( timer );
+			timer = setTimeout( function () {
+				if ( text && text !== last ) {
+					last               = text;
+					status.textContent = text;
+				}
+			}, 1000 );
+		}
+		area.addEventListener( 'input', function () {
+			var n             = length();
+			count.textContent = area.value ? fill( countFormat, n ) : '';
+			if ( n >= min && ! reached ) {
+				reached = true;
+				say( reachedText );
+			}
+		} );
+		area.addEventListener( 'blur', function () {
+			var n = length();
+			if ( n < min ) {
+				say( fill( belowFormat, n ) );
+			}
+		} );
+	}
 	Array.prototype.forEach.call( roots, function ( root ) {
 		Array.prototype.forEach.call( root.querySelectorAll( '.ndvr-collect-form' ), function ( form ) {
+			lengthCounter( form.querySelector( 'textarea[data-ndvr-min-length]' ) );
 			form.addEventListener( 'submit', function ( e ) {
 				e.preventDefault();
 				submitForm( root, form );

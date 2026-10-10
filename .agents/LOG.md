@@ -815,3 +815,11 @@ EVIDENCE: exercised by Pro rr-10 (Stop cancels 2 unsent rows; counts); free suit
 EVIDENCE (QA site): `.agents/qa/rr-11.php` 34/34 — AC1 (dropped table + version 5 → upgrade), AC2–AC14, the paginate
 filter, the moderation hooks. AC15 core flows 49/49; all suites green; debug.log empty; phpcs clean on new files and
 no new sniffs in edited ones.
+
+## 2026-10-10 — RR-12 minimum review length built (in_review)
+- `Reviews\ReviewLength` (setting on the trust card, count/check, markup), `ReviewRepository::content_length()` /
+  `check_length()`, check in `create()` and early in the product, standalone and landing handlers; hint, counter and
+  polite status on the three forms; counter in reviews.js / collect.js (+ .min rebuilt); CSS in reviews / collect.
+EVIDENCE (QA site): `.agents/qa/rr-12.php` 16/16 — AC1 (create + three AJAX handlers), AC2 emoji/CJK, AC3 whitespace,
+AC4 tags/entities, AC5 import exempt, AC6 off state, AC7 markup on all three forms, AC8 list_link, AC9 filter. AC10 core
+flows 49/49; all suites green; debug.log empty; phpcs clean. Manual screen-reader timing check still to do (not a gate).

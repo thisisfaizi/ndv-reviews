@@ -252,3 +252,11 @@ Pro: `ndvr_qa`, `ndvr_admin_reply`, `ndvr_external`, `ndvr_qa_admin`.
 - CSV `q_<slug>` columns (export: every question; import: unknown slug → inactive Short text question). Privacy:
   export rows "Question: {label}"; erase deletes `_ndvr_answers` and `_ndvr_ans_*`. Uninstall: table, `_ndvr_answers`,
   `comment_meta_prefixes` `_ndvr_ans_`.
+
+## Minimum review length (RR-12, no API change)
+- Setting `min_review_length` (0–500, card "Reviews and trust"); filter `ndv-reviews/min_review_length` ( $min, $data ).
+- `ReviewRepository::content_length( $html )` and `check_length( $content, $data )` (→ `ndvr_too_short`, interactive
+  sources only), backed by `Reviews\ReviewLength`. Called in `create()` after the empty check and early in the three
+  handlers. Markup: textarea `aria-describedby`, `data-ndvr-min-length`, `data-ndvr-count-format`,
+  `data-ndvr-status-reached`, `data-ndvr-status-format`; `.ndvr-length-hint`, `.ndvr-length-count` (no live region),
+  `.ndvr-length-status.screen-reader-text` (role status, polite). Counter code in `reviews.js` and `collect.js`.

@@ -1,8 +1,13 @@
 # RR-12: Minimum review length
 
-Status: prd-ok (rev 3) · Plan: F · Inherits PRD-00 + RR-00 · No schema change · No Pro-facing API, so no `NDVR_API` change
+Status: built, in review (rev 3) · Plan: F · Inherits PRD-00 + RR-00 · No schema change · No Pro-facing API, so no `NDVR_API` change
 
 Review findings applied: round 2 RR-12 items 1 (live region) and 2 (`list_link`).
+
+Build notes (2026-10-10):
+- **Hint element:** the hint is a `<span class="ndvr-length-hint">` (styled as a block), not a `<p>`. On the standalone form and the landing page the textarea sits inside a `<label>`, where a `<p>` isn't allowed. The hint, the counter and the status follow the textarea in the same parent.
+- **Code location:** the logic lives in `Reviews\ReviewLength` (setting, `min()`, `count()`, `check()`, markup helpers). `ReviewRepository::content_length()` and `check_length()` are the contract's static entry points and delegate to it.
+- **Early check:** the three AJAX handlers also run the check before any upload, so a short review never stores an attachment. `create()` repeats it.
 
 ## 1. Problem and who it's for
 One-word reviews ("good", "ok") help nobody, and a page full of them can look fake. Merchants with many short reviews want a floor. CusRev sells a minimum length in its Professional tier; we include it in free.

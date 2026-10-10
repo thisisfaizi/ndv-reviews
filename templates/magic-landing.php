@@ -104,7 +104,16 @@ endif;
 
 				<p class="ndvr-field">
 					<label><?php esc_html_e( 'Your review', 'rosette-reviews' ); ?> <span class="required">*</span>
-						<textarea name="comment" rows="5" required></textarea>
+						<?php
+						$ndvr_min = \NdvReviews\Reviews\ReviewLength::min(
+							array(
+								'source'     => 'magic_link',
+								'product_id' => (int) $ndvr_pid,
+							)
+						);
+						?>
+						<textarea name="comment" rows="5" required<?php echo \NdvReviews\Reviews\ReviewLength::textarea_attrs( 'p' . (int) $ndvr_pid . '-length', $ndvr_min ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the helper. ?>></textarea>
+						<?php echo \NdvReviews\Reviews\ReviewLength::after_textarea( 'p' . (int) $ndvr_pid . '-length', $ndvr_min ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the helper. ?>
 					</label>
 				</p>
 

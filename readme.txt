@@ -161,6 +161,7 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 * New, off by default: one follow-up reminder a set number of days after the first email, only to customers who still have something to review. It has its own subject and text, and a preview.
 * New, off by default: a consent checkbox for review emails at checkout (classic checkout and the Checkout block), in opt-in or opt-out mode. The answer is saved on the order with the time and the wording shown, and every review email respects it.
 * Multilingual stores (WPML with WooCommerce Multilingual, or Polylang): review emails and the review page use the language of the order, and your own subject and text can be translated in the plugin's string translation.
+* Minimum review length: ask for at least a set number of characters (off by default). Customers see a hint and a counter; imports are not affected.
 * Review questions: ask up to two questions on every review form (a choice such as "How does it fit?", short text, or yes/no), optional or required. Answers show on the review, can be edited by you, and are exported and imported with your reviews. Rosette Reviews → Review Questions.
 
 = 1.0.0 =

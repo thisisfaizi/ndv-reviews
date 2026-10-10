@@ -197,6 +197,7 @@ class Landing implements Registerable {
 					'ajax_action'    => self::AJAX_ACTION,
 					'default_author' => $row ? $this->default_author( $row, $request ) : '',
 					'is_test'        => $row && 'test' === $row->type,
+					'review_fields'  => \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_active(),
 				)
 			);
 			$this->output_page( $html );
@@ -333,6 +334,16 @@ class Landing implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
 		}
 
+		// Required questions before any upload. An old template override without
+		// the questions sends no marker, and its submissions skip the check.
+		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
+		$answers = $fields->sanitize( isset( $input['ndvr_answers'] ) && is_array( $input['ndvr_answers'] ) ? $input['ndvr_answers'] : array() );
+		$present = ! empty( $input['ndvr_answers_present'] );
+		$checked = $fields->validate( $answers, 'list' === $row->type ? 'list_link' : 'magic_link', $present );
+		if ( is_wp_error( $checked ) ) {
+			wp_send_json_error( array( 'message' => $checked->get_error_message() ), 400 );
+		}
+
 		$request = $this->request_for( $row );
 		$is_list = 'list' === $row->type;
 
@@ -371,19 +382,21 @@ class Landing implements Registerable {
 		add_action( 'ndv-reviews/review_created', $restore, PHP_INT_MIN );
 		$result = $this->reviews->create(
 			array(
-				'product_id' => $product_id,
-				'author'     => mb_substr( $author, 0, 60 ),
-				'email'      => $email,
-				'content'    => isset( $input['comment'] ) ? $input['comment'] : '',
-				'title'      => isset( $input['ndvr_title'] ) ? $input['ndvr_title'] : '',
-				'recommend'  => isset( $input['ndvr_recommend'] ) ? $input['ndvr_recommend'] : 'neutral',
-				'criteria'   => $criteria,
-				'media'      => $media,
-				'user_id'    => $is_list ? 0 : (int) $row->customer_id,
-				'source'     => $is_list ? 'list_link' : 'magic_link',
-				'order_id'   => $is_list ? 0 : (int) $row->order_id,
-				'consent'    => ! empty( $input['ndvr_consent'] ),
-				'approved'   => 0,
+				'product_id'      => $product_id,
+				'author'          => mb_substr( $author, 0, 60 ),
+				'email'           => $email,
+				'content'         => isset( $input['comment'] ) ? $input['comment'] : '',
+				'title'           => isset( $input['ndvr_title'] ) ? $input['ndvr_title'] : '',
+				'recommend'       => isset( $input['ndvr_recommend'] ) ? $input['ndvr_recommend'] : 'neutral',
+				'criteria'        => $criteria,
+				'media'           => $media,
+				'user_id'         => $is_list ? 0 : (int) $row->customer_id,
+				'source'          => $is_list ? 'list_link' : 'magic_link',
+				'answers'         => $answers,
+				'answers_present' => $present,
+				'order_id'        => $is_list ? 0 : (int) $row->order_id,
+				'consent'         => ! empty( $input['ndvr_consent'] ),
+				'approved'        => 0,
 			)
 		);
 		remove_action( 'ndv-reviews/review_created', $restore, PHP_INT_MIN );

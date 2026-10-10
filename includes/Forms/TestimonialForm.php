@@ -165,7 +165,11 @@ class TestimonialForm implements Registerable {
 
 		ob_start();
 		?>
-		<div class="ndvr-collect" data-ajax-url="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" data-action="<?php echo esc_attr( self::AJAX_ACTION ); ?>"<?php if ( $this->settings->get( 'recaptcha_enabled' ) && '' !== (string) $this->settings->get( 'recaptcha_site_key' ) ) : ?> data-recaptcha-key="<?php echo esc_attr( (string) $this->settings->get( 'recaptcha_site_key' ) ); ?>"<?php endif; ?>>
+		<div class="ndvr-collect" data-ajax-url="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>" data-action="<?php echo esc_attr( self::AJAX_ACTION ); ?>"
+		<?php
+		if ( $this->settings->get( 'recaptcha_enabled' ) && '' !== (string) $this->settings->get( 'recaptcha_site_key' ) ) :
+			?>
+			data-recaptcha-key="<?php echo esc_attr( (string) $this->settings->get( 'recaptcha_site_key' ) ); ?>"<?php endif; ?>>
 			<form class="ndvr-collect-card ndvr-collect-form" data-product="<?php echo esc_attr( $product_id ); ?>">
 				<?php if ( $title ) : ?>
 					<h3 class="ndvr-collect-name"><?php echo esc_html( $title ); ?></h3>
@@ -192,6 +196,8 @@ class TestimonialForm implements Registerable {
 					<p class="ndvr-field"><label><?php esc_html_e( 'Your email', 'rosette-reviews' ); ?> <span class="required">*</span><input type="email" name="email" required /></label></p>
 					<p class="ndvr-field"><label><?php esc_html_e( 'Review title (optional)', 'rosette-reviews' ); ?><input type="text" name="ndvr_title" maxlength="150" /></label></p>
 					<p class="ndvr-field"><label><?php esc_html_e( 'Your review', 'rosette-reviews' ); ?> <span class="required">*</span><textarea name="comment" rows="5" required></textarea></label></p>
+
+					<?php echo FieldRenderer::render( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_active(), $prefix ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the renderer. ?>
 
 					<?php if ( $this->settings->get( 'photo_uploads' ) ) : ?>
 						<p class="ndvr-field"><label><?php esc_html_e( 'Add photos (optional)', 'rosette-reviews' ); ?><input type="file" name="ndvr_photos[]" accept="image/*" multiple="multiple" /></label></p>
@@ -266,6 +272,14 @@ class TestimonialForm implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
 		}
 
+		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
+		$answers = $fields->sanitize( isset( $input['ndvr_answers'] ) && is_array( $input['ndvr_answers'] ) ? $input['ndvr_answers'] : array() );
+		$present = ! empty( $input['ndvr_answers_present'] );
+		$checked = $fields->validate( $answers, 'form', $present );
+		if ( is_wp_error( $checked ) ) {
+			wp_send_json_error( array( 'message' => $checked->get_error_message() ), 400 );
+		}
+
 		$media = array();
 		if ( $this->settings->get( 'photo_uploads' ) ) {
 			$uploaded = $this->upload->handle( 'ndvr_photos', $product_id );
@@ -277,17 +291,19 @@ class TestimonialForm implements Registerable {
 
 		$result = $this->reviews->create(
 			array(
-				'product_id' => $product_id,
-				'author'     => isset( $input['author'] ) ? $input['author'] : '',
-				'email'      => isset( $input['email'] ) ? $input['email'] : '',
-				'content'    => isset( $input['comment'] ) ? $input['comment'] : '',
-				'title'      => isset( $input['ndvr_title'] ) ? $input['ndvr_title'] : '',
-				'criteria'   => $criteria,
-				'media'      => $media,
-				'user_id'    => get_current_user_id(),
-				'source'     => 'form',
-				'consent'    => true,
-				'approved'   => 0,
+				'product_id'      => $product_id,
+				'author'          => isset( $input['author'] ) ? $input['author'] : '',
+				'email'           => isset( $input['email'] ) ? $input['email'] : '',
+				'content'         => isset( $input['comment'] ) ? $input['comment'] : '',
+				'title'           => isset( $input['ndvr_title'] ) ? $input['ndvr_title'] : '',
+				'criteria'        => $criteria,
+				'media'           => $media,
+				'user_id'         => get_current_user_id(),
+				'source'          => 'form',
+				'answers'         => $answers,
+				'answers_present' => $present,
+				'consent'         => true,
+				'approved'        => 0,
 			)
 		);
 

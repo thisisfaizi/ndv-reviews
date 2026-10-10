@@ -695,3 +695,10 @@ button.ndvr-bar-row.is-current .ndvr-bar-track { background: var(--ndvr-line); }
 .ndvr-transparency-page p { margin: 0 0 6px; }
 .ndvr-transparency-body p:last-child { margin-bottom: 0; }
 .ndvr-transparency-extra { margin-top: 8px; }
+
+/* Review question answers (RR-11): after the review text, before the criteria. */
+.ndvr-answers { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 10px 0 0; padding: 0; font-size: 0.867em; }
+.ndvr-answers > div { display: flex; gap: 6px; margin: 0; }
+.ndvr-answers dt { margin: 0; font-weight: 600; color: var(--ndvr-ink); }
+.ndvr-answers dt::after { content: ":"; }
+.ndvr-answers dd { margin: 0; color: var(--ndvr-slate); }

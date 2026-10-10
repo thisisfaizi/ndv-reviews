@@ -231,3 +231,24 @@ Pro: `ndvr_qa`, `ndvr_admin_reply`, `ndvr_external`, `ndvr_qa_admin`.
 - Filter `ndv-reviews/translate_setting` (`$value, $key, $lang`), hooked at 10. Part of `NDVR_API` 6 (applied by Mailer since RR-06 rev 4; Pro RR-06P reads it at 6). String names `reminder_subject`, `reminder_body`, `followup_subject`, `followup_body`, `consent_label_optin`, `consent_label_optout`, `transparency_extra`; WPML context `ndv-reviews`, Polylang group `Rosette Reviews`. Option `ndv_reviews_ml_strings_hash` (WPML registration once per change).
 - Mailer: the email is built inside `with_locale( order locale or site locale )` (an admin retry never uses the admin's locale); stored texts pass `translate_setting` before merge tags and `wp_kses_post`; `build_link( $token, $lang = '' )`; `wp_mail()` after the restore. Landing renders and answers in the token's order locale.
 - Action `ndv-reviews/reminders_settings_after` under the Reminder settings card (the WPML/Polylang note).
+
+## Review questions (RR-11, `NDVR_API` 8, `Installer::V_FIELDS` 6)
+- Table `ndvr_review_fields` (id, label, slug UNIQUE, type choice|text|yesno, options JSON, required, filterable,
+  position, status active|inactive, created_at). Service `review_fields` → `Reviews\ReviewFieldRepository`:
+  `ready()`, `max_active()` (filter `ndv-reviews/max_review_fields`, default 2), `get_all()`, `get_active()`, `find()`,
+  `count_active()`, `insert()`, `update()`, `move( $id, up|down )`, `delete()`, `ensure_imported( $slug )`,
+  `sanitize( $raw )`, `validate( $clean, $source, $present )` (`ndvr_missing_answer`, "{Question} needs an answer.";
+  interactive sources only), `save_answers()`, `stored()`, `answers_for_view()`, `flush()`. Reads are empty until V_FIELDS.
+- Comment meta `_ndvr_answers` (field id => text; choice stores the option text; yes/no stores yes|no) and
+  `_ndvr_ans_<id>` for filterable fields. `ReviewQuery::paginate()` arg `answers` (field id => value, filterable only).
+  View-model key `answers` (list of field_id, label, value). `create()` keys `answers`, `answers_present` (default true).
+- `Forms\FieldRenderer::render( $fields, $id_prefix, $values )`: ids `{prefix}f{id}` and `{prefix}f{id}-o{n}`, marker
+  `ndvr_answers_present`. Prefixes: product form `ndvr-`, standalone form its own prefix, landing `p{product}-`.
+  Template variable `$review_fields` in `magic-landing.php`. Posted field `ndvr_answers[<id>]`.
+- Card: `<dl class="ndvr-answers">` on `ndv-reviews/review_body_after`; filters `ndv-reviews/review_field_answers`,
+  `ndv-reviews/show_answers`. Actions `ndv-reviews/moderation_edit_fields` (WP_Comment, table rows before Photos),
+  `ndv-reviews/moderation_edit_save` (int), `ndv-reviews/review_fields_saved` (int, post), `ndv-reviews/review_field_form_after`
+  (field). Admin page `ndv-reviews-questions` (`Admin\QuestionsPage`, `Caps::manage( 'questions' )`, nonce `ndvr_review_fields`).
+- CSV `q_<slug>` columns (export: every question; import: unknown slug → inactive Short text question). Privacy:
+  export rows "Question: {label}"; erase deletes `_ndvr_answers` and `_ndvr_ans_*`. Uninstall: table, `_ndvr_answers`,
+  `comment_meta_prefixes` `_ndvr_ans_`.

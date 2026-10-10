@@ -19,7 +19,7 @@ class Caps {
 	/**
 	 * Capability required for an Rosette Reviews admin screen.
 	 *
-	 * @param string $context Screen: overview|criteria|design|reminders|settings|tools.
+	 * @param string $context Screen: overview|criteria|questions|design|reminders|settings|tools.
 	 * @return string
 	 */
 	public static function manage( $context = 'settings' ) {

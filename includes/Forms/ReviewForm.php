@@ -450,6 +450,8 @@ class ReviewForm implements Registerable {
 				<textarea id="comment" name="comment" cols="45" rows="6" required></textarea>
 			</p>
 
+			<?php echo FieldRenderer::render( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_active(), 'ndvr-' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the renderer. ?>
+
 			<fieldset class="ndvr-field ndvr-field-recommend">
 				<legend><?php esc_html_e( 'Would you recommend this product?', 'rosette-reviews' ); ?></legend>
 				<label><input type="radio" name="ndvr_recommend" value="yes" /> <?php esc_html_e( 'Yes', 'rosette-reviews' ); ?></label>
@@ -567,6 +569,15 @@ class ReviewForm implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
 		}
 
+		// Required questions, also before any upload (create() repeats it).
+		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
+		$answers = $fields->sanitize( isset( $input['ndvr_answers'] ) && is_array( $input['ndvr_answers'] ) ? $input['ndvr_answers'] : array() );
+		$present = ! empty( $input['ndvr_answers_present'] );
+		$checked = $fields->validate( $answers, 'onsite', $present );
+		if ( is_wp_error( $checked ) ) {
+			wp_send_json_error( array( 'message' => $checked->get_error_message() ), 400 );
+		}
+
 		// Photos (uploaded via FormData) — only after the cheap validations above.
 		$media = array();
 		if ( $this->settings->get( 'photo_uploads' ) ) {
@@ -581,18 +592,20 @@ class ReviewForm implements Registerable {
 
 		$result = $this->reviews->create(
 			array(
-				'product_id' => $product_id,
-				'author'     => isset( $input['author'] ) ? $input['author'] : '',
-				'email'      => isset( $input['email'] ) ? $input['email'] : '',
-				'content'    => isset( $input['comment'] ) ? $input['comment'] : '',
-				'title'      => isset( $input['ndvr_title'] ) ? $input['ndvr_title'] : '',
-				'recommend'  => isset( $input['ndvr_recommend'] ) ? $input['ndvr_recommend'] : 'neutral',
-				'criteria'   => $criteria,
-				'media'      => $media,
-				'user_id'    => $user_id,
-				'source'     => 'onsite',
-				'consent'    => ! empty( $input['ndvr_consent'] ),
-				'approved'   => 0,
+				'product_id'      => $product_id,
+				'author'          => isset( $input['author'] ) ? $input['author'] : '',
+				'email'           => isset( $input['email'] ) ? $input['email'] : '',
+				'content'         => isset( $input['comment'] ) ? $input['comment'] : '',
+				'title'           => isset( $input['ndvr_title'] ) ? $input['ndvr_title'] : '',
+				'recommend'       => isset( $input['ndvr_recommend'] ) ? $input['ndvr_recommend'] : 'neutral',
+				'criteria'        => $criteria,
+				'media'           => $media,
+				'user_id'         => $user_id,
+				'source'          => 'onsite',
+				'answers'         => $answers,
+				'answers_present' => $present,
+				'consent'         => ! empty( $input['ndvr_consent'] ),
+				'approved'        => 0,
 			)
 		);
 

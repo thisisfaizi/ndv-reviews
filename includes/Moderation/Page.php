@@ -346,6 +346,14 @@ class Page implements Registerable {
 		);
 		update_comment_meta( $id, '_ndvr_title', $title );
 
+		/**
+		 * Fires while a review is saved from the Edit screen (nonce and
+		 * `moderate_comments` already checked). RR-11 saves answers here.
+		 *
+		 * @param int $comment_id Review id.
+		 */
+		do_action( 'ndv-reviews/moderation_edit_save', $id );
+
 		// Topic tags (comma-separated) — shared store used by the storefront pills.
 		if ( isset( $_POST['ndvr_tags'] ) ) {
 			$raw  = sanitize_text_field( wp_unslash( $_POST['ndvr_tags'] ) );
@@ -605,6 +613,15 @@ class Page implements Registerable {
 							</td>
 						</tr>
 					<?php endif; ?>
+					<?php
+					/**
+					 * Fires inside the Edit screen's table, before the photos row
+					 * (RR-11 adds the answers row). Output table rows.
+					 *
+					 * @param \WP_Comment $comment Review.
+					 */
+					do_action( 'ndv-reviews/moderation_edit_fields', $comment );
+					?>
 					<?php if ( ! empty( $media ) ) : ?>
 						<?php $ndvr_has_video = in_array( 'video', wp_list_pluck( $media, 'type' ), true ); ?>
 						<tr>

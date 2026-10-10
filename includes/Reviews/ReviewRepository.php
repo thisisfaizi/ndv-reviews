@@ -75,6 +75,10 @@ class ReviewRepository {
 	 *     @type string              $source     Source tag (onsite|qr|form|...).
 	 *     @type int                 $order_id   Optional originating order id.
 	 *     @type bool                $approved   Whether to approve immediately.
+	 *     @type array<int,string>   $answers    Review-question answers, field id => value (RR-11).
+	 *     @type bool                $answers_present Whether the form carried the questions
+	 *                                           (default true); required answers are checked
+	 *                                           only then, and only for customer-written sources.
 	 * }
 	 * @return int|\WP_Error New comment id, or WP_Error on failure.
 	 */
@@ -122,6 +126,15 @@ class ReviewRepository {
 			}
 		}
 
+		// Review questions (RR-11): cleaned for every source; required ones only
+		// for customer-written sources whose form rendered them.
+		$fields  = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
+		$answers = $fields->sanitize( isset( $data['answers'] ) && is_array( $data['answers'] ) ? $data['answers'] : array() );
+		$checked = $fields->validate( $answers, isset( $data['source'] ) ? sanitize_key( (string) $data['source'] ) : 'onsite', ! array_key_exists( 'answers_present', $data ) || ! empty( $data['answers_present'] ) );
+		if ( is_wp_error( $checked ) ) {
+			return $checked;
+		}
+
 		/**
 		 * Filter whether a new review is auto-approved (Pro auto-approve rules).
 		 *
@@ -165,6 +178,10 @@ class ReviewRepository {
 
 		// Criteria scores (already validated above).
 		$this->save_criteria_scores( $comment_id, $scores );
+
+		if ( $answers ) {
+			$fields->save_answers( $comment_id, $answers );
+		}
 
 		// Media.
 		if ( ! empty( $data['media'] ) ) {

@@ -1,8 +1,16 @@
 # RR-11: Custom questions on the review form
 
-Status: prd-ok (rev 3) · Plan: F (2 active questions) + P (higher cap, filter chips) · Inherits PRD-00 + RR-00 · **Schema `Installer::V_FIELDS`** (planned v6; provisional per PRD-00 §4, the number is taken at merge) · Raises `NDVR_API` to **7** (RR-00 F3b; planned build order, final at merge)
+Status: built, in review (rev 3) · Plan: F (2 active questions) + P (higher cap, filter chips) · Inherits PRD-00 + RR-00 · **Schema `Installer::V_FIELDS`** (planned v6; provisional per PRD-00 §4, the number is taken at merge) · Raises `NDVR_API` to **7** (RR-00 F3b; planned build order, final at merge)
 
 Review findings applied: round 2 RR-11 item 1 (unknown `q_<slug>` columns).
+
+Build notes (2026-10-10):
+- **Numbers at merge:** `Installer::V_FIELDS` = **6** (`NDVR_DB_VERSION` 6). **`NDVR_API` 8**: 7 went to the RR-10 review (list campaign cancel and counts), so RR-15's planned 8 becomes 9.
+- **Export columns:** one `q_<slug>` column per defined question, active or not, in position order, rather than only the questions that have a stored answer. The CSV is streamed with a fixed header, so the set is known before the first row. Questions with no answers export an empty column, and a deleted question exports nothing (its answers no longer show either).
+- **Skipped columns:** an import column `q_` whose slug sanitises to empty is reported in the import's `errors` list ("Column {name} was skipped.").
+- **Uninstall:** the registry gains a `comment_meta_prefixes` group (`_ndvr_ans_`), as §6 allowed.
+- **Hooks:** the card renderer, moderation row and moderation save live in `Reviews\ReviewFields` (service `review_field_hooks`). The repository is `Reviews\ReviewFieldRepository` (service `review_fields`). `answers_for_view()` gives Yes/No in the reader's language, and the stored value stays `yes`/`no`.
+- **Admin edit:** a choice answer that is no longer among the options stays selectable and survives a save untouched (§3, AC14).
 
 ## 1. Problem and who it's for
 Shoppers want context beyond stars: "How does it fit?", "What's your skin type?", "How long have you used it?". Merchants in apparel, beauty and home goods ask for it. CusRev (free, 2 questions), Yotpo, Judge.me and WiserReview offer custom questions. Our "form field builder" is on the Not-built list. This PRD covers the core need without a full form builder.

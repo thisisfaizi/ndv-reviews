@@ -103,3 +103,10 @@
 @media (prefers-reduced-motion: reduce) {
 	.ndvr-collect-submit { transition: none; }
 }
+
+/* Review questions (RR-11). */
+.ndvr-question { border: 0; padding: 0; margin: 0 0 20px; }
+.ndvr-question legend, .ndvr-question-text label { display: block; font-weight: 600; font-size: 0.933em; margin-bottom: 8px; padding: 0; color: var(--ndvr-ink); }
+.ndvr-question label { margin-right: 14px; font-size: 0.933em; color: var(--ndvr-ink); }
+.ndvr-question input[type="radio"] { margin-right: 4px; accent-color: var(--ndvr-accent); }
+.ndvr-question-text input[type="text"] { width: 100%; max-width: 420px; }

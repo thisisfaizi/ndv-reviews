@@ -124,6 +124,7 @@ class DashboardPage implements Registerable {
 				// Display + configuration.
 				'ndv-reviews-design',
 				'ndv-reviews-criteria',
+				'ndv-reviews-questions',
 				'ndv-reviews-settings',
 				'ndv-reviews-pro',
 				// Data.

@@ -43,7 +43,25 @@ class Exporter {
 	 * @return string[]
 	 */
 	private function columns() {
-		return array( 'product_id', 'author', 'email', 'rating', 'title', 'content', 'date', 'recommend', 'verified', 'status', 'criteria', 'photos', 'videos' );
+		return array_merge(
+			array( 'product_id', 'author', 'email', 'rating', 'title', 'content', 'date', 'recommend', 'verified', 'status', 'criteria', 'photos', 'videos' ),
+			array_keys( $this->question_columns() )
+		);
+	}
+
+	/**
+	 * Review questions as CSV columns (RR-11): `q_<slug>` => field id, for every
+	 * question, active or not, in position order.
+	 *
+	 * @return array<string,int>
+	 */
+	private function question_columns() {
+		$out = array();
+		foreach ( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_all() as $id => $field ) {
+			$out[ 'q_' . $field['slug'] ] = (int) $id;
+		}
+
+		return $out;
 	}
 
 	/**
@@ -52,7 +70,9 @@ class Exporter {
 	 * @return \Generator<int,array<string,mixed>>
 	 */
 	private function rows() {
-		$page = 1;
+		$page      = 1;
+		$questions = $this->question_columns();
+		$fields    = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
 
 		do {
 			$comments = (array) get_comments(
@@ -80,6 +100,12 @@ class Exporter {
 					$scores[ $score['name'] ] = (float) $score['rating'];
 				}
 
+				$stored = $questions ? $fields->stored( (int) $comment->comment_ID ) : array();
+				$extra  = array();
+				foreach ( $questions as $column => $field_id ) {
+					$extra[ $column ] = isset( $stored[ $field_id ] ) ? $stored[ $field_id ] : '';
+				}
+
 				yield array(
 					'product_id' => (int) $comment->comment_post_ID,
 					'author'     => $view['author'],
@@ -94,7 +120,7 @@ class Exporter {
 					'criteria'   => $scores,
 					'photos'     => array_values( wp_list_pluck( $view['media'], 'url' ) ),
 					'videos'     => array_values( wp_list_pluck( isset( $videos[ (int) $comment->comment_ID ] ) ? $videos[ (int) $comment->comment_ID ] : array(), 'url' ) ),
-				);
+				) + $extra;
 			}
 
 			++$page;

@@ -46,6 +46,7 @@ class ReviewQuery {
 				'min_rating' => 0,
 				'verified'   => false,
 				'with_media' => false,
+				'answers'    => array(),
 				'orderby'    => 'recent',
 				'page'       => 1,
 				'per_page'   => 10,
@@ -143,6 +144,21 @@ class ReviewQuery {
 				'value'   => '1',
 				'compare' => '=',
 			);
+		}
+
+		// Answers (RR-11): filterable questions only, on their own meta key.
+		if ( ! empty( $args['answers'] ) && is_array( $args['answers'] ) ) {
+			$defs = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->get_all();
+			foreach ( $args['answers'] as $field_id => $value ) {
+				$field_id = absint( $field_id );
+				if ( isset( $defs[ $field_id ] ) && $defs[ $field_id ]['filterable'] && is_scalar( $value ) && '' !== (string) $value ) {
+					$query_args['meta_query'][] = array(
+						'key'     => ReviewFieldRepository::ANSWER_PREFIX . $field_id,
+						'value'   => sanitize_text_field( (string) $value ),
+						'compare' => '=',
+					);
+				}
+			}
 		}
 
 		if ( ! empty( $args['with_media'] ) ) {
@@ -275,6 +291,7 @@ class ReviewQuery {
 			'media'        => null !== $media_map ? ( $media_map[ $id ] ?? array() ) : $this->media( $id ),
 			'incentive'    => $incentive,
 			'incentivized' => '' !== $incentive,
+			'answers'      => \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->answers_for_view( $id ),
 		);
 	}
 

@@ -105,6 +105,25 @@ class Privacy implements Registerable {
 	}
 
 	/**
+	 * Export rows for a review's question answers (RR-11).
+	 *
+	 * @param int $comment_id Review.
+	 * @return array<int,array{name:string,value:string}>
+	 */
+	private function answer_rows( $comment_id ) {
+		$rows = array();
+		foreach ( \NdvReviews\Plugin::instance()->container()->get( 'review_fields' )->answers_for_view( (int) $comment_id ) as $answer ) {
+			$rows[] = array(
+				/* translators: %s: review question. */
+				'name'  => sprintf( __( 'Question: %s', 'rosette-reviews' ), $answer['label'] ),
+				'value' => $answer['value'],
+			);
+		}
+
+		return $rows;
+	}
+
+	/**
 	 * One page of an email's reviews on every reviewable post type.
 	 *
 	 * @param string $email Email address.
@@ -165,6 +184,7 @@ class Privacy implements Registerable {
 					'name'  => __( 'Review', 'rosette-reviews' ),
 					'value' => $comment->comment_content,
 				),
+				...$this->answer_rows( $id ),
 				array(
 					'name'  => __( 'Date', 'rosette-reviews' ),
 					'value' => $comment->comment_date,
@@ -446,6 +466,9 @@ class Privacy implements Registerable {
 			delete_comment_meta( $id, '_ndvr_consent' );
 			delete_comment_meta( $id, '_ndvr_title' );
 			delete_comment_meta( $id, '_ndvr_order_id' );
+			delete_comment_meta( $id, '_ndvr_answers' );
+			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->commentmeta} WHERE comment_id = %d AND meta_key LIKE %s", $id, $wpdb->esc_like( '_ndvr_ans_' ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			wp_cache_delete( $id, 'comment_meta' );
 			update_comment_meta( $id, '_ndvr_source', 'erased' );
 
 			$removed = true;

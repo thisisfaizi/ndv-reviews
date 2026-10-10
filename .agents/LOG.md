@@ -804,3 +804,14 @@ rr-06 36, rr-07 51, Pro rr-01 120, rr-02 111, rr-06p 28); debug.log empty; phpcs
 - `RequestRepository::cancel_pending_for_campaign()` and `campaign_counts()` (dedupe-key prefix `c:{id}:`, unique index).
   RR-11 (planned API 7) takes the next level at merge.
 EVIDENCE: exercised by Pro rr-10 (Stop cancels 2 unsent rows; counts); free suites green.
+
+## 2026-10-10 — RR-11 custom review questions built (in_review)
+- `Reviews\ReviewFieldRepository` (service `review_fields`), `Reviews\ReviewFields` (card, moderation row/save),
+  `Forms\FieldRenderer`, `Admin\QuestionsPage` (Review Questions, after Rating Criteria). `create()` cleans answers for
+  every source and checks required ones for customer forms; product, standalone and landing forms render and pre-check
+  before uploads. View-model `answers`, `paginate( answers )`, export/import `q_<slug>`, privacy export/erase, uninstall
+  (`comment_meta_prefixes` group). New free actions `moderation_edit_fields` / `moderation_edit_save`. CSS in display /
+  reviews / collect (+ .min rebuilt). `V_FIELDS` 6, `NDVR_API` 8 (7 taken by the RR-10 review). Deviations in the PRD.
+EVIDENCE (QA site): `.agents/qa/rr-11.php` 34/34 — AC1 (dropped table + version 5 → upgrade), AC2–AC14, the paginate
+filter, the moderation hooks. AC15 core flows 49/49; all suites green; debug.log empty; phpcs clean on new files and
+no new sniffs in edited ones.

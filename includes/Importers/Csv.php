@@ -90,6 +90,26 @@ class Csv {
 		$header[0] = preg_replace( '/^\xEF\xBB\xBF/', '', (string) $header[0] );
 		$map       = array_flip( array_map( 'strtolower', array_map( 'trim', $header ) ) );
 
+		// Review questions (RR-11): a `q_<slug>` column maps to that question;
+		// an unknown slug creates an inactive Short text question first, so no
+		// answer is lost and nothing new appears on the forms.
+		$question_columns = array();
+		$review_fields    = \NdvReviews\Plugin::instance()->container()->get( 'review_fields' );
+		if ( $review_fields->ready() ) {
+			foreach ( $map as $name => $index ) {
+				if ( 0 !== strpos( (string) $name, 'q_' ) ) {
+					continue;
+				}
+				$field_id = $review_fields->ensure_imported( substr( (string) $name, 2 ) );
+				if ( $field_id ) {
+					$question_columns[ $field_id ] = (string) $name;
+				} else {
+					/* translators: %s: CSV column name. */
+					$result['errors'][] = sprintf( __( 'Column %s was skipped.', 'rosette-reviews' ), (string) $name );
+				}
+			}
+		}
+
 		// A single overall rating is applied to every active criterion, so the
 		// review's overall score equals the CSV rating.
 		$criteria_ids = array();
@@ -133,21 +153,28 @@ class Csv {
 				continue;
 			}
 
+			$answers = array();
+			foreach ( $question_columns as $field_id => $column ) {
+				$answers[ $field_id ] = $get( $column );
+			}
+
 			$rating   = round( (float) $rating_raw, 2 );
 			$criteria = array_fill_keys( $criteria_ids, $rating );
 			$status   = strtolower( $get( 'status' ) );
 
 			$created = $this->reviews->create(
 				array(
-					'product_id' => $product_id,
-					'author'     => $get( 'author' ) ? $get( 'author' ) : __( 'Anonymous', 'rosette-reviews' ),
-					'email'      => $email,
-					'content'    => $content,
-					'title'      => $get( 'title' ),
-					'recommend'  => in_array( $get( 'recommend' ), array( 'yes', 'no', 'neutral' ), true ) ? $get( 'recommend' ) : 'neutral',
-					'criteria'   => $criteria,
-					'source'     => 'import',
-					'approved'   => in_array( $status, array( 'pending', 'hold' ), true ) ? 0 : 1,
+					'product_id'      => $product_id,
+					'author'          => $get( 'author' ) ? $get( 'author' ) : __( 'Anonymous', 'rosette-reviews' ),
+					'email'           => $email,
+					'content'         => $content,
+					'title'           => $get( 'title' ),
+					'recommend'       => in_array( $get( 'recommend' ), array( 'yes', 'no', 'neutral' ), true ) ? $get( 'recommend' ) : 'neutral',
+					'criteria'        => $criteria,
+					'source'          => 'import',
+					'answers'         => $answers,
+					'answers_present' => false,
+					'approved'        => in_array( $status, array( 'pending', 'hold' ), true ) ? 0 : 1,
 				)
 			);
 

@@ -43,6 +43,11 @@ class Installer {
 	const V_QA_EMAIL = 5;
 
 	/**
+	 * RR-11 custom review questions: ndvr_review_fields table (no data step).
+	 */
+	const V_FIELDS = 6;
+
+	/**
 	 * Lock option (written by raw SQL only, never through add_option()).
 	 */
 	const LOCK_OPTION = 'ndv_reviews_upgrade_lock';
@@ -458,6 +463,23 @@ class Installer {
 			KEY scope_idx (scope, scope_id)
 		) {$charset_collate};";
 
+		// Merchant-defined review questions (RR-11).
+		$tables[] = "CREATE TABLE {$prefix}review_fields (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			label varchar(191) NOT NULL,
+			slug varchar(191) NOT NULL,
+			type varchar(20) NOT NULL DEFAULT 'text',
+			options longtext DEFAULT NULL,
+			required tinyint(1) NOT NULL DEFAULT 0,
+			filterable tinyint(1) NOT NULL DEFAULT 0,
+			position int(11) NOT NULL DEFAULT 0,
+			status varchar(20) NOT NULL DEFAULT 'active',
+			created_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			UNIQUE KEY slug (slug),
+			KEY status_pos (status, position)
+		) {$charset_collate};";
+
 		// Per-review criteria scores.
 		$tables[] = "CREATE TABLE {$prefix}review_criteria (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -654,6 +676,7 @@ class Installer {
 
 		return array(
 			$prefix . 'criteria',
+			$prefix . 'review_fields',
 			$prefix . 'review_criteria',
 			$prefix . 'review_media',
 			$prefix . 'review_votes',

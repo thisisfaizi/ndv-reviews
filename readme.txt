@@ -49,6 +49,7 @@ Rosette Reviews replaces the default WooCommerce reviews tab with a review secti
 * Spam protection: honeypot and rate limiting by default, optional Google reCAPTCHA v3.
 * Import existing WooCommerce reviews or a CSV file. Export to CSV or JSON at any time.
 * GDPR: consent checkbox, and WordPress personal data export and erasure.
+* Review questions: answers to the questions you add are stored with the review, included in personal data exports and removed by erasure.
 * Q&A (with an add-on that shows questions): the name a shopper gives, their account id, and, if they ask to be emailed when their question is answered, their email address. Exported and erased with the WordPress privacy tools.
 * Reminder results: the request log records when a customer opened the review link and when they left a review, so the dashboard can show how many orders that got a request led to a review. Two optional extras are off by default: UTM tags on the review link, and a 1×1 image that counts email opens. The image is a form of tracking that some privacy laws require consent for; mention it in your privacy policy if you turn it on. Erasing a customer's personal data cancels any review request still waiting to be sent to them.
 * Checkout consent: if you turn it on, Rosette Reviews saves the customer's answer, the time and the checkbox wording on the order. They are included in WordPress personal data exports and erasures.
@@ -160,6 +161,7 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 * New, off by default: one follow-up reminder a set number of days after the first email, only to customers who still have something to review. It has its own subject and text, and a preview.
 * New, off by default: a consent checkbox for review emails at checkout (classic checkout and the Checkout block), in opt-in or opt-out mode. The answer is saved on the order with the time and the wording shown, and every review email respects it.
 * Multilingual stores (WPML with WooCommerce Multilingual, or Polylang): review emails and the review page use the language of the order, and your own subject and text can be translated in the plugin's string translation.
+* Review questions: ask up to two questions on every review form (a choice such as "How does it fit?", short text, or yes/no), optional or required. Answers show on the review, can be edited by you, and are exported and imported with your reviews. Rosette Reviews → Review Questions.
 
 = 1.0.0 =
 * Initial public release.

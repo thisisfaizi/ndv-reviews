@@ -16,6 +16,7 @@
  * @var string                $ajax_action AJAX action name.
  * @var string                $default_author Name shown with the review unless changed.
  * @var bool                  $is_test     Admin test link (submissions are refused).
+ * @var array                 $review_fields Active review questions (RR-11).
  *
  * @package NdvReviews
  */
@@ -106,6 +107,13 @@ endif;
 						<textarea name="comment" rows="5" required></textarea>
 					</label>
 				</p>
+
+				<?php
+				// One <form> per product: ids p{product}-f{field}-o{n} stay unique.
+				if ( ! empty( $review_fields ) ) {
+					echo \NdvReviews\Forms\FieldRenderer::render( (array) $review_fields, 'p' . (int) $ndvr_pid . '-' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the renderer.
+				}
+				?>
 
 				<fieldset class="ndvr-field ndvr-field-recommend">
 					<legend><?php esc_html_e( 'Would you recommend this product?', 'rosette-reviews' ); ?></legend>

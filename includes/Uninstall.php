@@ -29,6 +29,7 @@ final class Uninstall {
 	 * - transient_prefixes: per-key transients, swept with LIKE.
 	 * - comment_meta:       keys removed from the reviews that survive uninstall
 	 *                       (WooCommerce native reviews keep their own `rating`).
+	 * - comment_meta_prefixes: per-id comment meta keys, swept with LIKE 'prefix%'.
 	 * - post_meta:          keys on reviewable posts (aggregates of non-products).
 	 * - order_meta:         keys on orders, HPOS table and legacy postmeta.
 	 * - user_meta:          keys on users.
@@ -38,7 +39,7 @@ final class Uninstall {
 	 */
 	public static function registry() {
 		return array(
-			'options'            => array(
+			'options'               => array(
 				'ndv_reviews_settings',
 				'ndv_reviews_consent_enabled_at',
 				'ndv_reviews_ml_strings_hash',
@@ -48,19 +49,19 @@ final class Uninstall {
 				'ndv_reviews_upgrade_error',
 				'ndv_reviews_media_resweep_cursor',
 			),
-			'option_prefixes'    => array(),
-			'transients'         => array(
+			'option_prefixes'       => array(),
+			'transients'            => array(
 				'ndv_reviews_activated',
 				'ndvr_upgrade_backoff',
 				'ndvr_recover_checked',
 				'ndvr_tp_import',
 			),
-			'transient_prefixes' => array(
+			'transient_prefixes'    => array(
 				'ndvr_rl_',
 				'ndvr_request_stats_',
 				'ndvr_order_action_notice_',
 			),
-			'comment_meta'       => array(
+			'comment_meta'          => array(
 				'_ndvr_overall_rating',
 				'_ndvr_source',
 				'_ndvr_verified',
@@ -73,26 +74,30 @@ final class Uninstall {
 				'_ndvr_import_hash',
 				'_ndvr_pooled_from',
 				'_ndvr_incentive_offered',
+				'_ndvr_answers',
 			),
-			'post_meta'          => array(
+			'comment_meta_prefixes' => array(
+				'_ndvr_ans_',
+			),
+			'post_meta'             => array(
 				'_ndvr_average_rating',
 				'_ndvr_review_count',
 				'_ndvr_rating_count',
 			),
-			'order_meta'         => array(
+			'order_meta'            => array(
 				'_ndvr_review_consent',
 				'_ndvr_review_consent_at',
 				'_ndvr_review_consent_text',
 				'_ndvr_review_consent_via',
 				'_wc_other/ndv-reviews/review-email-consent',
 			),
-			'user_meta'          => array(
+			'user_meta'             => array(
 				'ndvr_setup_dismissed',
 				'ndvr_health_notice_dismissed',
 				'ndvr_transparency_notice_dismissed',
 				'_wc_other/ndv-reviews/review-email-consent',
 			),
-			'scheduler_hooks'    => array(
+			'scheduler_hooks'       => array(
 				'ndvr_send_request',
 				'ndvr_requests_recover',
 				'ndvr_media_cleanup',
@@ -178,6 +183,12 @@ final class Uninstall {
 			$log[] = 'comment meta: ' . $key;
 			if ( ! $dry_run ) {
 				delete_metadata( 'comment', 0, $key, '', true );
+			}
+		}
+		foreach ( $registry['comment_meta_prefixes'] as $prefix ) {
+			$log[] = 'comment meta prefix: ' . $prefix;
+			if ( ! $dry_run ) {
+				$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->commentmeta} WHERE meta_key LIKE %s", $wpdb->esc_like( $prefix ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			}
 		}
 		foreach ( $registry['post_meta'] as $key ) {

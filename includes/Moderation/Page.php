@@ -547,7 +547,7 @@ class Page implements Registerable {
 			$scores[ $cs['name'] ] = $cs['rating'];
 		}
 		$criteria = $this->criteria->get_all();
-		$media    = $this->query->media( $id );
+		$media    = $this->query->media( $id, 'any' );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Edit Review', 'rosette-reviews' ); ?></h1>
@@ -606,12 +606,17 @@ class Page implements Registerable {
 						</tr>
 					<?php endif; ?>
 					<?php if ( ! empty( $media ) ) : ?>
+						<?php $ndvr_has_video = in_array( 'video', wp_list_pluck( $media, 'type' ), true ); ?>
 						<tr>
-							<th><?php esc_html_e( 'Photos', 'rosette-reviews' ); ?></th>
+							<th><?php echo esc_html( $ndvr_has_video ? __( 'Photos and videos', 'rosette-reviews' ) : __( 'Photos', 'rosette-reviews' ) ); ?></th>
 							<td>
 								<?php foreach ( $media as $m ) : ?>
-									<label style="display:inline-block;margin:0 12px 12px 0;text-align:center;">
-										<img src="<?php echo esc_url( $m['thumb'] ); ?>" style="width:80px;height:80px;object-fit:cover;display:block;border-radius:6px;" alt="" /><br>
+									<label style="display:inline-block;margin:0 12px 12px 0;text-align:center;vertical-align:top;">
+										<?php if ( 'image' === $m['type'] ) : ?>
+											<img src="<?php echo esc_url( $m['thumb'] ); ?>" style="width:80px;height:80px;object-fit:cover;display:block;border-radius:6px;" alt="" /><br>
+										<?php else : ?>
+											<a href="<?php echo esc_url( $m['url'] ); ?>" target="_blank" rel="noopener" style="display:block;width:80px;margin-bottom:6px;"><?php esc_html_e( 'Video (opens in a new tab)', 'rosette-reviews' ); ?></a>
+										<?php endif; ?>
 										<input type="checkbox" name="ndvr_remove_media[]" value="<?php echo esc_attr( $m['id'] ); ?>" /> <?php esc_html_e( 'Remove', 'rosette-reviews' ); ?>
 									</label>
 								<?php endforeach; ?>

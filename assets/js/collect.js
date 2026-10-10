@@ -82,7 +82,12 @@
 				body.append( 'ndvr_recaptcha_token', token );
 			}
 
-			return fetch( ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
+			// `action` also travels in the URL: when the upload is larger than
+			// post_max_size, PHP drops the body and admin-ajax.php would not know
+			// which handler to run, so the size message could never be returned.
+			var url = ajaxUrl + ( ajaxUrl.indexOf( '?' ) < 0 ? '?' : '&' ) + 'action=' + encodeURIComponent( action );
+
+			return fetch( url, { method: 'POST', credentials: 'same-origin', body: body } )
 				.then( function ( r ) { return r.json(); } )
 				.then( function ( res ) {
 					if ( res && res.success ) {

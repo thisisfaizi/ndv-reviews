@@ -243,7 +243,7 @@ class DashboardPage implements Registerable {
 
 		$media = Db::table( 'review_media' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from Db::table(), no input.
-		$photos = (int) $wpdb->get_var( "SELECT COUNT(DISTINCT comment_id) FROM `{$media}` WHERE status = 'approved'" );
+		$photos = (int) $wpdb->get_var( "SELECT COUNT(DISTINCT comment_id) FROM `{$media}` WHERE status = 'approved' AND type = 'image'" );
 
 		return array(
 			'avg'      => $total ? round( $sum / $total, 2 ) : 0.0,
@@ -554,6 +554,7 @@ class DashboardPage implements Registerable {
 					<?php if ( $tracking['sent'] > 0 ) : ?>
 						<h3 class="ndvr-subhead"><?php esc_html_e( 'Results · 90 days', 'rosette-reviews' ); ?></h3>
 						<div class="ndvr-mini-stats">
+							<div><strong><?php echo esc_html( number_format_i18n( $tracking['sent'] ) ); ?></strong><span><?php esc_html_e( 'Sent', 'rosette-reviews' ); ?></span></div>
 							<div><strong><?php echo esc_html( number_format_i18n( $tracking['opened'] ) ); ?></strong><span><?php esc_html_e( 'Link opened', 'rosette-reviews' ); ?></span></div>
 							<div><strong><?php echo esc_html( number_format_i18n( $tracking['reviewed'] ) ); ?></strong><span><?php esc_html_e( 'Reviewed', 'rosette-reviews' ); ?></span></div>
 							<div>

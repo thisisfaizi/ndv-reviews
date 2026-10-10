@@ -38,6 +38,11 @@ class Installer {
 	const V_PIPELINE = 4;
 
 	/**
+	 * RR-00b E10: ndvr_questions author_email, notified_at (no data step).
+	 */
+	const V_QA_EMAIL = 5;
+
+	/**
 	 * Lock option (written by raw SQL only, never through add_option()).
 	 */
 	const LOCK_OPTION = 'ndv_reviews_upgrade_lock';
@@ -172,6 +177,15 @@ class Installer {
 				'ndvr_upgrade_tables',
 				/* translators: %s: comma-separated database table names. */
 				sprintf( __( 'These tables could not be created: %s', 'rosette-reviews' ), implode( ', ', $missing ) )
+			);
+		}
+
+		$missing = self::missing_columns( $code );
+		if ( $missing ) {
+			return new \WP_Error(
+				'ndvr_upgrade_columns',
+				/* translators: %s: comma-separated table.column names. */
+				sprintf( __( 'These columns could not be added: %s', 'rosette-reviews' ), implode( ', ', $missing ) )
 			);
 		}
 
@@ -357,6 +371,53 @@ class Installer {
 	}
 
 	/**
+	 * Columns each schema version adds, so a version is never recorded as done
+	 * when dbDelta silently skipped an ALTER.
+	 *
+	 * @return array<int,array<string,string[]>> version => table suffix => columns.
+	 */
+	private static function required_columns() {
+		return array(
+			self::V_PIPELINE => array(
+				'requests' => array( 'source', 'origin', 'dedupe_key', 'token_id', 'claimed_at', 'opened_at', 'reviewed_at', 'meta' ),
+			),
+			self::V_QA_EMAIL => array(
+				'questions' => array( 'author_email', 'notified_at' ),
+			),
+		);
+	}
+
+	/**
+	 * Required columns (for versions up to $code) that don't exist.
+	 *
+	 * @param int $code Code schema version.
+	 * @return string[] table.column names.
+	 */
+	private static function missing_columns( $code ) {
+		global $wpdb;
+
+		$missing    = array();
+		$suppressed = $wpdb->suppress_errors( true );
+		foreach ( self::required_columns() as $version => $tables ) {
+			if ( (int) $version > (int) $code ) {
+				continue;
+			}
+			foreach ( $tables as $suffix => $columns ) {
+				$table = $wpdb->prefix . NDVR_TABLE_PREFIX . $suffix;
+				foreach ( $columns as $column ) {
+					// Names are hardcoded literals; not user input.
+					if ( false === $wpdb->query( "SELECT `{$column}` FROM `{$table}` LIMIT 0" ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						$missing[] = $suffix . '.' . $column;
+					}
+				}
+			}
+		}
+		$wpdb->suppress_errors( $suppressed );
+
+		return $missing;
+	}
+
+	/**
 	 * Create/upgrade all custom tables via dbDelta.
 	 *
 	 * @return void
@@ -474,8 +535,11 @@ class Installer {
 			status varchar(20) NOT NULL DEFAULT 'pending',
 			votes int(11) NOT NULL DEFAULT 0,
 			created_at datetime NOT NULL,
+			author_email varchar(191) DEFAULT NULL,
+			notified_at datetime DEFAULT NULL,
 			PRIMARY KEY  (id),
-			KEY product_idx (product_id, status)
+			KEY product_idx (product_id, status),
+			KEY email_idx (author_email)
 		) {$charset_collate};";
 
 		$tables[] = "CREATE TABLE {$prefix}answers (

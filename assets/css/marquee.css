@@ -97,6 +97,19 @@
 .ndvr-marquee-avatar { width: 36px; height: 36px; font-size: 15px; }
 .ndvr-marquee-name { font-weight: 700; font-size: 0.933em; color: var(--ndvr-ink); }
 .ndvr-marquee-verified { color: var(--ndvr-verdant); margin-left: 4px; font-weight: 800; }
+.ndvr-marquee-name .ndvr-pill {
+	display: inline-flex;
+	margin-left: 6px;
+	font-size: 0.733em;
+	font-weight: 600;
+	line-height: 1.4;
+	padding: 0 7px;
+	border: 1px solid var(--ndvr-line);
+	border-radius: 999px;
+	color: var(--ndvr-slate);
+	background: var(--ndvr-haze);
+	vertical-align: middle;
+}
 .ndvr-marquee-stars { margin-bottom: 10px; }
 .ndvr-marquee-stars .ndvr-stars-display { font-size: 1em; }
 .ndvr-marquee-stars .ndvr-star-empty, .ndvr-marquee-stars .ndvr-star-half { color: var(--ndvr-star-empty); }

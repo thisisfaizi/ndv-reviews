@@ -385,6 +385,20 @@ button.ndvr-bar-row.is-current .ndvr-bar-track { background: var(--ndvr-line); }
 .ndvr-verified-badge::before { content: "\2713"; font-weight: 800; }
 .ndvr-top-reviewer { color: #8a5a00; background: #fdf1dc; }
 
+/* Neutral pill for disclosures and add-on labels (RR-00b E9): never a status colour. */
+.ndvr-pill {
+	display: inline-flex;
+	align-items: center;
+	font-size: 0.733em;
+	font-weight: 600;
+	line-height: 1.4;
+	padding: 1px 8px;
+	border: 1px solid var(--ndvr-line);
+	border-radius: 999px;
+	color: var(--ndvr-slate);
+	background: var(--ndvr-haze);
+}
+
 .ndvr-review-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
 .ndvr-review-meta .ndvr-stars-display { font-size: 0.933em; }
 .ndvr-review-date { color: var(--ndvr-slate); font-size: 0.867em; font-variant-numeric: tabular-nums; }

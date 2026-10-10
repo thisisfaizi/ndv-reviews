@@ -49,6 +49,7 @@ Rosette Reviews replaces the default WooCommerce reviews tab with a review secti
 * Spam protection: honeypot and rate limiting by default, optional Google reCAPTCHA v3.
 * Import existing WooCommerce reviews or a CSV file. Export to CSV or JSON at any time.
 * GDPR: consent checkbox, and WordPress personal data export and erasure.
+* Q&A (with an add-on that shows questions): the name a shopper gives, their account id, and, if they ask to be emailed when their question is answered, their email address. Exported and erased with the WordPress privacy tools.
 * Reminder results: the request log records when a customer opened the review link and when they left a review, so the dashboard can show how many orders that got a request led to a review. Two optional extras are off by default: UTM tags on the review link, and a 1×1 image that counts email opens. The image is a form of tracking that some privacy laws require consent for; mention it in your privacy policy if you turn it on. Erasing a customer's personal data cancels any review request still waiting to be sent to them.
 
 = Shortcodes =
@@ -107,7 +108,7 @@ Rosette Reviews adds its rating and review data to WooCommerce's product schema 
 
 = Can I change how reviews look? =
 
-Use Rosette Reviews → Design for colors and layout, or copy a file from the plugin's `templates/` folder into `yourtheme/ndv-reviews/` and edit it.
+Use Rosette Reviews → Design for colors and layout, or copy a file from the plugin's `templates/` folder into `yourtheme/ndv-reviews/` and edit it. Keep the `do_action()` lines listed at the top of each template (for example `ndv-reviews/review_author_badges` and `ndv-reviews/marquee_author_badges`): labels such as the incentive disclosure are printed there.
 
 = Is my data removed if I delete the plugin? =
 
@@ -137,6 +138,11 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 * New, off by default: UTM tags on the review link, and an image that counts email opens.
 * Reminders that were waiting when the plugin was deactivated are sent after reactivation, spread out; ones more than 14 days overdue are skipped.
 * Erasing a customer's personal data cancels review requests still waiting to be sent to them.
+* Products that share reviews now show the shared reviews in their list, and a review posted without JavaScript returns the shopper to the product they reviewed. Tools can move reviews back when products stop sharing.
+* Photos of reviews marked as spam or moved to the trash are deleted after 7 days.
+* Reviews that were rewarded (for example with a coupon) carry a disclosure label, and it stays even if the add-on that rewarded them is removed.
+* Uploads that are too large now get a clear message instead of a generic error.
+* Privacy export and erasure now cover questions and answers.
 
 = 1.0.0 =
 * Initial public release.

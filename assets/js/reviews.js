@@ -146,7 +146,12 @@
 		form.classList.add( 'is-submitting' );
 		setMessage( ( cfg.i18n && cfg.i18n.submitting ) || 'Submitting…', '' );
 
-		fetch( cfg.ajaxUrl, {
+		// `action` also travels in the URL: an upload larger than post_max_size
+		// makes PHP drop the body, and admin-ajax.php still needs the action to
+		// return the size message.
+		var url = cfg.ajaxUrl + ( cfg.ajaxUrl.indexOf( '?' ) < 0 ? '?' : '&' ) + 'action=' + encodeURIComponent( cfg.action );
+
+		fetch( url, {
 			method: 'POST',
 			credentials: 'same-origin',
 			body: data

@@ -88,6 +88,28 @@ class AggregateStore {
 			update_post_meta( $post_id, '_ndvr_average_rating', $average );
 			update_post_meta( $post_id, '_ndvr_review_count', $count );
 		}
+
+		/**
+		 * Fires after a post's aggregate was saved (RR-00b E6), after
+		 * WooCommerce recomputed its own caches, so a listener's writes win.
+		 *
+		 * Listeners must not call AggregateStore::set() for the same post (that
+		 * recurses). A product mirror should be written with the product setters
+		 * and save(), so wc_product_meta_lookup ("Sort by average rating") stays
+		 * in step.
+		 *
+		 * @param int                                                  $post_id Post id.
+		 * @param array{average:float,count:int,counts:array<int,int>} $data    The saved aggregate.
+		 */
+		do_action(
+			'ndv-reviews/aggregate_saved',
+			$post_id,
+			array(
+				'average' => $average,
+				'count'   => $count,
+				'counts'  => $counts,
+			)
+		);
 	}
 
 	/**

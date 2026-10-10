@@ -44,6 +44,7 @@ final class Uninstall {
 				'ndv_reviews_unsubscribed',
 				'ndv_reviews_upgrade_lock',
 				'ndv_reviews_upgrade_error',
+				'ndv_reviews_media_resweep_cursor',
 			),
 			'option_prefixes'    => array(),
 			'transients'         => array(
@@ -66,6 +67,8 @@ final class Uninstall {
 				'_ndvr_order_id',
 				'_ndvr_consent',
 				'_ndvr_import_hash',
+				'_ndvr_pooled_from',
+				'_ndvr_incentive_offered',
 			),
 			'post_meta'          => array(
 				'_ndvr_average_rating',
@@ -80,6 +83,7 @@ final class Uninstall {
 			'scheduler_hooks'    => array(
 				'ndvr_send_request',
 				'ndvr_requests_recover',
+				'ndvr_media_cleanup',
 			),
 		);
 	}

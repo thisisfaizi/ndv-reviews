@@ -104,8 +104,7 @@ class Csv {
 
 			$get = static function ( $key ) use ( $row, $map ) {
 				$value = isset( $map[ $key ], $row[ $map[ $key ] ] ) ? trim( (string) $row[ $map[ $key ] ] ) : '';
-				// Undo the exporter's spreadsheet-formula guard ('=..., '+..., ...).
-				return preg_match( "/^'[=+\-@\t\r]/", $value ) ? substr( $value, 1 ) : $value;
+				return self::unguard_cell( $value );
 			};
 
 			$product_id = absint( $get( 'product_id' ) );
@@ -176,6 +175,19 @@ class Csv {
 		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 
 		return $result;
+	}
+
+	/**
+	 * Undo Exporter::csv_cell()'s spreadsheet-formula guard ('=..., '+..., ...),
+	 * public so add-on importers read exported cells the same way (RR-00b E11).
+	 *
+	 * @param string $value Cell value.
+	 * @return string
+	 */
+	public static function unguard_cell( $value ) {
+		$value = (string) $value;
+
+		return preg_match( "/^'[=+\-@\t\r]/", $value ) ? substr( $value, 1 ) : $value;
 	}
 
 	/**

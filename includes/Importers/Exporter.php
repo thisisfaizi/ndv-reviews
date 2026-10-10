@@ -43,7 +43,7 @@ class Exporter {
 	 * @return string[]
 	 */
 	private function columns() {
-		return array( 'product_id', 'author', 'email', 'rating', 'title', 'content', 'date', 'recommend', 'verified', 'status', 'criteria', 'photos' );
+		return array( 'product_id', 'author', 'email', 'rating', 'title', 'content', 'date', 'recommend', 'verified', 'status', 'criteria', 'photos', 'videos' );
 	}
 
 	/**
@@ -71,6 +71,7 @@ class Exporter {
 			$ids      = array_map( 'intval', wp_list_pluck( $comments, 'comment_ID' ) );
 			$criteria = $this->query->criteria_scores_bulk( $ids );
 			$media    = $this->query->media_bulk( $ids );
+			$videos   = $this->query->media_bulk( $ids, 'video' );
 
 			foreach ( $comments as $comment ) {
 				$view   = $this->query->to_view( $comment, $criteria, $media );
@@ -92,6 +93,7 @@ class Exporter {
 					'status'     => '1' === (string) $comment->comment_approved ? 'approved' : 'pending',
 					'criteria'   => $scores,
 					'photos'     => array_values( wp_list_pluck( $view['media'], 'url' ) ),
+					'videos'     => array_values( wp_list_pluck( isset( $videos[ (int) $comment->comment_ID ] ) ? $videos[ (int) $comment->comment_ID ] : array(), 'url' ) ),
 				);
 			}
 
@@ -103,12 +105,14 @@ class Exporter {
 	}
 
 	/**
-	 * Neutralize a CSV cell that a spreadsheet would run as a formula.
+	 * Neutralize a CSV cell that a spreadsheet would run as a formula. Public
+	 * so add-ons writing CSV guard cells the same way (RR-00b E11);
+	 * Csv::unguard_cell() reverses it.
 	 *
 	 * @param mixed $value Cell value.
 	 * @return mixed
 	 */
-	private function csv_cell( $value ) {
+	public static function csv_cell( $value ) {
 		if ( is_string( $value ) && '' !== $value && false !== strpos( "=+-@\t\r", $value[0] ) ) {
 			return "'" . $value;
 		}
@@ -135,8 +139,9 @@ class Exporter {
 			}
 			$row['criteria'] = implode( '; ', $parts );
 			$row['photos']   = implode( ' ', $row['photos'] );
+			$row['videos']   = implode( ' ', $row['videos'] );
 
-			fputcsv( $out, array_map( array( $this, 'csv_cell' ), array_values( $row ) ), ',', '"', '\\' );
+			fputcsv( $out, array_map( array( __CLASS__, 'csv_cell' ), array_values( $row ) ), ',', '"', '\\' );
 		}
 		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		exit;

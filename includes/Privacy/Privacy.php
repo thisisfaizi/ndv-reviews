@@ -7,6 +7,7 @@
 
 namespace NdvReviews\Privacy;
 
+use NdvReviews\Installer;
 use NdvReviews\Support\Registerable;
 use NdvReviews\Support\Db;
 use NdvReviews\Reviews\PostTypes;
@@ -181,11 +182,14 @@ class Privacy implements Registerable {
 			}
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from Db::table(), value placeholdered.
-			$photos = $wpdb->get_col( $wpdb->prepare( "SELECT url FROM `{$media}` WHERE comment_id = %d ORDER BY position ASC", $id ) );
-			foreach ( array_filter( (array) $photos ) as $url ) {
+			$files = $wpdb->get_results( $wpdb->prepare( "SELECT url, type FROM `{$media}` WHERE comment_id = %d ORDER BY position ASC", $id ) );
+			foreach ( (array) $files as $file ) {
+				if ( empty( $file->url ) ) {
+					continue;
+				}
 				$fields[] = array(
-					'name'  => __( 'Photo', 'rosette-reviews' ),
-					'value' => esc_url( $url ),
+					'name'  => 'video' === $file->type ? __( 'Video', 'rosette-reviews' ) : __( 'Photo', 'rosette-reviews' ),
+					'value' => esc_url( $file->url ),
 				);
 			}
 
@@ -245,6 +249,8 @@ class Privacy implements Registerable {
 				}
 			}
 
+			$data = array_merge( $data, $this->qa_export( $email ) );
+
 			if ( $this->mailer && $this->mailer->is_suppressed( $email ) ) {
 				$data[] = array(
 					'group_id'    => 'ndvr_review_requests',
@@ -264,6 +270,125 @@ class Privacy implements Registerable {
 			'data' => $data,
 			'done' => $done,
 		);
+	}
+
+	/**
+	 * Questions asked and answers written by the owner of an email (RR-00b E10):
+	 * questions by `author_email` (once V_QA_EMAIL ran) or by the account,
+	 * answers by the account.
+	 *
+	 * @param string $email Email address.
+	 * @return array<int,array<string,mixed>> Export items.
+	 */
+	private function qa_export( $email ) {
+		global $wpdb;
+
+		$user    = get_user_by( 'email', $email );
+		$user_id = $user ? (int) $user->ID : 0;
+		$data    = array();
+
+		$questions = Db::table( 'questions' );
+		$answers   = Db::table( 'answers' );
+		$has_email = Installer::is_current( Installer::V_QA_EMAIL );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table names from Db::table(); values placeholdered.
+		if ( $has_email ) {
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM `{$questions}` WHERE LOWER(author_email) = %s OR ( %d > 0 AND user_id = %d ) ORDER BY id ASC", strtolower( trim( $email ) ), $user_id, $user_id ) );
+		} elseif ( $user_id ) {
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM `{$questions}` WHERE user_id = %d ORDER BY id ASC", $user_id ) );
+		} else {
+			$rows = array();
+		}
+		$given = $user_id ? $wpdb->get_results( $wpdb->prepare( "SELECT * FROM `{$answers}` WHERE user_id = %d ORDER BY id ASC", $user_id ) ) : array();
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		foreach ( (array) $rows as $row ) {
+			$fields = array(
+				array(
+					'name'  => __( 'Product', 'rosette-reviews' ),
+					'value' => get_the_title( (int) $row->product_id ),
+				),
+				array(
+					'name'  => __( 'Question', 'rosette-reviews' ),
+					'value' => (string) $row->question,
+				),
+				array(
+					'name'  => __( 'Date', 'rosette-reviews' ),
+					'value' => (string) $row->created_at,
+				),
+				array(
+					'name'  => __( 'Status', 'rosette-reviews' ),
+					'value' => (string) $row->status,
+				),
+			);
+			if ( ! empty( $row->author_email ) ) {
+				$fields[] = array(
+					'name'  => __( 'Email me when answered', 'rosette-reviews' ),
+					'value' => __( 'Yes', 'rosette-reviews' ),
+				);
+			}
+			$data[] = array(
+				'group_id'    => 'ndvr_questions',
+				'group_label' => __( 'Questions you asked', 'rosette-reviews' ),
+				'item_id'     => 'ndvr-question-' . (int) $row->id,
+				'data'        => $fields,
+			);
+		}
+
+		foreach ( (array) $given as $row ) {
+			$data[] = array(
+				'group_id'    => 'ndvr_answers',
+				'group_label' => __( 'Answers you wrote', 'rosette-reviews' ),
+				'item_id'     => 'ndvr-answer-' . (int) $row->id,
+				'data'        => array(
+					array(
+						'name'  => __( 'Answer', 'rosette-reviews' ),
+						'value' => (string) $row->answer,
+					),
+					array(
+						'name'  => __( 'Date', 'rosette-reviews' ),
+						'value' => (string) $row->created_at,
+					),
+				),
+			);
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Anonymize questions and answers by the owner of an email (RR-00b E10).
+	 * The text stays, as with reviews; the name, account and email go.
+	 *
+	 * @param string $email Email address.
+	 * @return bool Whether anything changed.
+	 */
+	private function qa_erase( $email ) {
+		global $wpdb;
+
+		$user      = get_user_by( 'email', $email );
+		$user_id   = $user ? (int) $user->ID : 0;
+		$anonymous = __( 'Anonymous', 'rosette-reviews' );
+		$changed   = 0;
+
+		$questions = Db::table( 'questions' );
+		$answers   = Db::table( 'answers' );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table names from Db::table(); values placeholdered.
+		if ( Installer::is_current( Installer::V_QA_EMAIL ) ) {
+			$changed += (int) $wpdb->query( $wpdb->prepare( "UPDATE `{$questions}` SET author_name = %s, user_id = NULL, author_email = NULL WHERE LOWER(author_email) = %s OR ( %d > 0 AND user_id = %d )", $anonymous, strtolower( trim( $email ) ), $user_id, $user_id ) );
+		} elseif ( $user_id ) {
+			$changed += (int) $wpdb->query( $wpdb->prepare( "UPDATE `{$questions}` SET author_name = %s, user_id = NULL WHERE user_id = %d", $anonymous, $user_id ) );
+		}
+		if ( $user_id ) {
+			$changed += (int) $wpdb->query( $wpdb->prepare( "UPDATE `{$answers}` SET author_name = %s, user_id = NULL WHERE user_id = %d", $anonymous, $user_id ) );
+			// Their question votes: the vote counts stay on the questions.
+			$votes    = Db::table( 'question_votes' );
+			$changed += (int) $wpdb->query( $wpdb->prepare( "DELETE FROM `{$votes}` WHERE user_id = %d", $user_id ) );
+		}
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		return $changed > 0;
 	}
 
 	/**
@@ -339,6 +464,9 @@ class Privacy implements Registerable {
 				}
 			}
 			if ( $this->tokens && $this->tokens->delete_for_email( $email ) > 0 ) {
+				$removed = true;
+			}
+			if ( $this->qa_erase( $email ) ) {
 				$removed = true;
 			}
 			if ( $this->mailer && $this->mailer->hash_suppressed( $email ) ) {

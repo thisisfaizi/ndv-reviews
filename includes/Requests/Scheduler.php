@@ -143,8 +143,26 @@ class Scheduler implements Registerable {
 		if ( ! Installer::is_current( Installer::V_PIPELINE ) ) {
 			return new \WP_Error( 'ndvr_not_ready', __( 'The review-request database update has not finished yet.', 'rosette-reviews' ) );
 		}
+		if ( ! in_array( $args['source'], array( 'auto', 'manual', 'followup', 'campaign' ), true ) ) {
+			return new \WP_Error( 'ndvr_bad_source', __( 'Unknown review-request source.', 'rosette-reviews' ) );
+		}
+
+		$campaign = isset( $args['meta']['campaign_id'] ) ? absint( $args['meta']['campaign_id'] ) : 0;
+		if ( 'campaign' === $args['source'] && ! $campaign ) {
+			return new \WP_Error( 'ndvr_no_campaign', __( 'A campaign request needs a campaign id.', 'rosette-reviews' ) );
+		}
 
 		$order_id = absint( $order_id );
+
+		// An order already asked before this version (legacy row, including
+		// Pro BulkCampaign's direct inserts) keeps that one request: the first
+		// automatic request is never queued twice.
+		if ( 'free' === $args['origin'] && 'auto' === $args['source'] && 1 === $args['step'] ) {
+			$legacy = $this->requests->first_id_for_order( $order_id, array( 'legacy' ) );
+			if ( $legacy ) {
+				return $legacy;
+			}
+		}
 		$order    = $order_id && function_exists( 'wc_get_order' ) ? wc_get_order( $order_id ) : null;
 		$order    = $order instanceof \WC_Order ? $order : null;
 
@@ -172,6 +190,10 @@ class Scheduler implements Registerable {
 		$dedupe = null;
 		if ( in_array( $args['source'], array( 'auto', 'followup' ), true ) ) {
 			$dedupe = sprintf( 'o:%d:%s:%d:%s', $order_id, $args['origin'], $args['step'], $args['source'] );
+		} elseif ( 'campaign' === $args['source'] ) {
+			// Same key as list rows: one email per address per campaign, even
+			// for a customer with several orders in it.
+			$dedupe = 'c:' . $campaign . ':' . md5( strtolower( (string) $order->get_billing_email() ) );
 		}
 
 		return $this->insert_and_schedule(
@@ -432,6 +454,13 @@ class Scheduler implements Registerable {
 			return;
 		}
 
+		// The address was erased for privacy: never send (order rows would
+		// otherwise mail the order's billing address).
+		if ( empty( $row->email ) ) {
+			$this->requests->set_status( $request_id, 'cancelled', __( 'Not sent: the address was erased for privacy.', 'rosette-reviews' ) );
+			return;
+		}
+
 		$meta    = RequestRepository::meta( $row );
 		$is_list = 0 === (int) $row->order_id;
 		$order   = $is_list ? null : wc_get_order( (int) $row->order_id );
@@ -523,7 +552,7 @@ class Scheduler implements Registerable {
 	 */
 	public function retry( $request_id ) {
 		$request = $this->requests->find( $request_id );
-		if ( ! $request || 'failed' !== $request->status ) {
+		if ( ! $request || 'failed' !== $request->status || empty( $request->email ) ) {
 			return false;
 		}
 
@@ -550,6 +579,9 @@ class Scheduler implements Registerable {
 		}
 
 		$this->requests->recover_stuck( gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS ), __( 'Interrupted while sending; retry.', 'rosette-reviews' ) );
+
+		// Held-media cleanups the deactivation removed (RR-00b E3).
+		\NdvReviews\Moderation\Actions::resweep_held_media( 200 );
 
 		if ( ! function_exists( 'as_has_scheduled_action' ) || ! function_exists( 'as_schedule_single_action' ) ) {
 			return;
@@ -593,7 +625,7 @@ class Scheduler implements Registerable {
 		if ( ! function_exists( 'as_has_scheduled_action' ) || ! function_exists( 'as_schedule_recurring_action' ) ) {
 			return;
 		}
-		if ( true !== $force && false !== get_transient( 'ndvr_recover_checked' ) ) {
+		if ( true !== $force && ( wp_doing_ajax() || false !== get_transient( 'ndvr_recover_checked' ) ) ) {
 			return;
 		}
 

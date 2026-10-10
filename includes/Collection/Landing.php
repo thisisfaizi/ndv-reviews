@@ -243,6 +243,10 @@ class Landing implements Registerable {
 	 * @return void
 	 */
 	public function handle_submit() {
+		if ( Upload::request_too_large() ) {
+			Upload::send_too_large();
+		}
+
 		if ( ! check_ajax_referer( self::NONCE, 'nonce', false ) ) {
 			wp_send_json_error( array( 'message' => __( 'Session expired. Please reload.', 'rosette-reviews' ) ), 403 );
 		}
@@ -458,6 +462,29 @@ class Landing implements Registerable {
 	}
 
 	/**
+	 * Keep only handles that are registered.
+	 *
+	 * @param array<int,mixed> $handles Handles.
+	 * @param string           $kind    style|script.
+	 * @return string[]
+	 */
+	private static function registered_handles( array $handles, $kind ) {
+		$out = array();
+		foreach ( $handles as $handle ) {
+			$handle = is_string( $handle ) ? $handle : '';
+			if ( '' === $handle ) {
+				continue;
+			}
+			$registered = 'style' === $kind ? wp_style_is( $handle, 'registered' ) : wp_script_is( $handle, 'registered' );
+			if ( $registered ) {
+				$out[] = $handle;
+			}
+		}
+
+		return array_values( array_unique( $out ) );
+	}
+
+	/**
 	 * Output a minimal standalone HTML page wrapping the landing content.
 	 *
 	 * @param string $inner Rendered landing markup.
@@ -482,7 +509,16 @@ class Landing implements Registerable {
 		}
 		wp_enqueue_style( 'ndvr-collect', NDVR_URL . 'assets/css/collect.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 		wp_enqueue_style( 'ndvr-reviews', NDVR_URL . 'assets/css/reviews.css', array( 'ndvr-tokens' ), NDVR_VERSION );
-		wp_print_styles( array( 'ndvr-collect', 'ndvr-reviews' ) );
+
+		/**
+		 * Filter the style handles this standalone page prints (RR-00b E7). The
+		 * page never calls wp_head(), so this is how an add-on's registered
+		 * handle reaches it. Only registered handles print.
+		 *
+		 * @param string[] $handles Style handles.
+		 */
+		$styles = self::registered_handles( (array) apply_filters( 'ndv-reviews/landing_style_handles', array( 'ndvr-collect', 'ndvr-reviews' ) ), 'style' );
+		wp_print_styles( $styles );
 		?>
 </head>
 <body class="ndvr-collect-body">
@@ -490,8 +526,15 @@ class Landing implements Registerable {
 		<?php echo $inner; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</main>
 	<?php
-	wp_enqueue_script( 'ndvr-collect', NDVR_URL . 'assets/js/collect.js', array(), NDVR_VERSION, true );
-	wp_print_scripts( array( 'ndvr-collect' ) );
+		wp_enqueue_script( 'ndvr-collect', NDVR_URL . 'assets/js/collect.js', array(), NDVR_VERSION, true );
+
+		/**
+		 * Filter the script handles this standalone page prints (RR-00b E7).
+		 * Only registered handles print.
+		 *
+		 * @param string[] $handles Script handles.
+		 */
+		wp_print_scripts( self::registered_handles( (array) apply_filters( 'ndv-reviews/landing_script_handles', array( 'ndvr-collect' ) ), 'script' ) );
 	?>
 </body>
 </html>

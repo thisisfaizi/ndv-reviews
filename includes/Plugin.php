@@ -515,6 +515,11 @@ final class Plugin {
 			}
 		}
 
+		// The incentive disclosure pill (RR-00b E9) is registered outside the
+		// filterable list on purpose: a material-connection disclosure must not
+		// be removable (FTC 16 CFR 465, EU Omnibus).
+		( new \NdvReviews\Display\ReviewBadges() )->register();
+
 		/**
 		 * Fires once the free plugin is fully loaded. The Pro add-on boots here,
 		 * checks its license, and registers its modules against this instance.

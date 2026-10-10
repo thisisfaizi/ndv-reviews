@@ -487,11 +487,31 @@ class ListTable extends \WP_List_Table {
 	 */
 	public function column_media( $item ) {
 		global $wpdb;
-		$table = $wpdb->prefix . NDVR_TABLE_PREFIX . 'review_media';
+		$table = \NdvReviews\Support\Db::table( 'review_media' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$n = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM `{$table}` WHERE comment_id = %d", (int) $item->comment_ID ) );
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT type, COUNT(*) AS n FROM `{$table}` WHERE comment_id = %d GROUP BY type", (int) $item->comment_ID ) );
 
-		return $n > 0 ? esc_html( number_format_i18n( $n ) ) : '&mdash;';
+		$photos = 0;
+		$videos = 0;
+		foreach ( (array) $rows as $row ) {
+			if ( 'video' === $row->type ) {
+				$videos += (int) $row->n;
+			} else {
+				$photos += (int) $row->n;
+			}
+		}
+
+		$parts = array();
+		if ( $photos ) {
+			/* translators: %s: number of photos. */
+			$parts[] = sprintf( _n( '%s photo', '%s photos', $photos, 'rosette-reviews' ), number_format_i18n( $photos ) );
+		}
+		if ( $videos ) {
+			/* translators: %s: number of videos. */
+			$parts[] = sprintf( _n( '%s video', '%s videos', $videos, 'rosette-reviews' ), number_format_i18n( $videos ) );
+		}
+
+		return $parts ? esc_html( implode( ', ', $parts ) ) : '&mdash;';
 	}
 
 	/**

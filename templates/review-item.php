@@ -43,8 +43,15 @@ if ( empty( $review ) ) {
 				 * @param array<string,mixed> $review Review view-model.
 				 */
 				if ( apply_filters( 'ndv-reviews/show_verified_badge', ! empty( $review['verified'] ), $review ) ) :
+					/**
+					 * Filter the verified badge text (also used on marquee cards).
+					 *
+					 * @param string              $text   Default "Verified buyer".
+					 * @param array<string,mixed> $review Review view-model (may be empty).
+					 */
+					$ndvr_verified_text = (string) apply_filters( 'ndv-reviews/verified_badge_text', __( 'Verified buyer', 'rosette-reviews' ), $review );
 					?>
-					<span class="ndvr-verified-badge"><?php esc_html_e( 'Verified buyer', 'rosette-reviews' ); ?></span>
+					<span class="ndvr-verified-badge"><?php echo esc_html( $ndvr_verified_text ); ?></span>
 				<?php endif; ?>
 				<?php
 				/**

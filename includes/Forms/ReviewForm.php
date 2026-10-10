@@ -90,6 +90,105 @@ class ReviewForm implements Registerable {
 		// Fix the "post a comment" login message to say "review" on product pages.
 		add_filter( 'comment_form_must_log_in', array( $this, 'fix_login_message' ) );
 		add_filter( 'preprocess_comment', array( $this, 'block_unrated_native_post' ) );
+		// Native (no-JS) posts on a pooled product are stored on the pool (RR-00b E5).
+		add_filter( 'preprocess_comment', array( $this, 'remap_native_to_pool' ), 20 );
+		add_action( 'comment_post', array( $this, 'stamp_native_pooled' ), 20, 1 );
+		add_filter( 'comment_post_redirect', array( $this, 'redirect_native_to_origin' ), 10, 2 );
+	}
+
+	/**
+	 * Product a native post was written for, when it was stored on its pool
+	 * instead (this request only).
+	 *
+	 * @var int
+	 */
+	private $native_origin = 0;
+
+	/**
+	 * Store a native top-level product review on the product's pool, so it
+	 * counts where the pool's reviews live. The origin product's own settings
+	 * (comments open) were already checked by wp-comments-post.php.
+	 *
+	 * @param array<string,mixed> $commentdata Comment data.
+	 * @return array<string,mixed>
+	 */
+	public function remap_native_to_pool( $commentdata ) {
+		$this->native_origin = 0;
+		if ( is_admin() || ! empty( $commentdata['comment_parent'] ) ) {
+			return $commentdata;
+		}
+
+		$post_id = isset( $commentdata['comment_post_ID'] ) ? absint( $commentdata['comment_post_ID'] ) : 0;
+		if ( ! $post_id || 'product' !== get_post_type( $post_id ) ) {
+			return $commentdata;
+		}
+
+		$pool_id = \NdvReviews\Reviews\Pool::resolve_id( $post_id );
+		if ( $pool_id && $pool_id !== $post_id && 'product' === get_post_type( $pool_id ) ) {
+			$commentdata['comment_post_ID'] = $pool_id;
+			$this->native_origin            = \NdvReviews\Reviews\Pool::origin_id( $post_id );
+		}
+
+		return $commentdata;
+	}
+
+	/**
+	 * After the native insert (and WooCommerce's own rating meta, priority 1),
+	 * remember the origin and recount the pool. WooCommerce recounts the origin
+	 * from $_POST, not the pool, so this recount is required.
+	 *
+	 * @param int $comment_id New comment id.
+	 * @return void
+	 */
+	public function stamp_native_pooled( $comment_id ) {
+		if ( ! $this->native_origin ) {
+			return;
+		}
+
+		$comment = get_comment( $comment_id );
+		if ( ! $comment || (int) $comment->comment_post_ID === $this->native_origin ) {
+			return;
+		}
+
+		update_comment_meta( $comment_id, \NdvReviews\Reviews\Pool::POOLED_FROM_META, $this->native_origin );
+
+		// WooCommerce checked "verified owner" against the post the review is
+		// stored on (the pool); the buyer bought the product they reviewed.
+		if ( function_exists( 'wc_customer_bought_product' ) ) {
+			$bought = wc_customer_bought_product( (string) $comment->comment_author_email, (int) $comment->user_id, $this->native_origin );
+			update_comment_meta( $comment_id, 'verified', $bought ? 1 : 0 );
+		}
+
+		\NdvReviews\Plugin::instance()->container()->get( 'rating_cache' )->recalc_product( (int) $comment->comment_post_ID );
+	}
+
+	/**
+	 * Send the shopper back to the product they reviewed, not the pool.
+	 *
+	 * @param string      $location Redirect URL.
+	 * @param \WP_Comment $comment  The new comment.
+	 * @return string
+	 */
+	public function redirect_native_to_origin( $location, $comment ) {
+		if ( ! $this->native_origin || ! $comment instanceof \WP_Comment ) {
+			return $location;
+		}
+
+		$link = get_permalink( $this->native_origin );
+		if ( ! $link ) {
+			return $location;
+		}
+
+		// Keep core's "awaiting moderation" arguments so the shopper sees their
+		// pending review (unapproved, moderation-hash).
+		$query = (string) wp_parse_url( $location, PHP_URL_QUERY );
+		parse_str( $query, $args );
+		$keep = array_intersect_key( (array) $args, array_flip( array( 'unapproved', 'moderation-hash' ) ) );
+		if ( $keep ) {
+			$link = add_query_arg( array_map( 'rawurlencode', $keep ), $link );
+		}
+
+		return $link . '#comment-' . (int) $comment->comment_ID;
 	}
 
 	/**
@@ -348,6 +447,10 @@ class ReviewForm implements Registerable {
 	 * @return void
 	 */
 	public function handle_submit() {
+		if ( Upload::request_too_large() ) {
+			Upload::send_too_large();
+		}
+
 		if ( ! check_ajax_referer( self::NONCE_ACTION, 'ndvr_nonce', false ) ) {
 			wp_send_json_error( array( 'message' => __( 'Your session expired. Please reload the page.', 'rosette-reviews' ) ), 403 );
 		}

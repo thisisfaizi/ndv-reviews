@@ -45,6 +45,35 @@ class Upload {
 	}
 
 	/**
+	 * Whether this request's body was larger than post_max_size (RR-00b E8):
+	 * PHP then drops $_POST and $_FILES entirely, so a handler would otherwise
+	 * fail with a generic error. Reads only CONTENT_LENGTH.
+	 *
+	 * @return bool
+	 */
+	public static function request_too_large() {
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- read-only emptiness check before any nonce exists to check.
+		if ( ! empty( $_POST ) || ! empty( $_FILES ) ) {
+			return false;
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+
+		$length = isset( $_SERVER['CONTENT_LENGTH'] ) ? absint( $_SERVER['CONTENT_LENGTH'] ) : 0;
+		$limit  = wp_convert_hr_to_bytes( (string) ini_get( 'post_max_size' ) );
+
+		return $limit > 0 && $length > $limit;
+	}
+
+	/**
+	 * Send the "files too large" JSON (HTTP 413) and stop.
+	 *
+	 * @return void
+	 */
+	public static function send_too_large() {
+		wp_send_json_error( array( 'message' => __( 'Your files are too large to send. Try a smaller file or fewer photos.', 'rosette-reviews' ) ), 413 );
+	}
+
+	/**
 	 * Handle the photo uploads attached to a review submission.
 	 *
 	 * @param string $field   The $_FILES field name (supports multiple).

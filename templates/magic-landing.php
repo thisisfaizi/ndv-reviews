@@ -4,6 +4,9 @@
  *
  * Override: copy to yourtheme/ndv-reviews/magic-landing.php
  *
+ * Overrides should keep the action ndv-reviews/landing_form_fields (add-on
+ * fields such as a video upload render there).
+ *
  * @var bool                  $valid       Whether the token resolved.
  * @var string                $token       Raw token (re-submitted with each review).
  * @var int[]                 $products    Pending product ids.
@@ -118,6 +121,19 @@ endif;
 						</label>
 					</p>
 				<?php endif; ?>
+
+				<?php
+				/**
+				 * Fires in each product's landing form, after the photo field and
+				 * before consent (RR-00b E7). Each product has its own <form>, so
+				 * field names need no prefix, but element ids must include the
+				 * product id. File inputs are sent (the form posts FormData).
+				 *
+				 * @param int   $product_id Product id.
+				 * @param array $criteria   Active criteria.
+				 */
+				do_action( 'ndv-reviews/landing_form_fields', (int) $ndvr_pid, $criteria );
+				?>
 
 				<p class="ndvr-field ndvr-field-consent">
 					<label><input type="checkbox" name="ndvr_consent" value="1" required /> <?php esc_html_e( 'I consent to my review being stored and published.', 'rosette-reviews' ); ?></label>

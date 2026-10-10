@@ -28,14 +28,27 @@ class Reviewable {
 
 		$email = $order->get_billing_email();
 		$ids   = array();
+		$seen  = array();
 
 		foreach ( $order->get_items() as $item ) {
 			if ( ! $item instanceof \WC_Order_Item_Product ) {
 				continue;
 			}
 			$product_id = $item->get_product_id();
-			if ( $product_id && 'product' === get_post_type( $product_id ) && ! $this->has_reviewed( $email, $product_id, (int) $order->get_customer_id() ) ) {
-				$ids[ $product_id ] = $product_id;
+			if ( ! $product_id || 'product' !== get_post_type( $product_id ) ) {
+				continue;
+			}
+
+			// Two products that share reviews (one pool) get one form: keyed by
+			// pool, keeping the first ordered product (RR-00b E4).
+			$pool_id = \NdvReviews\Reviews\Pool::resolve_id( $product_id );
+			if ( isset( $ids[ $pool_id ] ) || isset( $seen[ $pool_id ] ) ) {
+				continue;
+			}
+			$seen[ $pool_id ] = true;
+
+			if ( ! $this->has_reviewed( $email, $product_id, (int) $order->get_customer_id() ) ) {
+				$ids[ $pool_id ] = $product_id;
 			}
 		}
 

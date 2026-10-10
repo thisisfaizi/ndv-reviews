@@ -4,6 +4,9 @@
  *
  * Override: copy to yourtheme/ndv-reviews/marquee.php
  *
+ * Overrides should keep the action ndv-reviews/marquee_author_badges: the
+ * incentive disclosure pill renders there.
+ *
  * @var array<int,array<string,mixed>> $items  Review view-models.
  * @var array<string,mixed>            $args   Display args.
  * @var int                            $repeat Number of times to repeat the set.
@@ -41,9 +44,24 @@ $ndvr_style = sprintf(
 							<?php echo Html::avatar( $ndvr_review['author'], 'ndvr-marquee-avatar' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Html::avatar(). ?>
 							<span class="ndvr-marquee-name">
 								<?php echo esc_html( $ndvr_review['author'] ); ?>
-								<?php if ( ! empty( $ndvr_review['verified'] ) ) : ?>
-									<span class="ndvr-marquee-verified" title="<?php esc_attr_e( 'Verified buyer', 'rosette-reviews' ); ?>"><span aria-hidden="true">&#10003;</span><span class="screen-reader-text"><?php esc_html_e( 'Verified buyer', 'rosette-reviews' ); ?></span></span>
+								<?php
+								if ( ! empty( $ndvr_review['verified'] ) ) :
+									/** This filter is documented in templates/review-item.php */
+									$ndvr_verified_text = (string) apply_filters( 'ndv-reviews/verified_badge_text', __( 'Verified buyer', 'rosette-reviews' ), $ndvr_review );
+									?>
+									<span class="ndvr-marquee-verified" title="<?php echo esc_attr( $ndvr_verified_text ); ?>"><span aria-hidden="true">&#10003;</span><span class="screen-reader-text"><?php echo esc_html( $ndvr_verified_text ); ?></span></span>
 								<?php endif; ?>
+								<?php
+								/**
+								 * Fires inside a marquee card's name line, after the verified mark
+								 * (small inline pills such as the incentive disclosure). Separate
+								 * from review_author_badges so full-card listeners stay out of the
+								 * compact marquee.
+								 *
+								 * @param array<string,mixed> $review Review view-model.
+								 */
+								do_action( 'ndv-reviews/marquee_author_badges', $ndvr_review );
+								?>
 							</span>
 						</figcaption>
 						<div class="ndvr-marquee-stars">

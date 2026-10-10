@@ -56,8 +56,16 @@ class ReviewQuery {
 		$per_page   = max( 1, min( 50, (int) $args['per_page'] ) );
 		$page       = max( 1, (int) $args['page'] );
 
+		// Reviews live on the product's pool (RR-00b E4); visibility is still
+		// checked on the product that was asked for. Reviews still stored on the
+		// product itself (written before it joined a pool, or through another
+		// path) are read too, so they never disappear from its page.
+		$pool_id         = $product_id ? Pool::resolve_id( $product_id ) : 0;
+		$args['pool_id'] = $pool_id;
+		$review_posts    = $product_id ? array_values( array_unique( array( $product_id, $pool_id ) ) ) : array();
+
 		$query_args = array(
-			'post_id'   => $product_id,
+			'post_id'   => 1 === count( $review_posts ) ? $review_posts[0] : 0,
 			'post_type' => PostTypes::all(), // Restrict to reviewable post types (excludes blog comments store-wide).
 			'type__in'  => array( 'review', 'comment' ),
 			'status'    => 'approve',
@@ -72,6 +80,9 @@ class ReviewQuery {
 		if ( $product_id ) {
 			if ( ! $this->is_viewable( $product_id ) ) {
 				return $this->empty_result( $page );
+			}
+			if ( count( $review_posts ) > 1 ) {
+				$query_args['post__in'] = $review_posts;
 			}
 		} else {
 			$query_args['post_status'] = 'publish';
@@ -135,7 +146,7 @@ class ReviewQuery {
 		}
 
 		if ( ! empty( $args['with_media'] ) ) {
-			$ids = $this->comment_ids_with_media( $product_id, isset( $query_args['post__in'] ) ? $query_args['post__in'] : array() );
+			$ids = $this->comment_ids_with_media( isset( $query_args['post__in'] ) ? 0 : $pool_id, isset( $query_args['post__in'] ) ? $query_args['post__in'] : array() );
 			if ( isset( $query_args['comment__in'] ) ) {
 				$ids = array_values( array_intersect( $query_args['comment__in'], $ids ) );
 			}
@@ -246,22 +257,42 @@ class ReviewQuery {
 		 * @param string      $author  Author display name.
 		 * @param \WP_Comment $comment The review comment.
 		 */
-		$author = (string) apply_filters( 'ndv-reviews/review_author', $comment->comment_author, $comment );
+		$author    = (string) apply_filters( 'ndv-reviews/review_author', $comment->comment_author, $comment );
+		$incentive = self::incentive( $id );
 
 		return array(
-			'id'         => $id,
-			'author'     => $author,
-			'date'       => $comment->comment_date,
-			'content'    => $comment->comment_content,
-			'title'      => (string) get_comment_meta( $id, '_ndvr_title', true ),
-			'overall'    => (float) get_comment_meta( $id, '_ndvr_overall_rating', true ),
-			'rating'     => (int) get_comment_meta( $id, 'rating', true ),
-			'recommend'  => (string) get_comment_meta( $id, '_ndvr_recommend', true ),
-			'verified'   => (bool) get_comment_meta( $id, '_ndvr_verified', true ),
-			'helpful_up' => (int) get_comment_meta( $id, '_ndvr_helpful_up', true ),
-			'criteria'   => null !== $criteria_map ? ( $criteria_map[ $id ] ?? array() ) : $this->criteria_scores( $id ),
-			'media'      => null !== $media_map ? ( $media_map[ $id ] ?? array() ) : $this->media( $id ),
+			'id'           => $id,
+			'author'       => $author,
+			'date'         => $comment->comment_date,
+			'content'      => $comment->comment_content,
+			'title'        => (string) get_comment_meta( $id, '_ndvr_title', true ),
+			'overall'      => (float) get_comment_meta( $id, '_ndvr_overall_rating', true ),
+			'rating'       => (int) get_comment_meta( $id, 'rating', true ),
+			'recommend'    => (string) get_comment_meta( $id, '_ndvr_recommend', true ),
+			'verified'     => (bool) get_comment_meta( $id, '_ndvr_verified', true ),
+			'helpful_up'   => (int) get_comment_meta( $id, '_ndvr_helpful_up', true ),
+			'criteria'     => null !== $criteria_map ? ( $criteria_map[ $id ] ?? array() ) : $this->criteria_scores( $id ),
+			'media'        => null !== $media_map ? ( $media_map[ $id ] ?? array() ) : $this->media( $id ),
+			'incentive'    => $incentive,
+			'incentivized' => '' !== $incentive,
 		);
+	}
+
+	/**
+	 * A review's incentive disclosure (RR-00b E9): '' (none), 'offered' or
+	 * 'received'. Any other truthy value of `_ndvr_incentive_offered` (for
+	 * example 1 set by store code) reads as 'offered'.
+	 *
+	 * @param int $comment_id Comment id.
+	 * @return string
+	 */
+	public static function incentive( $comment_id ) {
+		$value = get_comment_meta( absint( $comment_id ), '_ndvr_incentive_offered', true );
+		if ( empty( $value ) ) {
+			return '';
+		}
+
+		return 'received' === $value ? 'received' : 'offered';
 	}
 
 	/**
@@ -302,30 +333,61 @@ class ReviewQuery {
 	/**
 	 * Approved media for a review.
 	 *
-	 * @param int $comment_id Comment id.
-	 * @return array<int,array{id:int,url:string,thumb:string}>
+	 * @param int    $comment_id Comment id.
+	 * @param string $type       image (default), video, or 'any'.
+	 * @return array<int,array{id:int,url:string,thumb:string,type:string}>
 	 */
-	public function media( $comment_id ) {
+	public function media( $comment_id, $type = 'image' ) {
 		global $wpdb;
 
 		$table = Db::table( 'review_media' );
+		$type  = sanitize_key( (string) $type );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT attachment_id, url FROM `{$table}` WHERE comment_id = %d AND status = 'approved' ORDER BY position ASC", $comment_id ) );
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = 'any' === $type
+			? $wpdb->get_results( $wpdb->prepare( "SELECT attachment_id, url, type FROM `{$table}` WHERE comment_id = %d AND status = 'approved' ORDER BY position ASC", $comment_id ) )
+			: $wpdb->get_results( $wpdb->prepare( "SELECT attachment_id, url, type FROM `{$table}` WHERE comment_id = %d AND status = 'approved' AND type = %s ORDER BY position ASC", $comment_id, $type ) );
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		$out = array();
 		foreach ( (array) $rows as $row ) {
-			$id    = (int) $row->attachment_id;
-			$thumb = $id ? wp_get_attachment_image_url( $id, 'thumbnail' ) : '';
-			$full  = $id ? wp_get_attachment_image_url( $id, 'large' ) : (string) $row->url;
-			$out[] = array(
-				'id'    => $id,
-				'url'   => $full ? $full : (string) $row->url,
-				'thumb' => $thumb ? $thumb : (string) $row->url,
-			);
+			$out[] = self::media_row( $row );
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Display data for one review_media row. Only image rows get thumbnails
+	 * and the <img>-safe fallback to the file URL; a video row's `thumb` is ''
+	 * and its `url` is the attachment URL.
+	 *
+	 * @param object $row Row with attachment_id, url and type.
+	 * @return array{id:int,url:string,thumb:string,type:string}
+	 */
+	private static function media_row( $row ) {
+		$id   = (int) $row->attachment_id;
+		$type = isset( $row->type ) && '' !== $row->type ? (string) $row->type : 'image';
+
+		if ( 'image' !== $type ) {
+			$url = $id ? wp_get_attachment_url( $id ) : '';
+			return array(
+				'id'    => $id,
+				'url'   => $url ? $url : (string) $row->url,
+				'thumb' => '',
+				'type'  => $type,
+			);
+		}
+
+		$thumb = $id ? wp_get_attachment_image_url( $id, 'thumbnail' ) : '';
+		$full  = $id ? wp_get_attachment_image_url( $id, 'large' ) : (string) $row->url;
+
+		return array(
+			'id'    => $id,
+			'url'   => $full ? $full : (string) $row->url,
+			'thumb' => $thumb ? $thumb : (string) $row->url,
+			'type'  => 'image',
+		);
 	}
 
 	/**
@@ -371,10 +433,11 @@ class ReviewQuery {
 	/**
 	 * Approved media for MULTIPLE reviews in one query (avoids N+1 in paginate()).
 	 *
-	 * @param int[] $comment_ids Comment ids.
-	 * @return array<int,array<int,array{id:int,url:string,thumb:string}>> comment_id => media rows.
+	 * @param int[]  $comment_ids Comment ids.
+	 * @param string $type        image (default), video, or 'any'.
+	 * @return array<int,array<int,array{id:int,url:string,thumb:string,type:string}>> comment_id => media rows.
 	 */
-	public function media_bulk( array $comment_ids ) {
+	public function media_bulk( array $comment_ids, $type = 'image' ) {
 		$comment_ids = array_values( array_unique( array_map( 'absint', $comment_ids ) ) );
 		if ( empty( $comment_ids ) ) {
 			return array();
@@ -382,28 +445,26 @@ class ReviewQuery {
 
 		global $wpdb;
 		$table = Db::table( 'review_media' );
+		$type  = sanitize_key( (string) $type );
 
 		$placeholders = implode( ',', array_fill( 0, count( $comment_ids ), '%d' ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$type_sql     = 'any' === $type ? '' : ' AND type = %s';
+		$params       = 'any' === $type ? $comment_ids : array_merge( $comment_ids, array( $type ) );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table from Db::table(); placeholders built from counts; $type_sql is a literal.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT comment_id, attachment_id, url FROM `{$table}`
-				WHERE comment_id IN ({$placeholders}) AND status = 'approved'
+				"SELECT comment_id, attachment_id, url, type FROM `{$table}`
+				WHERE comment_id IN ({$placeholders}) AND status = 'approved'{$type_sql}
 				ORDER BY comment_id ASC, position ASC",
-				$comment_ids
+				$params
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		$out = array();
 		foreach ( (array) $rows as $row ) {
-			$id    = (int) $row->attachment_id;
-			$thumb = $id ? wp_get_attachment_image_url( $id, 'thumbnail' ) : '';
-			$full  = $id ? wp_get_attachment_image_url( $id, 'large' ) : (string) $row->url;
-			$out[ (int) $row->comment_id ][] = array(
-				'id'    => $id,
-				'url'   => $full ? $full : (string) $row->url,
-				'thumb' => $thumb ? $thumb : (string) $row->url,
-			);
+			$out[ (int) $row->comment_id ][] = self::media_row( $row );
 		}
 
 		return $out;
@@ -465,16 +526,29 @@ class ReviewQuery {
 			$params = array( 1 );
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		/**
+		 * Filter the media types that count for the "With photos" filter.
+		 *
+		 * @param string[] $types Default image only.
+		 */
+		$types = array_values( array_filter( array_map( 'sanitize_key', (array) apply_filters( 'ndv-reviews/with_media_types', array( 'image' ) ) ) ) );
+		if ( empty( $types ) ) {
+			return array();
+		}
+		$type_in = implode( ',', array_fill( 0, count( $types ), '%s' ) );
+		$params  = array_merge( $params, $types );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table from Db::table(); $where and $type_in hold placeholders only.
 		$ids = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT DISTINCT m.comment_id
 				FROM {$media} m
 				INNER JOIN {$wpdb->comments} c ON c.comment_ID = m.comment_id
-				WHERE {$where} AND m.status = 'approved' AND c.comment_approved = '1'",
+				WHERE {$where} AND m.status = 'approved' AND c.comment_approved = '1' AND m.type IN ({$type_in})",
 				$params
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 		return array_map( 'absint', (array) $ids );
 	}

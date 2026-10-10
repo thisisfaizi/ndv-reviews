@@ -135,6 +135,13 @@ class ToolsPage implements Registerable {
 			$this->exporter->stream_json();
 		} elseif ( 'csv_import' === $do ) {
 			$this->handle_csv_upload();
+		} elseif ( 'restore_pooled' === $do ) {
+			$moved = \NdvReviews\Reviews\Pool::restore( \NdvReviews\Reviews\Pool::orphans( 200 ) );
+			$this->notices[] = array(
+				'type'    => 'success',
+				/* translators: %s: number of reviews. */
+				'message' => sprintf( _n( 'Moved %s review back to its product.', 'Moved %s reviews back to their products.', $moved, 'rosette-reviews' ), number_format_i18n( $moved ) ),
+			);
 		}
 	}
 
@@ -241,6 +248,33 @@ class ToolsPage implements Registerable {
 					<button class="button" name="ndvr_tools_do" value="export_json"><?php esc_html_e( 'Export JSON', 'rosette-reviews' ); ?></button>
 				</form>
 			</div>
+
+			<?php
+			// Reviews left on another product after products stopped sharing reviews (RR-00b E5).
+			$ndvr_orphans = count( \NdvReviews\Reviews\Pool::orphans( 1000 ) );
+			if ( $ndvr_orphans > 0 ) :
+				?>
+				<div class="ndvr-card">
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Return shared reviews', 'rosette-reviews' ); ?></h2></div>
+					<p>
+						<?php
+						/* translators: %s: number of reviews. */
+						echo esc_html( sprintf( _n( '%s review is stored on another product because the products shared reviews. That sharing is no longer active. Move it back to the product it was written for.', '%s reviews are stored on another product because the products shared reviews. That sharing is no longer active. Move them back to the product they were written for.', $ndvr_orphans, 'rosette-reviews' ), number_format_i18n( $ndvr_orphans ) ) );
+						?>
+					</p>
+					<p class="description"><?php esc_html_e( 'Only do this if these products should stop sharing reviews. If sharing is turned back on later, the reviews move to the shared product again. Replies move with their review.', 'rosette-reviews' ); ?></p>
+					<form method="post">
+						<?php wp_nonce_field( self::NONCE ); ?>
+						<button class="button" name="ndvr_tools_do" value="restore_pooled">
+							<?php
+							$ndvr_batch = min( 200, $ndvr_orphans );
+							/* translators: %s: number of reviews. */
+							echo esc_html( sprintf( _n( 'Move %s review back', 'Move %s reviews back', $ndvr_batch, 'rosette-reviews' ), number_format_i18n( $ndvr_batch ) ) );
+							?>
+						</button>
+					</form>
+				</div>
+			<?php endif; ?>
 
 			<div class="ndvr-card">
 				<div class="ndvr-card-header"><h2><?php esc_html_e( 'QR code & shareable review link', 'rosette-reviews' ); ?></h2></div>

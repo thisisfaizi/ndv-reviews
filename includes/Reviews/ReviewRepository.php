@@ -168,7 +168,7 @@ class ReviewRepository {
 
 		// Media.
 		if ( ! empty( $data['media'] ) ) {
-			$this->save_media( $comment_id, (array) $data['media'] );
+			$this->save_media( $comment_id, (array) $data['media'], isset( $data['source'] ) ? sanitize_key( $data['source'] ) : 'onsite' );
 		}
 
 		// Meta.
@@ -196,6 +196,14 @@ class ReviewRepository {
 
 		if ( ! empty( $data['order_id'] ) ) {
 			update_comment_meta( $comment_id, '_ndvr_order_id', absint( $data['order_id'] ) );
+		}
+
+		// Stored on another product's pool: remember the product it was written
+		// for (the parent, for a variation), so it can move back if the
+		// products stop sharing reviews (RR-00b E5).
+		$origin = Pool::origin_id( $product_id );
+		if ( $origin !== $pool_id ) {
+			update_comment_meta( $comment_id, Pool::POOLED_FROM_META, $origin );
 		}
 
 		$is_verified = $this->verified->is_verified( $email, $user_id, $product_id, $source );
@@ -286,42 +294,123 @@ class ReviewRepository {
 	/**
 	 * Attach uploaded media to a review.
 	 *
-	 * @param int   $comment_id    Review comment id.
-	 * @param int[] $attachment_ids Validated attachment ids.
+	 * @param int    $comment_id     Review comment id.
+	 * @param int[]  $attachment_ids Validated attachment ids.
+	 * @param string $source         Review source (passed to the media status filter).
 	 * @return void
 	 */
-	private function save_media( $comment_id, array $attachment_ids ) {
+	private function save_media( $comment_id, array $attachment_ids, $source = '' ) {
+		$this->attach_media(
+			$comment_id,
+			$attachment_ids,
+			'image',
+			array(
+				'origin' => 'create',
+				'source' => (string) $source,
+			)
+		);
+	}
+
+	/**
+	 * Attach media-library items to a review (RR-00b E1): the one writer of
+	 * review_media rows. Never fires review_created and never sends mail, so
+	 * imports stay silent.
+	 *
+	 * @param int                 $comment_id Review comment id.
+	 * @param int[]               $ids        Attachment ids.
+	 * @param string              $type       image|video (filter ndv-reviews/media_types).
+	 * @param array<string,mixed> $context    Passed to ndv-reviews/review_media_status, merged over
+	 *                                        comment_id, type, source and origin ('api').
+	 * @return int Rows inserted.
+	 */
+	public function attach_media( $comment_id, array $ids, $type = 'image', array $context = array() ) {
 		global $wpdb;
 
-		$table    = Db::table( 'review_media' );
-		$position = 0;
+		$comment_id = absint( $comment_id );
+		$comment    = $comment_id ? get_comment( $comment_id ) : null;
+		if ( ! $comment || ! $this->is_review_comment( $comment ) ) {
+			return 0;
+		}
 
-		foreach ( $attachment_ids as $attachment_id ) {
-			$attachment_id = absint( $attachment_id );
-			if ( ! $attachment_id || 'attachment' !== get_post_type( $attachment_id ) ) {
+		/**
+		 * Filter the media types a review can hold.
+		 *
+		 * @param string[] $types Default image and video.
+		 */
+		$types = (array) apply_filters( 'ndv-reviews/media_types', array( 'image', 'video' ) );
+		$type  = sanitize_key( (string) $type );
+		if ( ! in_array( $type, $types, true ) ) {
+			return 0;
+		}
+
+		$table   = Db::table( 'review_media' );
+		$context = array_merge(
+			array(
+				'comment_id' => $comment_id,
+				'type'       => $type,
+				'source'     => (string) get_comment_meta( $comment_id, '_ndvr_source', true ),
+				'origin'     => 'api',
+			),
+			$context
+		);
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table from Db::table().
+		$existing = array_map( 'absint', (array) $wpdb->get_col( $wpdb->prepare( "SELECT attachment_id FROM `{$table}` WHERE comment_id = %d", $comment_id ) ) );
+		$position = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COALESCE( MAX( position ), -1 ) + 1 FROM `{$table}` WHERE comment_id = %d", $comment_id ) );
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		$inserted = 0;
+		foreach ( array_unique( array_map( 'absint', $ids ) ) as $attachment_id ) {
+			if ( ! $attachment_id || in_array( $attachment_id, $existing, true ) || 'attachment' !== get_post_type( $attachment_id ) ) {
+				continue;
+			}
+			$mime = (string) get_post_mime_type( $attachment_id );
+			if ( 0 !== strpos( $mime, $type . '/' ) ) {
 				continue;
 			}
 
 			/**
-			 * Filter a review photo's moderation status (Pro image moderation).
+			 * Filter a review media item's moderation status (Pro image moderation).
 			 *
-			 * @param string $status        approved|pending|rejected.
-			 * @param int    $attachment_id Attachment id.
+			 * @param string              $status        approved|pending|rejected.
+			 * @param int                 $attachment_id Attachment id.
+			 * @param array<string,mixed> $context       comment_id, type, source, origin.
 			 */
-			$status = (string) apply_filters( 'ndv-reviews/review_media_status', 'approved', $attachment_id );
+			$status = (string) apply_filters( 'ndv-reviews/review_media_status', 'approved', $attachment_id, $context );
 
-			$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$ok = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				$table,
 				array(
 					'comment_id'    => $comment_id,
-					'type'          => 'image',
+					'type'          => $type,
 					'attachment_id' => $attachment_id,
 					'url'           => wp_get_attachment_url( $attachment_id ),
-					'position'      => $position++,
+					'position'      => $position,
 					'status'        => in_array( $status, array( 'approved', 'pending', 'rejected' ), true ) ? $status : 'approved',
 				),
 				array( '%d', '%s', '%d', '%s', '%d', '%s' )
 			);
+			if ( $ok ) {
+				++$position;
+				++$inserted;
+				$existing[] = $attachment_id;
+			}
 		}
+
+		return $inserted;
+	}
+
+	/**
+	 * Whether a comment is a review this plugin can attach media to.
+	 *
+	 * @param \WP_Comment $comment Comment.
+	 * @return bool
+	 */
+	private function is_review_comment( $comment ) {
+		if ( 'review' === $comment->comment_type ) {
+			return true;
+		}
+
+		return 'comment' === $comment->comment_type && PostTypes::is_reviewable( (int) $comment->comment_post_ID );
 	}
 }

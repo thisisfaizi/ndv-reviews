@@ -23,8 +23,8 @@ class RecentReviewsWidget extends \WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'ndvr_recent_reviews',
-			__( 'NDV Reviews: Recent Reviews', 'ndv-reviews' ),
-			array( 'description' => __( 'The latest reviews across your store.', 'ndv-reviews' ) )
+			__( 'Rosette Reviews: Recent Reviews', 'rosette-reviews' ),
+			array( 'description' => __( 'The latest reviews across your store.', 'rosette-reviews' ) )
 		);
 	}
 
@@ -45,7 +45,7 @@ class RecentReviewsWidget extends \WP_Widget {
 		Plugin::instance()->container()->get( 'widgets' )->enqueue( 'stars' );
 
 		echo $args['before_widget']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		$title = ! empty( $instance['title'] ) ? $instance['title'] : __( 'Recent reviews', 'ndv-reviews' );
+		$title = ! empty( $instance['title'] ) ? $instance['title'] : __( 'Recent reviews', 'rosette-reviews' );
 		echo $args['before_title'] . esc_html( $title ) . $args['after_title']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
 		echo '<ul class="ndvr-recent-list">';
@@ -53,7 +53,10 @@ class RecentReviewsWidget extends \WP_Widget {
 			echo '<li class="ndvr-recent-item">';
 			echo Html::stars( $review['overall'] ? $review['overall'] : $review['rating'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			echo '<div class="ndvr-recent-text">' . esc_html( wp_trim_words( $review['content'], 14 ) ) . '</div>';
-			echo '<div class="ndvr-recent-author">&mdash; ' . esc_html( $review['author'] ) . '</div>';
+			echo '<div class="ndvr-recent-author">&mdash; ' . esc_html( $review['author'] );
+			/** This action is documented in templates/marquee.php (compact cards: the incentive disclosure prints here). */
+			do_action( 'ndv-reviews/marquee_author_badges', $review );
+			echo '</div>';
 			echo '</li>';
 		}
 		echo '</ul>';
@@ -72,11 +75,11 @@ class RecentReviewsWidget extends \WP_Widget {
 		$limit = isset( $instance['limit'] ) ? (int) $instance['limit'] : 5;
 		?>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>"><?php esc_html_e( 'Number of reviews:', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>"><?php esc_html_e( 'Number of reviews:', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'limit' ) ); ?>" type="number" value="<?php echo esc_attr( $limit ); ?>" />
 		</p>
 		<?php

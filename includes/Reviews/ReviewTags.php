@@ -77,7 +77,10 @@ class ReviewTags {
 	public static function for_post( $post_id ) {
 		global $wpdb;
 
+		// The product and its pool (RR-00b E4): reviews live on the pool, and ones
+		// still stored on the product itself are counted too.
 		$post_id = absint( $post_id );
+		$pool_id = $post_id ? Pool::resolve_id( $post_id ) : 0;
 
 		if ( $post_id ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -86,9 +89,10 @@ class ReviewTags {
 					"SELECT cm.meta_value AS tag, COUNT(*) AS total
 					FROM {$wpdb->commentmeta} cm
 					INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
-					WHERE cm.meta_key = '_ndvr_tag' AND c.comment_approved = '1' AND c.comment_post_ID = %d
+					WHERE cm.meta_key = '_ndvr_tag' AND c.comment_approved = '1' AND c.comment_post_ID IN ( %d, %d )
 					GROUP BY cm.meta_value ORDER BY total DESC",
-					$post_id
+					$post_id,
+					$pool_id
 				)
 			);
 		} else {
@@ -120,7 +124,10 @@ class ReviewTags {
 	public static function comment_ids_for_tag( $post_id, $tag ) {
 		global $wpdb;
 
+		// The product and its pool (RR-00b E4): reviews live on the pool, and ones
+		// still stored on the product itself are counted too.
 		$post_id = absint( $post_id );
+		$pool_id = $post_id ? Pool::resolve_id( $post_id ) : 0;
 		$tag     = sanitize_title( $tag );
 		if ( '' === $tag ) {
 			return array();
@@ -133,9 +140,10 @@ class ReviewTags {
 					"SELECT cm.comment_id
 					FROM {$wpdb->commentmeta} cm
 					INNER JOIN {$wpdb->comments} c ON c.comment_ID = cm.comment_id
-					WHERE cm.meta_key = '_ndvr_tag' AND cm.meta_value = %s AND c.comment_approved = '1' AND c.comment_post_ID = %d",
+					WHERE cm.meta_key = '_ndvr_tag' AND cm.meta_value = %s AND c.comment_approved = '1' AND c.comment_post_ID IN ( %d, %d )",
 					$tag,
-					$post_id
+					$post_id,
+					$pool_id
 				)
 			);
 		} else {

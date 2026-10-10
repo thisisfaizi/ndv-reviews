@@ -90,10 +90,73 @@ class ReviewForm implements Registerable {
 		// Fix the "post a comment" login message to say "review" on product pages.
 		add_filter( 'comment_form_must_log_in', array( $this, 'fix_login_message' ) );
 		add_filter( 'preprocess_comment', array( $this, 'block_unrated_native_post' ) );
+		// Native review posts always wait for moderation (RR-03), after spam
+		// plugins at the default priority.
+		add_filter( 'pre_comment_approved', array( $this, 'hold_native_review' ), 99, 2 );
 		// Native (no-JS) posts on a pooled product are stored on the pool (RR-00b E5).
 		add_filter( 'preprocess_comment', array( $this, 'remap_native_to_pool' ), 20 );
 		add_action( 'comment_post', array( $this, 'stamp_native_pooled' ), 20, 1 );
 		add_filter( 'comment_post_redirect', array( $this, 'redirect_native_to_origin' ), 10, 2 );
+	}
+
+	/**
+	 * Hold every review that reaches core's comment checks from outside the
+	 * admin for moderation (RR-03): the native comment form, admin-ajax
+	 * handlers (WooCommerce's order-review form, AJAX comment plugins, which
+	 * all run with is_admin() true) and REST. Core would otherwise approve it
+	 * when comment moderation is off or the author was approved before, which
+	 * would make the "we check reviews before they appear" sentence false.
+	 *
+	 * - Spam, trash and errors from earlier filters are kept.
+	 * - Staff keep core's result on admin screens, and in admin-ajax when they
+	 *   can moderate comments (quick replies from the Comments screen).
+	 * - A reply keeps core's result unless it carries a star rating from
+	 *   someone who can't moderate (WooCommerce stores a rated reply as a
+	 *   review, so it would count like one).
+	 * - An edit never changes publication: a held review stays held, a
+	 *   published one keeps core's result (edits never unpublish, RR-00).
+	 *
+	 * It can only lower a status, never raise one.
+	 *
+	 * @param int|string|\WP_Error $approved    Core's decision.
+	 * @param array<string,mixed>  $commentdata Comment data.
+	 * @return int|string|\WP_Error
+	 */
+	public function hold_native_review( $approved, $commentdata ) {
+		if ( is_wp_error( $approved ) || in_array( $approved, array( 'spam', 'trash' ), true ) ) {
+			return $approved;
+		}
+
+		$staff = current_user_can( 'moderate_comments' );
+		if ( ( is_admin() && ! wp_doing_ajax() ) || ( wp_doing_ajax() && $staff ) ) {
+			return $approved;
+		}
+
+		$post_id = isset( $commentdata['comment_post_ID'] ) ? absint( $commentdata['comment_post_ID'] ) : 0;
+		if ( ! $post_id || ! \NdvReviews\Reviews\PostTypes::is_reviewable( $post_id ) ) {
+			return $approved;
+		}
+
+		if ( ! empty( $commentdata['comment_parent'] ) && ( $staff || ! $this->posted_rating() ) ) {
+			return $approved;
+		}
+
+		$existing = ! empty( $commentdata['comment_ID'] ) ? get_comment( absint( $commentdata['comment_ID'] ) ) : null;
+		if ( $existing instanceof \WP_Comment && '1' === (string) $existing->comment_approved ) {
+			return $approved;
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Whether the request carries a star rating (WooCommerce's field name).
+	 *
+	 * @return bool
+	 */
+	private function posted_rating() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- read-only check; core's comment form has no nonce.
+		return isset( $_POST['rating'] ) && absint( $_POST['rating'] ) > 0;
 	}
 
 	/**

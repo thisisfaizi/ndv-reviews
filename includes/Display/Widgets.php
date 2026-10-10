@@ -138,17 +138,19 @@ class Widgets {
 	 * Summary box (renders an empty state when the product has no reviews, so
 	 * blocks/shortcodes never collapse to nothing).
 	 *
-	 * @param int $post_id Product id (0 = current).
+	 * @param int    $post_id Product id (0 = current).
+	 * @param string $surface Where it shows (summary_footer surface): summary, criteria or widget.
 	 * @return string
 	 */
-	public function summary( $post_id = 0 ) {
+	public function summary( $post_id = 0, $surface = 'summary' ) {
 		$post_id = $this->resolve_id( $post_id );
 		$this->enqueue( 'stars' );
 
 		return sprintf(
-			'<div class="%1$s">%2$s</div>',
+			'<div class="%1$s">%2$s%3$s</div>',
 			esc_attr( $this->wrap_classes() ),
-			View::render( 'summary.php', array( 'summary' => $this->summary->for_product( $post_id ) ) ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render() output is pre-escaped.
+			View::render( 'summary.php', array( 'summary' => $this->summary->for_product( $post_id ) ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render() output is pre-escaped.
+			self::summary_footer( $post_id, $surface ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- listener output, escaped by listeners.
 		);
 	}
 
@@ -159,7 +161,22 @@ class Widgets {
 	 * @return string
 	 */
 	public function criteria_graph( $post_id = 0 ) {
-		return $this->summary( $post_id );
+		return $this->summary( $post_id, 'criteria' );
+	}
+
+	/**
+	 * Capture the summary_footer action (RR-03) for methods that return HTML.
+	 *
+	 * @param int    $post_id Product id.
+	 * @param string $surface Surface.
+	 * @return string
+	 */
+	public static function summary_footer( $post_id, $surface ) {
+		ob_start();
+		/** This action is documented in includes/Display/Renderer.php */
+		do_action( 'ndv-reviews/summary_footer', (int) $post_id, (string) $surface );
+
+		return (string) ob_get_clean();
 	}
 
 	/**
@@ -205,7 +222,7 @@ class Widgets {
 					'summary'    => $this->summary->for_product( $args['product_id'] ),
 					'filterable' => true,
 				)
-			);
+			) . self::summary_footer( $args['product_id'], 'reviews' );
 		}
 
 		$list_html = View::render(
@@ -315,8 +332,8 @@ class Widgets {
 		return sprintf(
 			'<div class="ndvr-marquee-wrap">%1$s<button type="button" class="ndvr-marquee-toggle" data-label-pause="%2$s" data-label-play="%3$s"><span class="ndvr-marquee-toggle-icon" aria-hidden="true"></span><span class="ndvr-marquee-toggle-text">%2$s</span></button></div>',
 			$inner, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- View::render() output is pre-escaped.
-			esc_attr__( 'Pause animation', 'ndv-reviews' ),
-			esc_attr__( 'Play animation', 'ndv-reviews' )
+			esc_attr__( 'Pause animation', 'rosette-reviews' ),
+			esc_attr__( 'Play animation', 'rosette-reviews' )
 		);
 	}
 

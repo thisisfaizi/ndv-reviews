@@ -99,7 +99,7 @@ class TestimonialForm implements Registerable {
 		$atts = shortcode_atts(
 			array(
 				'product_id' => 0,
-				'title'      => __( 'Leave a review', 'ndv-reviews' ),
+				'title'      => __( 'Leave a review', 'rosette-reviews' ),
 			),
 			$atts,
 			'ndvr-testimonial'
@@ -114,7 +114,7 @@ class TestimonialForm implements Registerable {
 		// so show nothing to visitors and tell editors what is missing.
 		if ( ! $this->accepts_reviews( $product_id ) ) {
 			if ( current_user_can( 'edit_posts' ) ) {
-				return '<p class="ndvr-form-notice">' . esc_html__( 'Review form: set product_id to a published product (or reviewable post) with reviews open. This notice is shown to editors only.', 'ndv-reviews' ) . '</p>';
+				return '<p class="ndvr-form-notice">' . esc_html__( 'Review form: set product_id to a published product (or reviewable post) with reviews open. This notice is shown to editors only.', 'rosette-reviews' ) . '</p>';
 			}
 			return '';
 		}
@@ -122,7 +122,7 @@ class TestimonialForm implements Registerable {
 		if ( ! $this->settings->get( 'allow_guest_reviews', true ) && ! is_user_logged_in() ) {
 			return '<p class="must-log-in">' . sprintf(
 				/* translators: %s: login URL */
-				wp_kses( __( 'You must be <a href="%s">logged in</a> to post a review.', 'ndv-reviews' ), array( 'a' => array( 'href' => array() ) ) ),
+				wp_kses( __( 'You must be <a href="%s">logged in</a> to post a review.', 'rosette-reviews' ), array( 'a' => array( 'href' => array() ) ) ),
 				esc_url( wp_login_url( (string) get_permalink() ) )
 			) . '</p>';
 		}
@@ -188,16 +188,16 @@ class TestimonialForm implements Registerable {
 						</div>
 					<?php endif; ?>
 
-					<p class="ndvr-field"><label><?php esc_html_e( 'Your name', 'ndv-reviews' ); ?> <span class="required">*</span><input type="text" name="author" required /></label></p>
-					<p class="ndvr-field"><label><?php esc_html_e( 'Your email', 'ndv-reviews' ); ?> <span class="required">*</span><input type="email" name="email" required /></label></p>
-					<p class="ndvr-field"><label><?php esc_html_e( 'Review title (optional)', 'ndv-reviews' ); ?><input type="text" name="ndvr_title" maxlength="150" /></label></p>
-					<p class="ndvr-field"><label><?php esc_html_e( 'Your review', 'ndv-reviews' ); ?> <span class="required">*</span><textarea name="comment" rows="5" required></textarea></label></p>
+					<p class="ndvr-field"><label><?php esc_html_e( 'Your name', 'rosette-reviews' ); ?> <span class="required">*</span><input type="text" name="author" required /></label></p>
+					<p class="ndvr-field"><label><?php esc_html_e( 'Your email', 'rosette-reviews' ); ?> <span class="required">*</span><input type="email" name="email" required /></label></p>
+					<p class="ndvr-field"><label><?php esc_html_e( 'Review title (optional)', 'rosette-reviews' ); ?><input type="text" name="ndvr_title" maxlength="150" /></label></p>
+					<p class="ndvr-field"><label><?php esc_html_e( 'Your review', 'rosette-reviews' ); ?> <span class="required">*</span><textarea name="comment" rows="5" required></textarea></label></p>
 
 					<?php if ( $this->settings->get( 'photo_uploads' ) ) : ?>
-						<p class="ndvr-field"><label><?php esc_html_e( 'Add photos (optional)', 'ndv-reviews' ); ?><input type="file" name="ndvr_photos[]" accept="image/*" multiple="multiple" /></label></p>
+						<p class="ndvr-field"><label><?php esc_html_e( 'Add photos (optional)', 'rosette-reviews' ); ?><input type="file" name="ndvr_photos[]" accept="image/*" multiple="multiple" /></label></p>
 					<?php endif; ?>
 
-					<p class="ndvr-field ndvr-field-consent"><label><input type="checkbox" name="ndvr_consent" value="1" required /> <?php esc_html_e( 'I consent to my review being stored and published.', 'ndv-reviews' ); ?></label></p>
+					<p class="ndvr-field ndvr-field-consent"><label><input type="checkbox" name="ndvr_consent" value="1" required /> <?php esc_html_e( 'I consent to my review being stored and published.', 'rosette-reviews' ); ?></label></p>
 
 					<p class="ndvr-hp" aria-hidden="true" style="position:absolute;left:-9999px;">
 						<input type="text" name="<?php echo esc_attr( AntiSpam::HONEYPOT ); ?>" tabindex="-1" autocomplete="off" />
@@ -207,7 +207,7 @@ class TestimonialForm implements Registerable {
 					<input type="hidden" name="nonce" value="<?php echo esc_attr( wp_create_nonce( self::NONCE ) ); ?>" />
 
 					<div class="ndvr-collect-actions">
-						<button type="submit" class="ndvr-collect-submit"><?php esc_html_e( 'Submit review', 'ndv-reviews' ); ?></button>
+						<button type="submit" class="ndvr-collect-submit"><?php esc_html_e( 'Submit review', 'rosette-reviews' ); ?></button>
 						<span class="ndvr-form-message" role="status" aria-live="polite"></span>
 					</div>
 				</div>
@@ -224,11 +224,11 @@ class TestimonialForm implements Registerable {
 	 */
 	public function handle_submit() {
 		if ( ! check_ajax_referer( self::NONCE, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Session expired. Please reload.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Session expired. Please reload.', 'rosette-reviews' ) ), 403 );
 		}
 
 		if ( ! $this->settings->get( 'allow_guest_reviews', true ) && ! is_user_logged_in() ) {
-			wp_send_json_error( array( 'message' => __( 'You must be logged in to submit a review.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'You must be logged in to submit a review.', 'rosette-reviews' ) ), 403 );
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- verified above.
@@ -241,7 +241,7 @@ class TestimonialForm implements Registerable {
 		}
 
 		if ( empty( $input['ndvr_consent'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Please confirm consent.', 'ndv-reviews' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'Please confirm consent.', 'rosette-reviews' ) ), 400 );
 		}
 
 		$product_id = isset( $input['product_id'] ) ? absint( $input['product_id'] ) : 0;
@@ -249,14 +249,21 @@ class TestimonialForm implements Registerable {
 		// The target must be a published, reviewable post with reviews open;
 		// products also follow "verified owners only" (below).
 		if ( ! $this->accepts_reviews( $product_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'rosette-reviews' ) ), 403 );
+		}
+
+		// Products follow WooCommerce's "verified owners only" setting, the same
+		// rule as the product form (RR-03: the transparency notice states it).
+		if ( 'product' === get_post_type( $product_id ) && 'yes' === get_option( 'woocommerce_review_rating_verification_required' )
+			&& ! ( is_user_logged_in() && function_exists( 'wc_customer_bought_product' ) && wc_customer_bought_product( '', get_current_user_id(), $product_id ) ) ) {
+			wp_send_json_error( array( 'message' => __( 'Only logged in customers who have purchased this product may leave a review.', 'rosette-reviews' ) ), 403 );
 		}
 
 		// Require at least one valid star rating — same rule as ReviewForm, checked
 		// before any upload is stored.
 		$criteria = $this->reviews->valid_scores( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ? $input['ndvr_criteria'] : array() );
 		if ( empty( $criteria ) ) {
-			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
 		}
 
 		$media = array();
@@ -294,6 +301,6 @@ class TestimonialForm implements Registerable {
 
 		$this->antispam->record();
 
-		wp_send_json_success( array( 'message' => __( 'Thank you. Your review is awaiting moderation.', 'ndv-reviews' ) ) );
+		wp_send_json_success( array( 'message' => __( 'Thank you. Your review is awaiting moderation.', 'rosette-reviews' ) ) );
 	}
 }

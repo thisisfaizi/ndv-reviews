@@ -51,6 +51,7 @@ final class Uninstall {
 				'ndv_reviews_activated',
 				'ndvr_upgrade_backoff',
 				'ndvr_recover_checked',
+				'ndvr_tp_import',
 			),
 			'transient_prefixes' => array(
 				'ndvr_rl_',
@@ -79,6 +80,7 @@ final class Uninstall {
 			'user_meta'          => array(
 				'ndvr_setup_dismissed',
 				'ndvr_health_notice_dismissed',
+				'ndvr_transparency_notice_dismissed',
 			),
 			'scheduler_hooks'    => array(
 				'ndvr_send_request',

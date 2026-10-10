@@ -225,17 +225,35 @@ final class SettingsFields {
 	 * @param string              $page     Page.
 	 * @param string              $card     Card slug.
 	 * @param array<string,mixed> $settings Current settings (Settings::all()).
+	 * @param bool                $markers  Print each field's marker before it. Pass
+	 *                                      false when the fields are table rows and
+	 *                                      markers() was called outside the table.
 	 * @return void
 	 */
-	public static function render_card_fields( $page, $card, array $settings ) {
+	public static function render_card_fields( $page, $card, array $settings, $markers = true ) {
 		foreach ( self::card_fields( $page, $card ) as $key => $field ) {
 			$value = array_key_exists( $key, $settings ) ? $settings[ $key ] : $field['default'];
 			if ( $field['secret'] ) {
 				// The callback learns only whether a value is saved, never the value.
 				$value = ( is_string( $value ) && '' !== $value );
 			}
-			self::marker( $key );
+			if ( $markers ) {
+				self::marker( $key );
+			}
 			call_user_func( $field['render'], $value, $key );
+		}
+	}
+
+	/**
+	 * Print the markers of every renderable field on a card.
+	 *
+	 * @param string $page Page.
+	 * @param string $card Card slug.
+	 * @return void
+	 */
+	public static function markers( $page, $card ) {
+		foreach ( array_keys( self::card_fields( $page, $card ) ) as $key ) {
+			self::marker( $key );
 		}
 	}
 

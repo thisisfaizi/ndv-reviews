@@ -283,6 +283,13 @@ final class Plugin {
 		);
 
 		$c->set(
+			'transparency',
+			static function ( $c ) {
+				return new \NdvReviews\Display\Transparency( $c->get( 'settings' ) );
+			}
+		);
+
+		$c->set(
 			'request_tracking',
 			static function ( $c ) {
 				return new \NdvReviews\Requests\Tracking( $c->get( 'request_repository' ) );
@@ -486,6 +493,7 @@ final class Plugin {
 			$this->container->get( 'moderation_page' ),
 			$this->container->get( 'scheduler' ),
 			$this->container->get( 'request_tracking' ),
+			$this->container->get( 'transparency' ),
 			$this->container->get( 'landing' ),
 			$this->container->get( 'unsubscribe' ),
 			$this->container->get( 'health_check' ),

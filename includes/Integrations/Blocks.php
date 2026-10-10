@@ -60,7 +60,7 @@ class Blocks implements Registerable {
 			NDVR_VERSION,
 			true
 		);
-		wp_set_script_translations( 'ndvr-blocks', 'ndv-reviews', NDVR_DIR . 'languages' );
+		wp_set_script_translations( 'ndvr-blocks', 'rosette-reviews', NDVR_DIR . 'languages' );
 
 		$common = array(
 			'product_id' => array(
@@ -77,6 +77,17 @@ class Blocks implements Registerable {
 				'editor_style'    => 'ndvr-display',
 				'attributes'      => $common,
 				'render_callback' => array( $this, 'render_summary' ),
+			)
+		);
+
+		register_block_type(
+			'ndv-reviews/transparency',
+			array(
+				'api_version'     => 2,
+				'editor_script'   => 'ndvr-blocks',
+				'editor_style'    => 'ndvr-display',
+				'attributes'      => $common,
+				'render_callback' => array( $this, 'render_transparency' ),
 			)
 		);
 
@@ -194,6 +205,17 @@ class Blocks implements Registerable {
 	 */
 	public function render_summary( $attr ) {
 		return $this->wrap( $this->widgets->summary( isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0 ) );
+	}
+
+	/**
+	 * Render the "How reviews work" block (RR-03): the same sentences as
+	 * [ndvr-transparency], for a policy page.
+	 *
+	 * @param array<string,mixed> $attr Attributes.
+	 * @return string
+	 */
+	public function render_transparency( $attr ) {
+		return $this->wrap( \NdvReviews\Plugin::instance()->container()->get( 'transparency' )->shortcode( array( 'product_id' => isset( $attr['product_id'] ) ? (int) $attr['product_id'] : 0 ) ) );
 	}
 
 	/**

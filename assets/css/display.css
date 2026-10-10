@@ -667,3 +667,31 @@ button.ndvr-bar-row.is-current .ndvr-bar-track { background: var(--ndvr-line); }
 	.ndvr-review-photo img { transition: none; }
 	.ndvr-review-photo:hover img { transform: none; }
 }
+
+/* "How reviews work" transparency notice (RR-03). */
+.ndvr-transparency {
+	margin: 12px 0 18px;
+	font-size: 0.867em;
+	color: var(--ndvr-slate);
+}
+.ndvr-transparency summary {
+	cursor: pointer;
+	font-weight: 600;
+	color: var(--ndvr-ink);
+}
+.ndvr-transparency summary:focus-visible {
+	outline: 2px solid var(--ndvr-accent);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+.ndvr-transparency-body {
+	margin-top: 8px;
+	padding: 10px 14px;
+	border: 1px solid var(--ndvr-line);
+	border-radius: 8px;
+	background: var(--ndvr-haze);
+}
+.ndvr-transparency-body p,
+.ndvr-transparency-page p { margin: 0 0 6px; }
+.ndvr-transparency-body p:last-child { margin-bottom: 0; }
+.ndvr-transparency-extra { margin-top: 8px; }

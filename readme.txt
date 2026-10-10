@@ -143,6 +143,9 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 * Reviews that were rewarded (for example with a coupon) carry a disclosure label, and it stays even if the add-on that rewarded them is removed.
 * Uploads that are too large now get a clear message instead of a generic error.
 * Privacy export and erasure now cover questions and answers.
+* New, off by default: a "How reviews work" note under your ratings, built from your settings (how you collect reviews, what the verified label means, how you moderate), as EU and UK consumer law expect from stores that show reviews. Switch it on under Settings → Reviews and trust after reading it. Also available as the `[ndvr-transparency]` shortcode and block for a policy page.
+* Reviews posted through WordPress's own comment form, WooCommerce's review-request form or other plugins now always wait for moderation, even when comment moderation is off. A reply that carries a star rating waits too.
+* The standalone review form now follows WooCommerce's "verified owners only" setting for products.
 
 = 1.0.0 =
 * Initial public release.

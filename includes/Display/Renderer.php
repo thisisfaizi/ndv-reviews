@@ -248,6 +248,17 @@ class Renderer implements Registerable {
 		echo $summary_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- template output is escaped at source.
 
 		/**
+		 * Fires right after a rating summary on every summary surface (RR-03):
+		 * the reviews tab, [ndvr-summary], [ndvr-criteria-graph],
+		 * [ndvr-reviews show_summary="1"] and the sidebar widget. The
+		 * transparency notice prints here at priority 10.
+		 *
+		 * @param int    $product_id Product id.
+		 * @param string $surface    tab|summary|criteria|reviews|widget.
+		 */
+		do_action( 'ndv-reviews/summary_footer', (int) $product_id, 'tab' );
+
+		/**
 		 * Fires after the summary box, before the review list (Pro renders the AI
 		 * "Customers say…" summary and topic pills here).
 		 *

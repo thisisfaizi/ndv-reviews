@@ -22,8 +22,8 @@ class SummaryWidget extends \WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'ndvr_summary',
-			__( 'NDV Reviews: Summary', 'ndv-reviews' ),
-			array( 'description' => __( 'Rating summary for a product.', 'ndv-reviews' ) )
+			__( 'Rosette Reviews: Summary', 'rosette-reviews' ),
+			array( 'description' => __( 'Rating summary for a product.', 'rosette-reviews' ) )
 		);
 	}
 
@@ -36,7 +36,7 @@ class SummaryWidget extends \WP_Widget {
 	 */
 	public function widget( $args, $instance ) {
 		$widgets = Plugin::instance()->container()->get( 'widgets' );
-		$html    = $widgets->summary( isset( $instance['product_id'] ) ? (int) $instance['product_id'] : 0 );
+		$html    = $widgets->summary( isset( $instance['product_id'] ) ? (int) $instance['product_id'] : 0, 'widget' );
 		if ( '' === trim( wp_strip_all_tags( $html ) ) && '' === $html ) {
 			return;
 		}
@@ -60,11 +60,11 @@ class SummaryWidget extends \WP_Widget {
 		$product = isset( $instance['product_id'] ) ? (int) $instance['product_id'] : 0;
 		?>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'product_id' ) ); ?>"><?php esc_html_e( 'Product ID (0 = current):', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'product_id' ) ); ?>"><?php esc_html_e( 'Product ID (0 = current):', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'product_id' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'product_id' ) ); ?>" type="number" value="<?php echo esc_attr( $product ); ?>" />
 		</p>
 		<?php

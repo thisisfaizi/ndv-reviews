@@ -55,20 +55,25 @@
 		return numberControl( __( 'Product ID (0 = current product)', 'rosette-reviews' ), props.attributes, props.setAttributes, 'product_id' );
 	}
 
-	function simpleBlock( name, title, panelTitle ) {
+	function storeControl( props ) {
+		return numberControl( __( 'Product ID (0 = whole store)', 'rosette-reviews' ), props.attributes, props.setAttributes, 'product_id' );
+	}
+
+	function simpleBlock( name, title, panelTitle, control ) {
 		blocks.registerBlockType( name, {
 			apiVersion: 2,
 			title: title,
 			icon: icon,
 			category: 'widgets',
 			attributes: { product_id: { type: 'number', default: 0 } },
-			edit: editor( name, panelTitle, productControl ),
+			edit: editor( name, panelTitle, control || productControl ),
 			save: function () { return null; }
 		} );
 	}
 
 	simpleBlock( 'ndv-reviews/summary', __( 'Rosette Reviews: Summary', 'rosette-reviews' ), __( 'Source', 'rosette-reviews' ) );
 	simpleBlock( 'ndv-reviews/stars', __( 'Rosette Reviews: Stars', 'rosette-reviews' ), __( 'Source', 'rosette-reviews' ) );
+	simpleBlock( 'ndv-reviews/transparency', __( 'Rosette Reviews: How reviews work', 'rosette-reviews' ), __( 'Source', 'rosette-reviews' ), storeControl );
 	simpleBlock( 'ndv-reviews/form', __( 'Rosette Reviews: Form', 'rosette-reviews' ), __( 'Form', 'rosette-reviews' ) );
 
 	blocks.registerBlockType( 'ndv-reviews/reviews', {

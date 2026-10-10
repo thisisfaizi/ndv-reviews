@@ -174,6 +174,15 @@ class Csv {
 
 		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 
+		/**
+		 * Fires at the end of a third-party import run (RR-03), so the
+		 * transparency notice's "imported reviews" sentence updates at once.
+		 * Other importers that write `_ndvr_import_hash` fire it with their slug.
+		 *
+		 * @param string $importer Importer slug.
+		 */
+		do_action( 'ndv-reviews/third_party_import_done', 'csv' );
+
 		return $result;
 	}
 

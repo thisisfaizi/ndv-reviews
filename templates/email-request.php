@@ -14,6 +14,7 @@
  * @var string    $accent        Button background color (#hex).
  * @var string    $accent_text   Button text color with readable contrast.
  * @var string    $store_address Store address on one line, or ''.
+ * @var string    $context       order|list (a recipient from an uploaded list has no order).
  *
  * @package NdvReviews
  */
@@ -64,8 +65,13 @@ $ndvr_preheader = sprintf( __( 'Review the items from your recent %s order.', 'r
 								</h1>
 								<p style="margin:0 0 16px;">
 									<?php
-									/* translators: %s: store name. */
-									echo esc_html( sprintf( __( 'Thank you for your order from %s. Could you tell other shoppers what you think of it? Your review helps them choose.', 'rosette-reviews' ), $ndvr_store ) );
+									if ( isset( $context ) && 'list' === $context ) {
+										/* translators: %s: store name. */
+										echo esc_html( sprintf( __( '%s would like to hear what you think of the products below. Your review helps other shoppers choose.', 'rosette-reviews' ), $ndvr_store ) );
+									} else {
+										/* translators: %s: store name. */
+										echo esc_html( sprintf( __( 'Thank you for your order from %s. Could you tell other shoppers what you think of it? Your review helps them choose.', 'rosette-reviews' ), $ndvr_store ) );
+									}
 									?>
 								</p>
 							<?php endif; ?>
@@ -110,7 +116,14 @@ $ndvr_preheader = sprintf( __( 'Review the items from your recent %s order.', 'r
 								<p style="margin:14px 0 0;font-size:11px;line-height:1.5;color:#999;"><?php echo esc_html( $ndvr_store . ' · ' . $store_address ); ?></p>
 							<?php endif; ?>
 							<p style="margin:14px 0 0;font-size:11px;color:#999;">
-								<?php esc_html_e( 'You received this email because you placed an order with us.', 'rosette-reviews' ); ?>
+								<?php
+								if ( isset( $context ) && 'list' === $context ) {
+									/* translators: %s: store name. */
+									echo esc_html( sprintf( __( 'You\'re receiving this because %s asked for your review.', 'rosette-reviews' ), $ndvr_store ) );
+								} else {
+									esc_html_e( 'You received this email because you placed an order with us.', 'rosette-reviews' );
+								}
+								?>
 								<a href="<?php echo esc_url( $unsub_link ); ?>" style="color:#999;"><?php esc_html_e( 'Unsubscribe from review requests', 'rosette-reviews' ); ?></a>
 							</p>
 						</td>

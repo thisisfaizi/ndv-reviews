@@ -32,6 +32,12 @@ class Installer {
 	const V_FOUNDATIONS = 3;
 
 	/**
+	 * RR-09 request pipeline: ndvr_requests source, origin, dedupe_key,
+	 * token_id, claimed_at, opened_at, reviewed_at, meta (no data step).
+	 */
+	const V_PIPELINE = 4;
+
+	/**
 	 * Lock option (written by raw SQL only, never through add_option()).
 	 */
 	const LOCK_OPTION = 'ndv_reviews_upgrade_lock';
@@ -440,9 +446,22 @@ class Installer {
 			scheduled_at datetime DEFAULT NULL,
 			sent_at datetime DEFAULT NULL,
 			error text DEFAULT NULL,
+			source varchar(20) NOT NULL DEFAULT 'legacy',
+			origin varchar(10) NOT NULL DEFAULT 'free',
+			dedupe_key varchar(120) DEFAULT NULL,
+			token_id bigint(20) unsigned DEFAULT NULL,
+			claimed_at datetime DEFAULT NULL,
+			opened_at datetime DEFAULT NULL,
+			reviewed_at datetime DEFAULT NULL,
+			meta longtext DEFAULT NULL,
 			PRIMARY KEY  (id),
+			UNIQUE KEY dedupe (dedupe_key),
 			KEY order_idx (order_id),
-			KEY status_idx (status, scheduled_at)
+			KEY status_idx (status, scheduled_at),
+			KEY token_idx (token_id),
+			KEY order_sent (order_id, sent_at),
+			KEY email_sent (email(100), sent_at),
+			KEY status_claim (status, claimed_at)
 		) {$charset_collate};";
 
 		// Product Q&A (Pro).

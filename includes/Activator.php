@@ -35,6 +35,10 @@ class Activator {
 
 		Installer::maybe_upgrade( true );
 
+		// The hourly recovery job (RR-09): re-queues reminders whose jobs the
+		// deactivation removed, and resets crashed sends.
+		Requests\Scheduler::ensure_recover_scheduled( true );
+
 		set_transient( 'ndv_reviews_activated', 1, 60 );
 
 		flush_rewrite_rules();

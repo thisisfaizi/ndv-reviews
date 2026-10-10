@@ -49,9 +49,11 @@ final class Uninstall {
 			'transients'         => array(
 				'ndv_reviews_activated',
 				'ndvr_upgrade_backoff',
+				'ndvr_recover_checked',
 			),
 			'transient_prefixes' => array(
 				'ndvr_rl_',
+				'ndvr_request_stats_',
 			),
 			'comment_meta'       => array(
 				'_ndvr_overall_rating',
@@ -77,6 +79,7 @@ final class Uninstall {
 			),
 			'scheduler_hooks'    => array(
 				'ndvr_send_request',
+				'ndvr_requests_recover',
 			),
 		);
 	}

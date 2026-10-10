@@ -224,6 +224,22 @@ class Privacy implements Registerable {
 								'name'  => __( 'Sent', 'rosette-reviews' ),
 								'value' => (string) $row->sent_at,
 							),
+							array(
+								'name'  => __( 'Source', 'rosette-reviews' ),
+								'value' => isset( $row->source ) ? (string) $row->source : '',
+							),
+							array(
+								'name'  => __( 'Link opened', 'rosette-reviews' ),
+								'value' => isset( $row->opened_at ) ? (string) $row->opened_at : '',
+							),
+							array(
+								'name'  => __( 'Reviewed', 'rosette-reviews' ),
+								'value' => isset( $row->reviewed_at ) ? (string) $row->reviewed_at : '',
+							),
+							array(
+								'name'  => __( 'First name (from an uploaded list)', 'rosette-reviews' ),
+								'value' => (string) ( \NdvReviews\Requests\RequestRepository::meta( $row )['first_name'] ?? '' ),
+							),
 						),
 					);
 				}
@@ -313,8 +329,14 @@ class Privacy implements Registerable {
 		$done = count( $comments ) < self::PER_PAGE;
 
 		if ( $done ) {
-			if ( $this->requests && $this->requests->anonymize_email( $email ) > 0 ) {
-				$removed = true;
+			if ( $this->requests ) {
+				// Pending requests to this address must never send (any origin).
+				if ( $this->requests->cancel_pending_for_email( $email, __( 'Not sent: the address was erased for privacy.', 'rosette-reviews' ) ) > 0 ) {
+					$removed = true;
+				}
+				if ( $this->requests->anonymize_email( $email ) > 0 ) {
+					$removed = true;
+				}
 			}
 			if ( $this->tokens && $this->tokens->delete_for_email( $email ) > 0 ) {
 				$removed = true;

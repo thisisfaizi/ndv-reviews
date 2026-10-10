@@ -52,6 +52,33 @@ class TokenRepository {
 	}
 
 	/**
+	 * Create a per-order token and return its row id too (RR-09: the request
+	 * row records which token its email carried).
+	 *
+	 * @param int      $order_id    Order id.
+	 * @param string   $email       Customer email.
+	 * @param int[]    $product_ids Reviewable product ids.
+	 * @param int|null $customer_id Customer user id (nullable).
+	 * @return array{raw:string,id:int}
+	 */
+	public function create_order_token_row( $order_id, $email, array $product_ids, $customer_id = null ) {
+		return $this->create_row( 'order', $order_id, $customer_id, $email, $product_ids );
+	}
+
+	/**
+	 * Create a token for a recipient from an uploaded customer list (no order).
+	 * Reviews through it are stored with source `list_link`; they count as
+	 * verified only when that email actually bought the product.
+	 *
+	 * @param string $email       Recipient email.
+	 * @param int[]  $product_ids Products to review.
+	 * @return array{raw:string,id:int}
+	 */
+	public function create_list_token( $email, array $product_ids ) {
+		return $this->create_row( 'list', null, null, $email, $product_ids );
+	}
+
+	/**
 	 * Create a customer "magic" token covering all current unreviewed products.
 	 *
 	 * @param int    $customer_id Customer user id.
@@ -79,9 +106,9 @@ class TokenRepository {
 	}
 
 	/**
-	 * Internal token creation.
+	 * Internal token creation (raw token only).
 	 *
-	 * @param string   $type        order|customer|test.
+	 * @param string   $type        order|customer|test|list.
 	 * @param int|null $order_id    Order id.
 	 * @param int|null $customer_id Customer id.
 	 * @param string   $email       Email.
@@ -90,6 +117,23 @@ class TokenRepository {
 	 * @return string Raw token.
 	 */
 	private function create( $type, $order_id, $customer_id, $email, array $product_ids, $lifetime = 0 ) {
+		$created = $this->create_row( $type, $order_id, $customer_id, $email, $product_ids, $lifetime );
+
+		return $created['raw'];
+	}
+
+	/**
+	 * Internal token creation.
+	 *
+	 * @param string   $type        order|customer|test|list.
+	 * @param int|null $order_id    Order id.
+	 * @param int|null $customer_id Customer id.
+	 * @param string   $email       Email.
+	 * @param int[]    $product_ids Product ids.
+	 * @param int      $lifetime    Fixed lifetime in seconds (0 = use the expiry setting).
+	 * @return array{raw:string,id:int} Raw token and row id (0 if the insert failed).
+	 */
+	private function create_row( $type, $order_id, $customer_id, $email, array $product_ids, $lifetime = 0 ) {
 		global $wpdb;
 
 		$raw = wp_generate_password( 40, false );
@@ -117,10 +161,10 @@ class TokenRepository {
 			}
 		}
 
-		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$inserted = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			Db::table( 'review_tokens' ),
 			array(
-				'type'        => in_array( $type, array( 'customer', 'test' ), true ) ? $type : 'order',
+				'type'        => in_array( $type, array( 'customer', 'test', 'list' ), true ) ? $type : 'order',
 				'order_id'    => $order_id ? absint( $order_id ) : null,
 				'customer_id' => $customer_id ? absint( $customer_id ) : null,
 				'email_hash'  => $this->hash_email( $email ),
@@ -133,7 +177,19 @@ class TokenRepository {
 			array( '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
 
-		return $raw;
+		// A failed insert must not hand out a link that resolves to nothing
+		// (or, through a stale insert_id, to someone else's token).
+		if ( ! $inserted ) {
+			return array(
+				'raw' => '',
+				'id'  => 0,
+			);
+		}
+
+		return array(
+			'raw' => $raw,
+			'id'  => (int) $wpdb->insert_id,
+		);
 	}
 
 	/**

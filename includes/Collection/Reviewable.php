@@ -34,7 +34,7 @@ class Reviewable {
 				continue;
 			}
 			$product_id = $item->get_product_id();
-			if ( $product_id && 'product' === get_post_type( $product_id ) && ! $this->has_reviewed( $email, $product_id ) ) {
+			if ( $product_id && 'product' === get_post_type( $product_id ) && ! $this->has_reviewed( $email, $product_id, (int) $order->get_customer_id() ) ) {
 				$ids[ $product_id ] = $product_id;
 			}
 		}
@@ -72,28 +72,36 @@ class Reviewable {
 	}
 
 	/**
-	 * Whether the given email has already left a review for the product.
+	 * Whether a customer has already reviewed a product: the one "already
+	 * reviewed" test (PRD-00 §6). Reviews are stored on the product's pool, so
+	 * both the product and its pool are checked, matching the email, or the
+	 * account when the email changed.
 	 *
 	 * @param string $email      Email.
 	 * @param int    $product_id Product id.
+	 * @param int    $user_id    Customer user id (0 for guests and list rows).
 	 * @return bool
 	 */
-	public function has_reviewed( $email, $product_id ) {
-		if ( ! is_email( $email ) ) {
+	public function has_reviewed( $email, $product_id, $user_id = 0 ) {
+		$product_id = absint( $product_id );
+		$user_id    = absint( $user_id );
+		if ( ! $product_id ) {
 			return false;
 		}
 
-		$existing = get_comments(
-			array(
-				'post_id'              => absint( $product_id ),
-				'author_email'        => $email,
-				'type__in'            => array( 'review', 'comment' ),
-				'status'              => 'all',
-				'count'               => true,
-				'number'              => 1,
-			)
+		$posts = array_values( array_unique( array( $product_id, \NdvReviews\Reviews\Pool::resolve_id( $product_id ) ) ) );
+		$base  = array(
+			'post__in' => $posts,
+			'type__in' => array( 'review', 'comment' ),
+			'status'   => 'all',
+			'count'    => true,
+			'number'   => 1,
 		);
 
-		return (int) $existing > 0;
+		if ( is_email( $email ) && (int) get_comments( $base + array( 'author_email' => $email ) ) > 0 ) {
+			return true;
+		}
+
+		return $user_id > 0 && (int) get_comments( $base + array( 'user_id' => $user_id ) ) > 0;
 	}
 }

@@ -45,71 +45,359 @@ class Mailer {
 	private $reviewable;
 
 	/**
+	 * Request log (cooldown and token linkage). Optional so older direct
+	 * `new Mailer()` callers keep working; without it there is no cooldown.
+	 *
+	 * @var RequestRepository|null
+	 */
+	private $requests;
+
+	/**
+	 * Whether the email being built is for a list recipient (no order).
+	 *
+	 * @var bool
+	 */
+	private $list_context = false;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Settings        $settings   Settings.
-	 * @param TokenRepository $tokens     Token repository.
-	 * @param Reviewable      $reviewable Reviewable resolver.
+	 * @param Settings               $settings   Settings.
+	 * @param TokenRepository        $tokens     Token repository.
+	 * @param Reviewable             $reviewable Reviewable resolver.
+	 * @param RequestRepository|null $requests   Request log.
 	 */
-	public function __construct( Settings $settings, TokenRepository $tokens, Reviewable $reviewable ) {
+	public function __construct( Settings $settings, TokenRepository $tokens, Reviewable $reviewable, ?RequestRepository $requests = null ) {
 		$this->settings   = $settings;
 		$this->tokens     = $tokens;
 		$this->reviewable = $reviewable;
+		$this->requests   = $requests;
 	}
 
 	/**
-	 * Send the review-request email for an order.
+	 * The single gate for every review request, free and Pro (RR-09).
 	 *
-	 * Error codes ndvr_no_order, ndvr_order_ineligible, ndvr_unsubscribed and
-	 * ndvr_nothing_to_review mean "deliberately not sent" (see
-	 * Scheduler::process()); anything else is a delivery failure.
+	 * Error codes in Scheduler::SKIP_CODES mean "deliberately not sent" (the
+	 * row ends cancelled); anything else is a delivery failure.
 	 *
-	 * @param int $order_id Order id.
+	 * @param \WC_Order|null      $order   Order, or null for a list recipient.
+	 * @param array<string,mixed> $context {
+	 *     Eligibility context.
+	 *
+	 *     @type string $stage      queue|send.
+	 *     @type string $source     auto|manual|followup|campaign|legacy.
+	 *     @type string $origin     free|pro.
+	 *     @type int    $step       Step number.
+	 *     @type int    $request_id Request row id (0 when there is none yet).
+	 *     @type bool   $list       Whether this is a list recipient (no order).
+	 *     @type string $email      List recipient email.
+	 *     @type int[]  $products   List recipient product ids.
+	 * }
 	 * @return true|\WP_Error
 	 */
-	public function send_for_order( $order_id ) {
-		$order = function_exists( 'wc_get_order' ) ? wc_get_order( $order_id ) : null;
-		if ( ! $order ) {
-			return new \WP_Error( 'ndvr_no_order', __( 'Order not found.', 'rosette-reviews' ) );
-		}
-
-		// The send is scheduled `reminder_delay_days` ahead of the qualifying
-		// status change and fires later via Action Scheduler — the order can
-		// legitimately move to cancelled/refunded/failed in that window (a
-		// customer requesting a refund is the common case). Re-check the
-		// *current* status at send time rather than trusting the status that
-		// was true when this was originally scheduled.
-		$ineligible_statuses = (array) apply_filters(
-			'ndv-reviews/reminder_ineligible_order_statuses',
-			array( 'cancelled', 'refunded', 'failed', 'trash' )
+	public function check_eligibility( $order, array $context = array() ) {
+		$context = wp_parse_args(
+			$context,
+			array(
+				'stage'      => 'send',
+				'source'     => 'auto',
+				'origin'     => 'free',
+				'step'       => 1,
+				'request_id' => 0,
+				'list'       => false,
+				'email'      => '',
+				'products'   => array(),
+			)
 		);
-		if ( in_array( $order->get_status(), $ineligible_statuses, true ) ) {
-			return new \WP_Error( 'ndvr_order_ineligible', __( 'Order is no longer eligible for a review request.', 'rosette-reviews' ) );
+		$is_list = ! empty( $context['list'] );
+		$order   = $order instanceof \WC_Order ? $order : null;
+
+		$result = $this->eligibility_steps( $order, $context, $is_list );
+
+		/**
+		 * Filter the final review-request eligibility decision. Applied last;
+		 * a listener that doesn't apply returns $eligible unchanged.
+		 *
+		 * @param true|\WP_Error      $eligible Decision so far.
+		 * @param \WC_Order|null      $order    Order (null for list rows).
+		 * @param array<string,mixed> $context  Context (see check_eligibility()).
+		 */
+		$filtered = apply_filters( 'ndv-reviews/request_eligible', $result, $order, $context );
+
+		return ( true === $filtered || is_wp_error( $filtered ) ) ? $filtered : $result;
+	}
+
+	/**
+	 * The ordered eligibility steps (see check_eligibility()).
+	 *
+	 * @param \WC_Order|null      $order   Order.
+	 * @param array<string,mixed> $context Context.
+	 * @param bool                $is_list Whether this is a list recipient.
+	 * @return true|\WP_Error
+	 */
+	private function eligibility_steps( $order, array $context, $is_list ) {
+		if ( ! $is_list ) {
+			if ( ! $order ) {
+				return new \WP_Error( 'ndvr_no_order', __( 'Order not found.', 'rosette-reviews' ) );
+			}
+
+			// The send runs days after the qualifying status change; the order can
+			// legitimately move to cancelled/refunded/failed in that window (a
+			// customer requesting a refund is the common case). Check the current
+			// status every time.
+			$ineligible_statuses = (array) apply_filters(
+				'ndv-reviews/reminder_ineligible_order_statuses',
+				array( 'cancelled', 'refunded', 'failed', 'trash' )
+			);
+			if ( in_array( $order->get_status(), $ineligible_statuses, true ) ) {
+				return new \WP_Error( 'ndvr_order_ineligible', __( 'Order is no longer eligible for a review request.', 'rosette-reviews' ) );
+			}
 		}
 
-		$email = $order->get_billing_email();
+		$email = $is_list ? (string) $context['email'] : (string) $order->get_billing_email();
 		if ( ! is_email( $email ) ) {
-			return new \WP_Error( 'ndvr_no_email', __( 'Order has no valid email.', 'rosette-reviews' ) );
+			return new \WP_Error( 'ndvr_no_email', __( 'No valid email address.', 'rosette-reviews' ) );
 		}
 
 		if ( $this->is_suppressed( $email ) ) {
 			return new \WP_Error( 'ndvr_unsubscribed', __( 'Recipient has unsubscribed.', 'rosette-reviews' ) );
 		}
 
+		$products = $is_list ? $this->list_products( $email, (array) $context['products'] ) : $this->reviewable->for_order( $order );
+		if ( empty( $products ) ) {
+			return new \WP_Error( 'ndvr_nothing_to_review', __( 'No reviewable products in this order.', 'rosette-reviews' ) );
+		}
+
+		// Cooldown: at send time always; at queue time only for manual sends,
+		// which then insert no row at all.
+		$check_cooldown = 'send' === $context['stage'] || 'manual' === $context['source'];
+		if ( $check_cooldown && $this->requests ) {
+			$last = $is_list ? $this->requests->last_sent_at_for_email( $email ) : $this->requests->last_sent_at_for_order( $order->get_id() );
+
+			/**
+			 * Filter the minimum time between two review requests to the same
+			 * order (or, for list rows, the same email).
+			 *
+			 * @param int                 $seconds Default 20 hours.
+			 * @param array<string,mixed> $context Eligibility context.
+			 */
+			$cooldown = max( 0, (int) apply_filters( 'ndv-reviews/request_cooldown', 20 * HOUR_IN_SECONDS, $context ) );
+			if ( $last && $cooldown > 0 && strtotime( $last . ' UTC' ) > time() - $cooldown ) {
+				return new \WP_Error( 'ndvr_cooldown', __( 'A review request was sent to this customer recently.', 'rosette-reviews' ) );
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * A list recipient's products, minus the ones they already reviewed.
+	 *
+	 * @param string $email    Recipient email.
+	 * @param int[]  $products Requested product ids.
+	 * @return int[]
+	 */
+	private function list_products( $email, array $products ) {
+		$out = array();
+		foreach ( array_unique( array_map( 'absint', $products ) ) as $product_id ) {
+			if ( $product_id && PostTypes::is_reviewable( $product_id ) && ! $this->reviewable->has_reviewed( $email, $product_id ) ) {
+				$out[] = $product_id;
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Send the review-request email for an order.
+	 *
+	 * With `request_id` (the queue, Scheduler::process()) eligibility was
+	 * already checked and the token is linked to the row. Without it (the
+	 * legacy direct path, used by older Pro versions) this runs the full gate,
+	 * cooldown included. Error codes in Scheduler::SKIP_CODES mean "deliberately
+	 * not sent"; anything else is a delivery failure.
+	 *
+	 * @param int                 $order_id Order id.
+	 * @param array<string,mixed> $args {
+	 *     Optional.
+	 *
+	 *     @type int    $request_id Request row id.
+	 *     @type string $variant    first|followup (UTM content and texts).
+	 * }
+	 * @return true|\WP_Error
+	 */
+	public function send_for_order( $order_id, array $args = array() ) {
+		$request_id = isset( $args['request_id'] ) ? absint( $args['request_id'] ) : 0;
+		$variant    = isset( $args['variant'] ) && 'followup' === $args['variant'] ? 'followup' : 'first';
+
+		$order = function_exists( 'wc_get_order' ) ? wc_get_order( $order_id ) : null;
+		if ( ! $request_id ) {
+			$eligible = $this->check_eligibility(
+				$order ? $order : null,
+				array(
+					'stage'  => 'send',
+					'source' => 'legacy',
+					'origin' => 'pro',
+				)
+			);
+			if ( is_wp_error( $eligible ) ) {
+				return $eligible;
+			}
+		}
+		if ( ! $order ) {
+			return new \WP_Error( 'ndvr_no_order', __( 'Order not found.', 'rosette-reviews' ) );
+		}
+
+		$email    = $order->get_billing_email();
 		$products = $this->reviewable->for_order( $order );
 		if ( empty( $products ) ) {
 			return new \WP_Error( 'ndvr_nothing_to_review', __( 'No reviewable products in this order.', 'rosette-reviews' ) );
 		}
 
-		$token = $this->tokens->create_order_token( $order_id, $email, $products, $order->get_customer_id() );
-		$link  = $this->build_link( $token );
+		$token = $this->tokens->create_order_token_row( $order->get_id(), $email, $products, $order->get_customer_id() );
+		if ( ! $token['id'] ) {
+			return new \WP_Error( 'ndvr_token_failed', __( 'The review link could not be created.', 'rosette-reviews' ) );
+		}
+		if ( $request_id && $this->requests ) {
+			$this->requests->set_token( $request_id, $token['id'] );
+		}
+		$link = $this->tracked_link( $this->build_link( $token['raw'] ), $variant );
 
-		$subject = $this->subject( $order, $link );
-		$body    = $this->body( $order, $products, $link, $email );
+		$texts = $this->request_texts(
+			array(
+				'subject' => $this->subject( $order, $link ),
+				'body'    => $this->body( $order, $products, $link, $email ),
+			),
+			$request_id,
+			$order
+		);
 
-		$sent = wp_mail( $email, $subject, $body, $this->headers( $email ) );
+		$sent = wp_mail( $email, $texts['subject'], $this->with_pixel( $texts['body'], $request_id ), $this->headers( $email ) );
 
 		return $sent ? true : new \WP_Error( 'ndvr_mail_failed', __( 'wp_mail() returned false.', 'rosette-reviews' ) );
+	}
+
+	/**
+	 * Send the review request to a recipient from an uploaded list (no order).
+	 * Eligibility was checked by the queue; reviews through the link are stored
+	 * with source `list_link`.
+	 *
+	 * @param string $email      Recipient email.
+	 * @param string $first_name Recipient first name ('' if unknown).
+	 * @param int[]  $products   Product ids to review.
+	 * @param int    $request_id Request row id.
+	 * @return true|\WP_Error
+	 */
+	public function send_to_list_recipient( $email, $first_name, array $products, $request_id ) {
+		$email = sanitize_email( (string) $email );
+		if ( ! is_email( $email ) ) {
+			return new \WP_Error( 'ndvr_no_email', __( 'No valid email address.', 'rosette-reviews' ) );
+		}
+
+		$products = $this->list_products( $email, $products );
+		if ( empty( $products ) ) {
+			return new \WP_Error( 'ndvr_nothing_to_review', __( 'No reviewable products in this order.', 'rosette-reviews' ) );
+		}
+
+		// An unsaved order object so the templates (and theme overrides) can use
+		// the usual WC_Order getters, as previews do.
+		$order = new \WC_Order();
+		$order->set_billing_first_name( sanitize_text_field( (string) $first_name ) );
+		$order->set_billing_email( $email );
+
+		$token = $this->tokens->create_list_token( $email, $products );
+		if ( ! $token['id'] ) {
+			return new \WP_Error( 'ndvr_token_failed', __( 'The review link could not be created.', 'rosette-reviews' ) );
+		}
+		if ( $request_id && $this->requests ) {
+			$this->requests->set_token( absint( $request_id ), $token['id'] );
+		}
+		$link = $this->tracked_link( $this->build_link( $token['raw'] ), 'first' );
+
+		// A list recipient has no order: {order_number} must stay empty, not
+		// show the preview's sample number.
+		$this->list_context = true;
+		$texts              = $this->request_texts(
+			array(
+				'subject' => $this->subject( $order, $link ),
+				'body'    => $this->body( $order, $products, $link, $email, array(), 'list' ),
+			),
+			absint( $request_id ),
+			null
+		);
+		$this->list_context = false;
+
+		$sent = wp_mail( $email, $texts['subject'], $this->with_pixel( $texts['body'], absint( $request_id ) ), $this->headers( $email ) );
+
+		return $sent ? true : new \WP_Error( 'ndvr_mail_failed', __( 'wp_mail() returned false.', 'rosette-reviews' ) );
+	}
+
+	/**
+	 * Let features change a request email's subject and body.
+	 *
+	 * @param array{subject:string,body:string} $texts      Subject and body HTML.
+	 * @param int                               $request_id Request row id (0 on the legacy path).
+	 * @param \WC_Order|null                    $order      Order (null for list rows).
+	 * @return array{subject:string,body:string}
+	 */
+	private function request_texts( array $texts, $request_id, $order ) {
+		$row = ( $request_id && $this->requests ) ? $this->requests->find( $request_id ) : null;
+
+		/**
+		 * Filter a review-request email's subject and body HTML.
+		 *
+		 * @param array{subject:string,body:string} $texts Subject and body.
+		 * @param object|null                       $row   Request row (null on the legacy path).
+		 * @param \WC_Order|null                    $order Order (null for list rows).
+		 */
+		$filtered = apply_filters( 'ndv-reviews/request_email_texts', $texts, $row, $order );
+
+		return array(
+			'subject' => isset( $filtered['subject'] ) ? (string) $filtered['subject'] : $texts['subject'],
+			'body'    => isset( $filtered['body'] ) ? (string) $filtered['body'] : $texts['body'],
+		);
+	}
+
+	/**
+	 * Add the optional UTM tags to a review link.
+	 *
+	 * @param string $link    Review link.
+	 * @param string $variant first|followup.
+	 * @return string
+	 */
+	private function tracked_link( $link, $variant ) {
+		if ( ! $this->settings->get( 'reminder_utm' ) ) {
+			return $link;
+		}
+
+		$tags = array(
+			'utm_source'   => 'rosette-reviews',
+			'utm_medium'   => 'email',
+			'utm_campaign' => 'review-request',
+		);
+		if ( 'followup' === $variant ) {
+			$tags['utm_content'] = 'followup';
+		}
+
+		return add_query_arg( $tags, $link );
+	}
+
+	/**
+	 * Add the optional open-tracking image (off by default) before </body>.
+	 *
+	 * @param string $html       Email HTML.
+	 * @param int    $request_id Request row id (no pixel without one).
+	 * @return string
+	 */
+	private function with_pixel( $html, $request_id ) {
+		if ( ! $request_id || ! $this->settings->get( 'reminder_open_pixel' ) ) {
+			return $html;
+		}
+
+		$img = '<img src="' . esc_url( Tracking::pixel_url( $request_id ) ) . '" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;" />';
+		$pos = strripos( $html, '</body>' );
+
+		return false === $pos ? $html . $img : substr( $html, 0, $pos ) . $img . substr( $html, $pos );
 	}
 
 	/**
@@ -354,9 +642,10 @@ class Mailer {
 	 * @param string               $link      Review link.
 	 * @param string               $email     Recipient email.
 	 * @param array<string,string> $overrides Optional unsaved `body`.
+	 * @param string               $context   order|list (list recipients get their own footer line).
 	 * @return string
 	 */
-	private function body( $order, $products, $link, $email, array $overrides = array() ) {
+	private function body( $order, $products, $link, $email, array $overrides = array(), $context = 'order' ) {
 		$custom = isset( $overrides['body'] ) ? $overrides['body'] : (string) $this->settings->get( 'reminder_body' );
 		$custom = trim( $custom );
 		$intro  = '' !== $custom
@@ -380,6 +669,7 @@ class Mailer {
 				'accent'       => $accent,
 				'accent_text'  => $this->readable_text_color( $accent ),
 				'store_address' => $this->store_address(),
+				'context'       => 'list' === $context ? 'list' : 'order',
 			)
 		);
 
@@ -415,7 +705,7 @@ class Mailer {
 		$values = array(
 			'{customer_name}' => $order->get_billing_first_name(),
 			'{store_name}'    => $this->store_name(),
-			'{order_number}'  => $order->get_id() ? (string) $order->get_order_number() : '1001',
+			'{order_number}'  => $order->get_id() ? (string) $order->get_order_number() : ( $this->list_context ? '' : '1001' ),
 			'{review_link}'   => $link,
 		);
 

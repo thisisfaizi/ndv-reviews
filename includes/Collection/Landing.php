@@ -14,6 +14,7 @@ use NdvReviews\Reviews\CriteriaRepository;
 use NdvReviews\Reviews\ReviewRepository;
 use NdvReviews\Forms\AntiSpam;
 use NdvReviews\Forms\Upload;
+use NdvReviews\Requests\RequestRepository;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -69,22 +70,47 @@ class Landing implements Registerable {
 	private $upload;
 
 	/**
+	 * Request log (open and conversion tracking, list recipients). Optional
+	 * so older direct constructions keep working.
+	 *
+	 * @var RequestRepository|null
+	 */
+	private $requests;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Settings           $settings Settings.
-	 * @param TokenRepository    $tokens   Token repository.
-	 * @param CriteriaRepository $criteria Criteria repository.
-	 * @param ReviewRepository   $reviews  Review repository.
-	 * @param AntiSpam           $antispam Anti-spam.
-	 * @param Upload             $upload   Upload handler.
+	 * @param Settings               $settings Settings.
+	 * @param TokenRepository        $tokens   Token repository.
+	 * @param CriteriaRepository     $criteria Criteria repository.
+	 * @param ReviewRepository       $reviews  Review repository.
+	 * @param AntiSpam               $antispam Anti-spam.
+	 * @param Upload                 $upload   Upload handler.
+	 * @param RequestRepository|null $requests Request log.
 	 */
-	public function __construct( Settings $settings, TokenRepository $tokens, CriteriaRepository $criteria, ReviewRepository $reviews, AntiSpam $antispam, Upload $upload ) {
+	public function __construct( Settings $settings, TokenRepository $tokens, CriteriaRepository $criteria, ReviewRepository $reviews, AntiSpam $antispam, Upload $upload, ?RequestRepository $requests = null ) {
 		$this->settings = $settings;
 		$this->tokens   = $tokens;
 		$this->criteria = $criteria;
 		$this->reviews  = $reviews;
 		$this->antispam = $antispam;
 		$this->upload   = $upload;
+		$this->requests = $requests;
+	}
+
+	/**
+	 * The request whose email carried this token (null for tokens made
+	 * outside the queue, such as customer and test links).
+	 *
+	 * @param object $row Token row.
+	 * @return object|null
+	 */
+	private function request_for( $row ) {
+		if ( ! $this->requests || ! is_object( $row ) || 'test' === $row->type ) {
+			return null;
+		}
+
+		return $this->requests->find_by_token( (int) $row->id );
 	}
 
 	/**
@@ -131,6 +157,13 @@ class Landing implements Registerable {
 
 		nocache_headers();
 
+		// Record the first time the link from a review request was opened
+		// (one UPDATE, first view only; test links are never counted).
+		$request = $row ? $this->request_for( $row ) : null;
+		if ( $request ) {
+			$this->requests->mark_opened( (int) $request->id );
+		}
+
 		$pending = $row ? $this->pending_products( $row ) : array();
 		$valid   = (bool) $row;
 
@@ -156,7 +189,7 @@ class Landing implements Registerable {
 				'nonce'          => wp_create_nonce( self::NONCE ),
 				'ajax_url'       => admin_url( 'admin-ajax.php' ),
 				'ajax_action'    => self::AJAX_ACTION,
-				'default_author' => $row ? $this->default_author( $row ) : '',
+				'default_author' => $row ? $this->default_author( $row, $request ) : '',
 				'is_test'        => $row && 'test' === $row->type,
 			)
 		);
@@ -263,11 +296,14 @@ class Landing implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
 		}
 
+		$request = $this->request_for( $row );
+		$is_list = 'list' === $row->type;
+
 		// Theme overrides of the template may not have the name field, so an
 		// empty or missing value falls back to the order's name.
 		$author = isset( $input['author'] ) && is_string( $input['author'] ) ? trim( sanitize_text_field( $input['author'] ) ) : '';
 		if ( '' === $author ) {
-			$author = $this->default_author( $row );
+			$author = $this->default_author( $row, $request );
 		}
 
 		$media = array();
@@ -279,7 +315,12 @@ class Landing implements Registerable {
 			$media = $uploaded;
 		}
 
-		$email = $this->token_email( $row );
+		// A list token has no order or account: its email is the list address
+		// the request went to.
+		$email = $is_list ? ( $request && is_email( $request->email ) ? (string) $request->email : '' ) : $this->token_email( $row );
+		if ( $is_list && ( '' === $email || ! $this->tokens->email_matches( $row, $email ) ) ) {
+			wp_send_json_error( array( 'message' => __( 'This link is no longer valid. Please request a fresh one.', 'rosette-reviews' ) ), 410 );
+		}
 
 		$result = $this->reviews->create(
 			array(
@@ -291,9 +332,9 @@ class Landing implements Registerable {
 				'recommend'  => isset( $input['ndvr_recommend'] ) ? $input['ndvr_recommend'] : 'neutral',
 				'criteria'   => $criteria,
 				'media'      => $media,
-				'user_id'    => (int) $row->customer_id,
-				'source'     => 'magic_link',
-				'order_id'   => (int) $row->order_id,
+				'user_id'    => $is_list ? 0 : (int) $row->customer_id,
+				'source'     => $is_list ? 'list_link' : 'magic_link',
+				'order_id'   => $is_list ? 0 : (int) $row->order_id,
 				'consent'    => ! empty( $input['ndvr_consent'] ),
 				'approved'   => 0,
 			)
@@ -308,11 +349,26 @@ class Landing implements Registerable {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ), 400 );
 		}
 
-		// Mark verified explicitly: the token proves purchase.
-		update_comment_meta( $result, '_ndvr_verified', 1 );
-		update_comment_meta( $result, 'verified', 1 );
+		// Order and customer tokens prove the purchase, so mark verified
+		// explicitly. A list token only proves the mailbox: create() already
+		// verified it if, and only if, that email bought the product.
+		if ( in_array( $row->type, array( 'order', 'customer' ), true ) ) {
+			update_comment_meta( $result, '_ndvr_verified', 1 );
+			update_comment_meta( $result, 'verified', 1 );
+		}
 
 		$this->tokens->mark_product( (int) $row->id, $product_id, 'reviewed' );
+
+		// The first review through a request's link converts it.
+		if ( $request && $this->requests->mark_reviewed( (int) $request->id ) ) {
+			/**
+			 * Fires when a review request led to a review (first review only).
+			 *
+			 * @param int $request_id Request id.
+			 * @param int $comment_id The new review.
+			 */
+			do_action( 'ndv-reviews/request_converted', (int) $request->id, (int) $result );
+		}
 
 		wp_send_json_success(
 			array(
@@ -328,12 +384,19 @@ class Landing implements Registerable {
 	 * first name plus last initial ("Jane D."). Never the account login, which
 	 * is often the customer's email address.
 	 *
-	 * @param object $row Token row.
+	 * @param object      $row     Token row.
+	 * @param object|null $request The request the token came with, if any.
 	 * @return string
 	 */
-	private function default_author( $row ) {
+	private function default_author( $row, $request = null ) {
 		$first = '';
 		$last  = '';
+
+		// List recipients: the first name from the uploaded list.
+		if ( 'list' === $row->type && $request ) {
+			$meta  = RequestRepository::meta( $request );
+			$first = isset( $meta['first_name'] ) ? (string) $meta['first_name'] : '';
+		}
 
 		if ( ! empty( $row->order_id ) && function_exists( 'wc_get_order' ) ) {
 			$order = wc_get_order( (int) $row->order_id );

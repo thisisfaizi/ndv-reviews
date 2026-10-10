@@ -390,6 +390,7 @@ class DashboardPage implements Registerable {
 		$last30    = $this->count_reviews( 'approve', gmdate( 'Y-m-d H:i:s', $now - 30 * DAY_IN_SECONDS ) );
 		$prev30    = $this->count_reviews( 'approve', gmdate( 'Y-m-d H:i:s', $now - 60 * DAY_IN_SECONDS ), gmdate( 'Y-m-d H:i:s', $now - 30 * DAY_IN_SECONDS ) );
 		$reminders = $this->reminder_stats();
+		$tracking  = ( new \NdvReviews\Requests\RequestRepository() )->stats( 90 );
 		$lists     = $this->product_lists();
 		$checklist = $this->checklist( $stats['total'] );
 		$todo      = count( array_filter( wp_list_pluck( $checklist, 'done' ), static function ( $d ) {
@@ -550,6 +551,23 @@ class DashboardPage implements Registerable {
 						<div><strong><?php echo esc_html( number_format_i18n( $reminders['scheduled'] ) ); ?></strong><span><?php esc_html_e( 'Scheduled', 'rosette-reviews' ); ?></span></div>
 						<div class="<?php echo $reminders['failed'] ? 'is-alert' : ''; ?>"><strong><?php echo esc_html( number_format_i18n( $reminders['failed'] ) ); ?></strong><span><?php esc_html_e( 'Failed', 'rosette-reviews' ); ?></span></div>
 					</div>
+					<?php if ( $tracking['sent'] > 0 ) : ?>
+						<h3 class="ndvr-subhead"><?php esc_html_e( 'Results · 90 days', 'rosette-reviews' ); ?></h3>
+						<div class="ndvr-mini-stats">
+							<div><strong><?php echo esc_html( number_format_i18n( $tracking['opened'] ) ); ?></strong><span><?php esc_html_e( 'Link opened', 'rosette-reviews' ); ?></span></div>
+							<div><strong><?php echo esc_html( number_format_i18n( $tracking['reviewed'] ) ); ?></strong><span><?php esc_html_e( 'Reviewed', 'rosette-reviews' ); ?></span></div>
+							<div>
+								<strong><?php echo esc_html( null === $tracking['conversion'] ? '—' : number_format_i18n( $tracking['conversion'] * 100 ) . '%' ); ?></strong>
+								<span><?php esc_html_e( 'Conversion', 'rosette-reviews' ); ?></span>
+							</div>
+						</div>
+						<p class="description">
+							<?php
+							/* translators: 1: orders with a review, 2: orders that got a request. */
+							echo esc_html( sprintf( __( '%1$s of %2$s orders that got a request left a review.', 'rosette-reviews' ), number_format_i18n( $tracking['orders_reviewed'] ), number_format_i18n( $tracking['orders_sent'] ) ) );
+							?>
+						</p>
+					<?php endif; ?>
 					<p class="ndvr-card-foot"><a href="<?php echo esc_url( admin_url( 'admin.php?page=ndv-reviews-reminders' ) ); ?>"><?php esc_html_e( 'Open reminder log', 'rosette-reviews' ); ?></a></p>
 				</section>
 

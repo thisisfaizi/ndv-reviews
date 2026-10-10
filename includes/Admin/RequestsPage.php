@@ -258,6 +258,7 @@ class RequestsPage implements Registerable {
 	private function status_label( $status ) {
 		$labels = array(
 			'scheduled' => __( 'Scheduled', 'rosette-reviews' ),
+			'sending'   => __( 'Sending', 'rosette-reviews' ),
 			'sent'      => __( 'Sent', 'rosette-reviews' ),
 			'failed'    => __( 'Failed', 'rosette-reviews' ),
 			'cancelled' => __( 'Not sent', 'rosette-reviews' ),
@@ -265,6 +266,29 @@ class RequestsPage implements Registerable {
 		);
 
 		return isset( $labels[ $status ] ) ? $labels[ $status ] : $status;
+	}
+
+	/**
+	 * Translated label for where a request came from.
+	 *
+	 * @param object $row Request row.
+	 * @return string
+	 */
+	private function source_label( $row ) {
+		$source = isset( $row->source ) ? (string) $row->source : 'legacy';
+		if ( isset( $row->origin ) && 'pro' === $row->origin && 'campaign' !== $source ) {
+			return __( 'Pro automation', 'rosette-reviews' );
+		}
+
+		$labels = array(
+			'auto'     => __( 'Automatic', 'rosette-reviews' ),
+			'manual'   => __( 'Manual', 'rosette-reviews' ),
+			'followup' => __( 'Follow-up', 'rosette-reviews' ),
+			'campaign' => __( 'Campaign', 'rosette-reviews' ),
+			'legacy'   => __( 'Earlier version', 'rosette-reviews' ),
+		);
+
+		return isset( $labels[ $source ] ) ? $labels[ $source ] : $source;
 	}
 
 	/**
@@ -350,6 +374,7 @@ class RequestsPage implements Registerable {
 							</td>
 						</tr>
 					</table>
+					<?php \NdvReviews\Requests\Tracking::render_section( $s->all() ); ?>
 					<p>
 						<button type="submit" name="ndvr_requests_do" value="save" class="button button-primary"><?php esc_html_e( 'Save settings', 'rosette-reviews' ); ?></button>
 						<button type="submit" class="button" formaction="<?php echo esc_url( admin_url( 'admin-post.php?action=' . self::PREVIEW_ACTION ) ); ?>" formtarget="_blank"><?php esc_html_e( 'Preview email', 'rosette-reviews' ); ?></button>
@@ -402,20 +427,23 @@ class RequestsPage implements Registerable {
 							<th><?php esc_html_e( 'ID', 'rosette-reviews' ); ?></th>
 							<th><?php esc_html_e( 'Order', 'rosette-reviews' ); ?></th>
 							<th><?php esc_html_e( 'Email', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Source', 'rosette-reviews' ); ?></th>
 							<th><?php esc_html_e( 'Status', 'rosette-reviews' ); ?></th>
 							<th><?php esc_html_e( 'Scheduled', 'rosette-reviews' ); ?></th>
 							<th><?php esc_html_e( 'Sent', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Link opened', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Reviewed', 'rosette-reviews' ); ?></th>
 							<th><?php esc_html_e( 'Note', 'rosette-reviews' ); ?></th>
 							<th><?php esc_html_e( 'Actions', 'rosette-reviews' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php if ( empty( $log['items'] ) ) : ?>
-							<tr><td colspan="8"><?php esc_html_e( 'No review requests yet.', 'rosette-reviews' ); ?></td></tr>
+							<tr><td colspan="11"><?php esc_html_e( 'No review requests yet.', 'rosette-reviews' ); ?></td></tr>
 						<?php endif; ?>
 						<?php foreach ( $log['items'] as $row ) : ?>
 							<?php
-							$order_obj  = wc_get_order( (int) $row->order_id );
+							$order_obj  = $row->order_id ? wc_get_order( (int) $row->order_id ) : null;
 							$order_link = $order_obj ? $order_obj->get_edit_order_url() : '';
 							?>
 							<tr>
@@ -423,14 +451,19 @@ class RequestsPage implements Registerable {
 								<td>
 									<?php if ( $order_link ) : ?>
 										<a href="<?php echo esc_url( $order_link ); ?>">#<?php echo esc_html( $order_obj->get_order_number() ); ?></a>
+									<?php elseif ( ! $row->order_id ) : ?>
+										<?php esc_html_e( 'List', 'rosette-reviews' ); ?>
 									<?php else : ?>
 										#<?php echo esc_html( $row->order_id ); ?>
 									<?php endif; ?>
 								</td>
 								<td><?php echo esc_html( $row->email ? $row->email : '—' ); ?></td>
+								<td><?php echo esc_html( $this->source_label( $row ) ); ?></td>
 								<td><span class="ndvr-status ndvr-status-<?php echo esc_attr( $row->status ); ?>"><?php echo esc_html( $this->status_label( $row->status ) ); ?></span></td>
 								<td><?php echo esc_html( $row->scheduled_at ); ?></td>
 								<td><?php echo esc_html( $row->sent_at ? $row->sent_at : '—' ); ?></td>
+								<td><?php echo esc_html( ! empty( $row->opened_at ) ? $row->opened_at : '—' ); ?></td>
+								<td><?php echo esc_html( ! empty( $row->reviewed_at ) ? $row->reviewed_at : '—' ); ?></td>
 								<td><?php echo esc_html( $row->error ? $row->error : '' ); ?></td>
 								<td>
 									<?php if ( 'failed' === $row->status ) : ?>

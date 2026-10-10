@@ -49,6 +49,7 @@ Rosette Reviews replaces the default WooCommerce reviews tab with a review secti
 * Spam protection: honeypot and rate limiting by default, optional Google reCAPTCHA v3.
 * Import existing WooCommerce reviews or a CSV file. Export to CSV or JSON at any time.
 * GDPR: consent checkbox, and WordPress personal data export and erasure.
+* Reminder results: the request log records when a customer opened the review link and when they left a review, so the dashboard can show how many orders that got a request led to a review. Two optional extras are off by default: UTM tags on the review link, and a 1×1 image that counts email opens. The image is a form of tracking that some privacy laws require consent for; mention it in your privacy policy if you turn it on. Erasing a customer's personal data cancels any review request still waiting to be sent to them.
 
 = Shortcodes =
 
@@ -131,6 +132,11 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 * Uninstall (when you opt in to data removal) now removes every option, setting, meta key and scheduled job the plugin stores.
 * The reCAPTCHA secret key is no longer shown in the settings page; leave the field empty to keep it.
 * Developers: new template, moderation-screen and settings hooks for add-ons.
+* Review requests can no longer be sent twice: each one is claimed before it is sent, repeated order events create one request, and a request to the same order within 20 hours is skipped.
+* The request log shows where each request came from, when the review link was opened and when a review was left. The dashboard shows how many orders that got a request led to a review.
+* New, off by default: UTM tags on the review link, and an image that counts email opens.
+* Reminders that were waiting when the plugin was deactivated are sent after reactivation, spread out; ones more than 14 days overdue are skipped.
+* Erasing a customer's personal data cancels review requests still waiting to be sent to them.
 
 = 1.0.0 =
 * Initial public release.

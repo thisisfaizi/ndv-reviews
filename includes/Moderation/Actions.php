@@ -135,7 +135,7 @@ class Actions implements Registerable {
 	 * @return array<string,string>
 	 */
 	public function add_rating_column( $columns ) {
-		$columns['ndvr_rating'] = __( 'Rating', 'ndv-reviews' );
+		$columns['ndvr_rating'] = __( 'Rating', 'rosette-reviews' );
 
 		return $columns;
 	}

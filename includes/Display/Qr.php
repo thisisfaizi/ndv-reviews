@@ -46,7 +46,7 @@ class Qr {
 			'<svg xmlns="http://www.w3.org/2000/svg" width="%1$d" height="%1$d" viewBox="0 0 %2$d %2$d" shape-rendering="crispEdges" role="img" aria-label="%3$s"><rect width="%2$d" height="%2$d" fill="#fff"/><g fill="#000">%4$s</g></svg>',
 			(int) $px,
 			(int) $dim,
-			esc_attr__( 'QR code', 'ndv-reviews' ),
+			esc_attr__( 'QR code', 'rosette-reviews' ),
 			$rects
 		);
 	}

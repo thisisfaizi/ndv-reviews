@@ -97,9 +97,9 @@ class AdminNotify implements Registerable {
 
 		$subject = $pending
 			/* translators: 1: store name, 2: product name. */
-			? sprintf( __( '[%1$s] New review awaiting approval: %2$s', 'ndv-reviews' ), $store, $product )
+			? sprintf( __( '[%1$s] New review awaiting approval: %2$s', 'rosette-reviews' ), $store, $product )
 			/* translators: 1: store name, 2: product name. */
-			: sprintf( __( '[%1$s] New review: %2$s', 'ndv-reviews' ), $store, $product );
+			: sprintf( __( '[%1$s] New review: %2$s', 'rosette-reviews' ), $store, $product );
 
 		wp_mail( $to, wp_specialchars_decode( $subject, ENT_QUOTES ), $this->body( $comment, $product, $rating, $pending ), array( 'Content-Type: text/html; charset=UTF-8' ) );
 	}
@@ -145,17 +145,17 @@ class AdminNotify implements Registerable {
 <body style="margin:0;padding:24px 0;background:#f6f6f6;font-family:Arial,Helvetica,sans-serif;color:#333;">
 	<table role="presentation" width="600" cellpadding="0" cellspacing="0" align="center" style="max-width:600px;width:100%;background:#fff;border-radius:10px;">
 		<tr><td style="padding:24px 28px;font-size:14px;line-height:1.6;">
-			<p style="margin:0 0 4px;color:#777;font-size:12px;"><?php echo esc_html( $pending ? __( 'Awaiting your approval', 'ndv-reviews' ) : __( 'Published', 'ndv-reviews' ) ); ?></p>
+			<p style="margin:0 0 4px;color:#777;font-size:12px;"><?php echo esc_html( $pending ? __( 'Awaiting your approval', 'rosette-reviews' ) : __( 'Published', 'rosette-reviews' ) ); ?></p>
 			<h1 style="margin:0 0 12px;font-size:18px;color:#111;"><?php echo esc_html( $product ); ?></h1>
 			<?php if ( $stars ) : ?>
-				<p style="margin:0 0 8px;font-size:20px;color:#f5a623;letter-spacing:2px;" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: rating. */ __( '%s out of 5 stars', 'ndv-reviews' ), number_format_i18n( $rating, 1 ) ) ); ?>"><?php echo esc_html( $stars ); ?> <span style="font-size:13px;color:#555;letter-spacing:0;"><?php echo esc_html( number_format_i18n( $rating, 1 ) ); ?>/5</span></p>
+				<p style="margin:0 0 8px;font-size:20px;color:#f5a623;letter-spacing:2px;" aria-label="<?php echo esc_attr( sprintf( /* translators: %s: rating. */ __( '%s out of 5 stars', 'rosette-reviews' ), number_format_i18n( $rating, 1 ) ) ); ?>"><?php echo esc_html( $stars ); ?> <span style="font-size:13px;color:#555;letter-spacing:0;"><?php echo esc_html( number_format_i18n( $rating, 1 ) ); ?>/5</span></p>
 			<?php endif; ?>
 			<p style="margin:0 0 12px;color:#555;">
 				<?php
 				/* translators: %s: reviewer name. */
-				echo esc_html( sprintf( __( 'By %s', 'ndv-reviews' ), $comment->comment_author ) );
+				echo esc_html( sprintf( __( 'By %s', 'rosette-reviews' ), $comment->comment_author ) );
 				if ( $verified ) {
-					echo ' · ' . esc_html__( 'Verified buyer', 'ndv-reviews' );
+					echo ' · ' . esc_html__( 'Verified buyer', 'rosette-reviews' );
 				}
 				?>
 			</p>
@@ -165,13 +165,13 @@ class AdminNotify implements Registerable {
 			<p style="margin:0 0 20px;"><?php echo esc_html( $excerpt ); ?></p>
 			<p style="margin:0;">
 				<?php if ( $pending ) : ?>
-					<a href="<?php echo esc_url( $moderate ); ?>" style="<?php echo esc_attr( $button ); ?>background:#111;color:#fff;"><?php esc_html_e( 'Review pending reviews', 'ndv-reviews' ); ?></a>
+					<a href="<?php echo esc_url( $moderate ); ?>" style="<?php echo esc_attr( $button ); ?>background:#111;color:#fff;"><?php esc_html_e( 'Review pending reviews', 'rosette-reviews' ); ?></a>
 				<?php endif; ?>
-				<a href="<?php echo esc_url( $edit ); ?>" style="<?php echo esc_attr( $button ); ?>background:#eee;color:#111;"><?php esc_html_e( 'Open this review', 'ndv-reviews' ); ?></a>
+				<a href="<?php echo esc_url( $edit ); ?>" style="<?php echo esc_attr( $button ); ?>background:#eee;color:#111;"><?php esc_html_e( 'Open this review', 'rosette-reviews' ); ?></a>
 			</p>
 		</td></tr>
 		<tr><td style="padding:14px 28px;border-top:1px solid #eee;font-size:11px;color:#999;">
-			<?php esc_html_e( 'You can change or turn off these emails under NDV Reviews > Review Reminders.', 'ndv-reviews' ); ?>
+			<?php esc_html_e( 'You can change or turn off these emails under Rosette Reviews > Review Reminders.', 'rosette-reviews' ); ?>
 		</td></tr>
 	</table>
 </body>

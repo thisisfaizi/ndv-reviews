@@ -22,8 +22,8 @@ class MarqueeWidget extends \WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'ndvr_marquee',
-			__( 'NDV Reviews: Marquee', 'ndv-reviews' ),
-			array( 'description' => __( 'Scrolling marquee of recent reviews.', 'ndv-reviews' ) )
+			__( 'Rosette Reviews: Marquee', 'rosette-reviews' ),
+			array( 'description' => __( 'Scrolling marquee of recent reviews.', 'rosette-reviews' ) )
 		);
 	}
 
@@ -63,20 +63,20 @@ class MarqueeWidget extends \WP_Widget {
 	 * @return string
 	 */
 	public function form( $instance ) {
-		$title = isset( $instance['title'] ) ? $instance['title'] : __( 'What customers say', 'ndv-reviews' );
+		$title = isset( $instance['title'] ) ? $instance['title'] : __( 'What customers say', 'rosette-reviews' );
 		$limit = isset( $instance['limit'] ) ? (int) $instance['limit'] : 12;
 		$min   = isset( $instance['min_rating'] ) ? (float) $instance['min_rating'] : 0;
 		?>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>"><?php esc_html_e( 'Number of reviews:', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>"><?php esc_html_e( 'Number of reviews:', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'limit' ) ); ?>" type="number" value="<?php echo esc_attr( $limit ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'min_rating' ) ); ?>"><?php esc_html_e( 'Minimum rating:', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'min_rating' ) ); ?>"><?php esc_html_e( 'Minimum rating:', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'min_rating' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'min_rating' ) ); ?>" type="number" step="0.5" min="0" max="5" value="<?php echo esc_attr( $min ); ?>" />
 		</p>
 		<?php

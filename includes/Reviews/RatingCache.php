@@ -71,7 +71,8 @@ class RatingCache {
 			return;
 		}
 
-		// Distribution of integer ratings across approved review comments.
+		// Distribution of integer ratings across approved top-level review
+		// comments (a reply never counts, even if it carries a rating).
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
@@ -81,6 +82,7 @@ class RatingCache {
 				WHERE cm.meta_key = 'rating'
 				AND c.comment_post_ID = %d
 				AND c.comment_approved = '1'
+				AND c.comment_parent = 0
 				AND c.comment_type IN ( 'review', 'comment' )
 				GROUP BY meta_value",
 				$product_id

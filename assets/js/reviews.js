@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — front-end review form submission + UI enhancements.
+ * Rosette Reviews — front-end review form submission + UI enhancements.
  * Vanilla JS, no jQuery. Intercepts the WooCommerce review form and submits
  * it over AJAX so there is no full page reload.
  */

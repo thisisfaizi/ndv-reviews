@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — Design admin screen (card selectors). Scoped to .ndvr-design.
+ * Rosette Reviews — Design admin screen (card selectors). Scoped to .ndvr-design.
  */
 
 .ndvr-design .ndvr-design-intro { color: var(--ndvr-slate, #5e6675); font-size: 14px; margin: 0 0 8px; }
@@ -43,9 +43,9 @@
 	transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 .ndvr-design .ndvr-opt:hover .ndvr-opt-card { transform: translateY(-2px); box-shadow: 0 12px 26px -18px rgba(20,22,28,.3); }
-.ndvr-design .ndvr-opt input:focus-visible + .ndvr-opt-card { box-shadow: 0 0 0 3px var(--ndvr-verdant-soft, #e7f3ee); }
+.ndvr-design .ndvr-opt input:focus-visible + .ndvr-opt-card { box-shadow: var(--ndvr-focus, 0 0 0 3px rgba(214,51,79,.18)); }
 .ndvr-design .ndvr-opt input:checked + .ndvr-opt-card {
-	border-color: var(--ndvr-verdant, #0f7d5b);
+	border-color: var(--ndvr-ink, #181a1f);
 }
 .ndvr-design .ndvr-opt input:checked + .ndvr-opt-card::after {
 	content: "\2713";
@@ -55,14 +55,14 @@
 	width: 22px;
 	height: 22px;
 	border-radius: 50%;
-	background: var(--ndvr-verdant, #0f7d5b);
+	background: var(--ndvr-brand, #d6334f);
 	color: #fff;
 	font-size: 13px;
 	font-weight: 800;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 2px 6px rgba(15,125,91,.4);
+	box-shadow: 0 2px 6px rgba(214,51,79,.35);
 }
 .ndvr-design .ndvr-opt-preview {
 	display: flex;
@@ -112,6 +112,24 @@
 .ndvr-design .ndvr-swatch[aria-pressed="true"] { border-color: var(--ndvr-ink, #181a1f); box-shadow: inset 0 0 0 1px var(--ndvr-ink, #181a1f); font-weight: 600; }
 .ndvr-design .ndvr-swatch:focus-visible { outline: 2px solid #2271b1; outline-offset: 2px; }
 .ndvr-design .ndvr-accent-help { color: var(--ndvr-slate, #5e6675); font-size: 13px; margin: 0 0 12px; clear: both; }
+
+/* Optional rating colours */
+.ndvr-design .ndvr-color-field { clear: both; padding: 4px 0 14px; }
+.ndvr-design .ndvr-color-field + .ndvr-color-field { border-top: 1px solid var(--ndvr-line, #e6e9ef); padding-top: 16px; }
+.ndvr-design .ndvr-color-label { margin: 0 0 4px; font-size: 13px; color: var(--ndvr-ink, #181a1f); }
+.ndvr-design .ndvr-color-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ndvr-design .ndvr-color-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ndvr-ink, #181a1f); }
+.ndvr-design .ndvr-color-field.is-default input[type="color"] { opacity: .45; }
+.ndvr-design .ndvr-contrast-warning {
+	margin: 10px 0 0;
+	padding: 8px 12px;
+	border-radius: 9px;
+	background: #fffaf2;
+	border: 1px solid #f5c27a;
+	color: #9a5b00;
+	font-size: 12.5px;
+}
+.ndvr-design .ndvr-contrast-warning[hidden] { display: none; }
 
 .ndvr-design .ndvr-typo-row { display: flex; gap: 24px; flex-wrap: wrap; clear: both; }
 .ndvr-design .ndvr-typo-row label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; }

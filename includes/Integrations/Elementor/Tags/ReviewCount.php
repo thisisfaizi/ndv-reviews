@@ -31,7 +31,7 @@ class ReviewCount extends \Elementor\Core\DynamicTags\Tag {
 	 * @return string
 	 */
 	public function get_title() {
-		return __( 'Product Review Count', 'ndv-reviews' );
+		return __( 'Product Review Count', 'rosette-reviews' );
 	}
 
 	/**

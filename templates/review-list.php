@@ -19,9 +19,9 @@ if ( empty( $result['items'] ) ) {
 	// "Filtered" = the shopper narrowed the list (AJAX); otherwise there are
 	// simply no reviews. $filtered is optional so theme overrides keep working.
 	if ( ! empty( $filtered ) ) {
-		echo '<p class="ndvr-no-reviews">' . esc_html__( 'No reviews match these filters.', 'ndv-reviews' ) . '</p>';
+		echo '<p class="ndvr-no-reviews">' . esc_html__( 'No reviews match these filters.', 'rosette-reviews' ) . '</p>';
 	} else {
-		echo '<p class="ndvr-no-reviews">' . esc_html__( 'No reviews yet.', 'ndv-reviews' ) . '</p>';
+		echo '<p class="ndvr-no-reviews">' . esc_html__( 'No reviews yet.', 'rosette-reviews' ) . '</p>';
 	}
 	return;
 }
@@ -57,10 +57,10 @@ if ( empty( $result['items'] ) ) {
 	$ndvr_pages_to_show = array_values( array_unique( $ndvr_pages_to_show ) );
 	sort( $ndvr_pages_to_show, SORT_NUMERIC );
 	?>
-	<nav class="ndvr-pagination" aria-label="<?php esc_attr_e( 'Reviews pages', 'ndv-reviews' ); ?>">
+	<nav class="ndvr-pagination" aria-label="<?php esc_attr_e( 'Reviews pages', 'rosette-reviews' ); ?>">
 		<?php if ( $ndvr_current > 1 ) : ?>
 			<button type="button" class="ndvr-page ndvr-page-prev" data-page="<?php echo esc_attr( $ndvr_current - 1 ); ?>">
-				<?php esc_html_e( 'Prev', 'ndv-reviews' ); ?>
+				<?php esc_html_e( 'Prev', 'rosette-reviews' ); ?>
 			</button>
 		<?php endif; ?>
 		<?php
@@ -79,7 +79,7 @@ if ( empty( $result['items'] ) ) {
 		<?php endforeach; ?>
 		<?php if ( $ndvr_current < $ndvr_total ) : ?>
 			<button type="button" class="ndvr-page ndvr-page-next" data-page="<?php echo esc_attr( $ndvr_current + 1 ); ?>">
-				<?php esc_html_e( 'Next', 'ndv-reviews' ); ?>
+				<?php esc_html_e( 'Next', 'rosette-reviews' ); ?>
 			</button>
 		<?php endif; ?>
 	</nav>

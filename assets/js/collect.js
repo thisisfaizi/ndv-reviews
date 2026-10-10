@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — collection forms (tokenized landing page + [ndvr-testimonial]).
+ * Rosette Reviews — collection forms (tokenized landing page + [ndvr-testimonial]).
  * Submits each product review independently. Vanilla JS, no jQuery.
  *
  * reCAPTCHA v3: when the form container carries data-recaptcha-key (the site

@@ -34,7 +34,7 @@ class SummaryWidget extends \Elementor\Widget_Base {
 	 * @return string
 	 */
 	public function get_title() {
-		return __( 'Review Summary', 'ndv-reviews' );
+		return __( 'Review Summary', 'rosette-reviews' );
 	}
 
 	/**
@@ -90,11 +90,11 @@ class SummaryWidget extends \Elementor\Widget_Base {
 	 * @return void
 	 */
 	protected function register_controls() {
-		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'ndv-reviews' ) ) );
+		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'rosette-reviews' ) ) );
 		$this->add_control(
 			'product_id',
 			array(
-				'label'   => __( 'Product ID (0 = current)', 'ndv-reviews' ),
+				'label'   => __( 'Product ID (0 = current)', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::NUMBER,
 				'default' => 0,
 			)
@@ -104,15 +104,15 @@ class SummaryWidget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style',
 			array(
-				'label' => __( 'Style', 'ndv-reviews' ),
+				'label' => __( 'Style', 'rosette-reviews' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
-		$this->add_color_control( 'average_color', __( 'Overall number color', 'ndv-reviews' ), '.ndvr-summary-average' );
+		$this->add_color_control( 'average_color', __( 'Overall number color', 'rosette-reviews' ), '.ndvr-summary-average' );
 		$this->add_typography_control( 'average_typography', '.ndvr-summary-average' );
-		$this->add_color_control( 'bar_fill_color', __( 'Bar fill color', 'ndv-reviews' ), '.ndvr-bar-fill' );
-		$this->add_color_control( 'bar_track_color', __( 'Bar track color', 'ndv-reviews' ), '.ndvr-bar-track', 'background' );
-		$this->add_color_control( 'criterion_label_color', __( 'Criteria label color', 'ndv-reviews' ), '.ndvr-criterion-name' );
+		$this->add_color_control( 'bar_fill_color', __( 'Bar fill color', 'rosette-reviews' ), '.ndvr-bar-fill' );
+		$this->add_color_control( 'bar_track_color', __( 'Bar track color', 'rosette-reviews' ), '.ndvr-bar-track', 'background' );
+		$this->add_color_control( 'criterion_label_color', __( 'Criteria label color', 'rosette-reviews' ), '.ndvr-criterion-name' );
 		$this->add_group_control(
 			\Elementor\Group_Control_Background::get_type(),
 			array(
@@ -131,7 +131,7 @@ class SummaryWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'box_radius',
 			array(
-				'label'      => __( 'Border radius', 'ndv-reviews' ),
+				'label'      => __( 'Border radius', 'rosette-reviews' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array( 'px' => array( 'min' => 0, 'max' => 40 ) ),
@@ -141,7 +141,7 @@ class SummaryWidget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'box_padding',
 			array(
-				'label'      => __( 'Padding', 'ndv-reviews' ),
+				'label'      => __( 'Padding', 'rosette-reviews' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em', '%' ),
 				'selectors'  => array( '{{WRAPPER}} .ndvr-summary' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};' ),

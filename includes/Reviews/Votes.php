@@ -37,14 +37,14 @@ class Votes implements Registerable {
 	 */
 	public function handle() {
 		if ( ! check_ajax_referer( self::NONCE_ACTION, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Session expired.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Session expired.', 'rosette-reviews' ) ), 403 );
 		}
 
 		$comment_id = isset( $_POST['comment_id'] ) ? absint( wp_unslash( $_POST['comment_id'] ) ) : 0;
 		$comment    = get_comment( $comment_id );
 
 		if ( ! $comment || '1' !== (string) $comment->comment_approved ) {
-			wp_send_json_error( array( 'message' => __( 'Review not found.', 'ndv-reviews' ) ), 404 );
+			wp_send_json_error( array( 'message' => __( 'Review not found.', 'rosette-reviews' ) ), 404 );
 		}
 
 		$result = $this->vote( $comment_id );
@@ -56,7 +56,7 @@ class Votes implements Registerable {
 		wp_send_json_success(
 			array(
 				'count'   => $result,
-				'message' => __( 'Thanks for your feedback!', 'ndv-reviews' ),
+				'message' => __( 'Thanks for your feedback!', 'rosette-reviews' ),
 			)
 		);
 	}
@@ -85,7 +85,7 @@ class Votes implements Registerable {
 		);
 
 		if ( ! $inserted ) {
-			return new \WP_Error( 'ndvr_already_voted', __( 'You have already marked this review as helpful.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_already_voted', __( 'You have already marked this review as helpful.', 'rosette-reviews' ) );
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared

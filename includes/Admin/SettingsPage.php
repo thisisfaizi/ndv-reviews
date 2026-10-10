@@ -70,8 +70,8 @@ class SettingsPage implements Registerable {
 	public function register_menu() {
 		add_submenu_page(
 			'ndv-reviews',
-			__( 'Settings', 'ndv-reviews' ),
-			__( 'Settings', 'ndv-reviews' ),
+			__( 'Settings', 'rosette-reviews' ),
+			__( 'Settings', 'rosette-reviews' ),
 			Caps::manage(),
 			self::PAGE_SLUG,
 			array( $this, 'render' )
@@ -113,7 +113,7 @@ class SettingsPage implements Registerable {
 			)
 		);
 
-		$this->notice = __( 'Settings saved.', 'ndv-reviews' );
+		$this->notice = __( 'Settings saved.', 'rosette-reviews' );
 	}
 
 	/**
@@ -150,7 +150,7 @@ class SettingsPage implements Registerable {
 		$enabled =(array) $s->get( 'reviewable_post_types', array() );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Settings', 'ndv-reviews' ); ?></h1>
+			<h1><?php esc_html_e( 'Settings', 'rosette-reviews' ); ?></h1>
 
 			<?php if ( '' !== $this->notice ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php echo esc_html( $this->notice ); ?></p></div>
@@ -161,23 +161,23 @@ class SettingsPage implements Registerable {
 
 				<?php // ── Card: Collection ── ?>
 				<div class="ndvr-card">
-					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Collection', 'ndv-reviews' ); ?></h2></div>
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Collection', 'rosette-reviews' ); ?></h2></div>
 					<div class="ndvr-field">
-						<label style="font-weight:700;"><?php esc_html_e( 'Reviews', 'ndv-reviews' ); ?></label>
+						<label style="font-weight:700;"><?php esc_html_e( 'Reviews', 'rosette-reviews' ); ?></label>
 						<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin-bottom:8px;">
 							<input type="checkbox" name="enable_reviews" value="1" <?php checked( (bool) $s->get( 'enable_reviews' ) ); ?> />
-							<?php esc_html_e( 'Enable reviews', 'ndv-reviews' ); ?>
+							<?php esc_html_e( 'Enable reviews', 'rosette-reviews' ); ?>
 						</label>
 						<label style="display:flex;align-items:center;gap:8px;font-weight:400;">
 							<input type="checkbox" name="allow_guest_reviews" value="1" <?php checked( (bool) $s->get( 'allow_guest_reviews' ) ); ?> />
-							<?php esc_html_e( 'Allow guest (logged-out) reviews', 'ndv-reviews' ); ?>
+							<?php esc_html_e( 'Allow guest (logged-out) reviews', 'rosette-reviews' ); ?>
 						</label>
 					</div>
 
 					<?php if ( ! empty( $cpts ) ) : ?>
 					<div class="ndvr-field" style="margin-top:18px;">
-						<label style="font-weight:700;"><?php esc_html_e( 'Also collect reviews on', 'ndv-reviews' ); ?></label>
-						<span class="description" style="display:block;margin-bottom:10px;"><?php esc_html_e( 'WooCommerce products are always reviewable. Add other public post types here.', 'ndv-reviews' ); ?></span>
+						<label style="font-weight:700;"><?php esc_html_e( 'Also collect reviews on', 'rosette-reviews' ); ?></label>
+						<span class="description" style="display:block;margin-bottom:10px;"><?php esc_html_e( 'WooCommerce products are always reviewable. Add other public post types here.', 'rosette-reviews' ); ?></span>
 						<div style="display:flex;flex-wrap:wrap;gap:10px;">
 							<?php foreach ( $cpts as $cpt ) : ?>
 								<label style="display:inline-flex;align-items:center;gap:7px;background:var(--ndvr-haze);border-radius:8px;padding:7px 12px;font-weight:500;cursor:pointer;">
@@ -190,14 +190,14 @@ class SettingsPage implements Registerable {
 					<?php endif; ?>
 
 					<div class="ndvr-field" style="margin-top:18px;">
-						<label style="font-weight:700;"><?php esc_html_e( 'Photo uploads', 'ndv-reviews' ); ?></label>
+						<label style="font-weight:700;"><?php esc_html_e( 'Photo uploads', 'rosette-reviews' ); ?></label>
 						<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
 							<label style="display:flex;align-items:center;gap:7px;font-weight:400;">
 								<input type="checkbox" name="photo_uploads" value="1" <?php checked( (bool) $s->get( 'photo_uploads' ) ); ?> />
-								<?php esc_html_e( 'Allow photo uploads', 'ndv-reviews' ); ?>
+								<?php esc_html_e( 'Allow photo uploads', 'rosette-reviews' ); ?>
 							</label>
 							<label style="display:flex;align-items:center;gap:7px;font-weight:400;color:var(--ndvr-slate);">
-								<?php esc_html_e( 'Max per review:', 'ndv-reviews' ); ?>
+								<?php esc_html_e( 'Max per review:', 'rosette-reviews' ); ?>
 								<input type="number" name="max_photos" min="0" max="<?php echo esc_attr( self::MAX_PHOTOS ); ?>" value="<?php echo esc_attr( $s->get( 'max_photos', 5 ) ); ?>" style="width:60px;" />
 							</label>
 						</div>
@@ -206,19 +206,19 @@ class SettingsPage implements Registerable {
 
 				<?php // ── Card: Spam protection ── ?>
 				<div class="ndvr-card">
-					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Spam Protection', 'ndv-reviews' ); ?></h2></div>
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'Spam Protection', 'rosette-reviews' ); ?></h2></div>
 					<div class="ndvr-field">
 						<label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:14px;">
 							<input type="checkbox" name="recaptcha_enabled" value="1" <?php checked( (bool) $s->get( 'recaptcha_enabled' ) ); ?> />
-							<?php esc_html_e( 'Enable reCAPTCHA v3 (your own keys)', 'ndv-reviews' ); ?>
+							<?php esc_html_e( 'Enable reCAPTCHA v3 (your own keys)', 'rosette-reviews' ); ?>
 						</label>
 						<div class="ndvr-field-row">
 							<div class="ndvr-field">
-								<label><?php esc_html_e( 'Site key', 'ndv-reviews' ); ?></label>
+								<label><?php esc_html_e( 'Site key', 'rosette-reviews' ); ?></label>
 								<input type="text" name="recaptcha_site_key" value="<?php echo esc_attr( $s->get( 'recaptcha_site_key' ) ); ?>" placeholder="6Lcxxx..." />
 							</div>
 							<div class="ndvr-field">
-								<label><?php esc_html_e( 'Secret key', 'ndv-reviews' ); ?></label>
+								<label><?php esc_html_e( 'Secret key', 'rosette-reviews' ); ?></label>
 								<input type="text" name="recaptcha_secret" value="<?php echo esc_attr( $s->get( 'recaptcha_secret' ) ); ?>" placeholder="6Lcxxx..." />
 							</div>
 						</div>
@@ -227,25 +227,25 @@ class SettingsPage implements Registerable {
 
 				<?php // ── Card: SEO & Advanced ── ?>
 				<div class="ndvr-card">
-					<div class="ndvr-card-header"><h2><?php esc_html_e( 'SEO & Advanced', 'ndv-reviews' ); ?></h2></div>
+					<div class="ndvr-card-header"><h2><?php esc_html_e( 'SEO & Advanced', 'rosette-reviews' ); ?></h2></div>
 					<div class="ndvr-field">
-						<label><?php esc_html_e( 'Schema markup (JSON-LD)', 'ndv-reviews' ); ?></label>
+						<label><?php esc_html_e( 'Schema markup (JSON-LD)', 'rosette-reviews' ); ?></label>
 						<select name="schema_mode" style="max-width:340px;">
-							<option value="auto"   <?php selected( $s->get( 'schema_mode' ), 'auto' ); ?>><?php esc_html_e( 'Automatic: add ratings to WooCommerce\'s product schema; skip standalone schema if an SEO plugin is active (recommended)', 'ndv-reviews' ); ?></option>
-							<option value="plugin" <?php selected( $s->get( 'schema_mode' ), 'plugin' ); ?>><?php esc_html_e( 'Always: also output standalone product schema when an SEO plugin is active', 'ndv-reviews' ); ?></option>
-							<option value="off"    <?php selected( $s->get( 'schema_mode' ), 'off' ); ?>><?php esc_html_e( 'Off: add no review schema', 'ndv-reviews' ); ?></option>
+							<option value="auto"   <?php selected( $s->get( 'schema_mode' ), 'auto' ); ?>><?php esc_html_e( 'Automatic: add ratings to WooCommerce\'s product schema; skip standalone schema if an SEO plugin is active (recommended)', 'rosette-reviews' ); ?></option>
+							<option value="plugin" <?php selected( $s->get( 'schema_mode' ), 'plugin' ); ?>><?php esc_html_e( 'Always: also output standalone product schema when an SEO plugin is active', 'rosette-reviews' ); ?></option>
+							<option value="off"    <?php selected( $s->get( 'schema_mode' ), 'off' ); ?>><?php esc_html_e( 'Off: add no review schema', 'rosette-reviews' ); ?></option>
 						</select>
 					</div>
 					<div class="ndvr-field" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ndvr-line);">
 						<label style="display:flex;align-items:center;gap:8px;font-weight:400;color:var(--ndvr-slate);">
 							<input type="checkbox" name="remove_data_on_uninstall" value="1" <?php checked( (bool) $s->get( 'remove_data_on_uninstall' ) ); ?> />
-							<?php esc_html_e( 'Delete all NDV Reviews data when the plugin is uninstalled', 'ndv-reviews' ); ?>
+							<?php esc_html_e( 'Delete all Rosette Reviews data when the plugin is uninstalled', 'rosette-reviews' ); ?>
 						</label>
 					</div>
 				</div>
 
 				<div style="margin-top:4px;">
-					<button type="submit" name="ndvr_settings_save" value="1" class="button button-primary"><?php esc_html_e( 'Save settings', 'ndv-reviews' ); ?></button>
+					<button type="submit" name="ndvr_settings_save" value="1" class="button button-primary"><?php esc_html_e( 'Save settings', 'rosette-reviews' ); ?></button>
 				</div>
 			</form>
 		</div>

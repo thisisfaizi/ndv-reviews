@@ -22,8 +22,8 @@ class TopRatedWidget extends \WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'ndvr_top_rated',
-			__( 'NDV Reviews: Top-Rated Products', 'ndv-reviews' ),
-			array( 'description' => __( 'Your highest-rated products.', 'ndv-reviews' ) )
+			__( 'Rosette Reviews: Top-Rated Products', 'rosette-reviews' ),
+			array( 'description' => __( 'Your highest-rated products.', 'rosette-reviews' ) )
 		);
 	}
 
@@ -62,7 +62,7 @@ class TopRatedWidget extends \WP_Widget {
 		wp_enqueue_style( 'ndvr-display', NDVR_URL . 'assets/css/display.css', array( 'ndvr-tokens' ), NDVR_VERSION );
 
 		echo $args['before_widget']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		$title = ! empty( $instance['title'] ) ? $instance['title'] : __( 'Top-rated products', 'ndv-reviews' );
+		$title = ! empty( $instance['title'] ) ? $instance['title'] : __( 'Top-rated products', 'rosette-reviews' );
 		echo $args['before_title'] . esc_html( $title ) . $args['after_title']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
 		echo '<ul class="ndvr-top-rated" style="list-style:none;margin:0;padding:0;">';
@@ -91,11 +91,11 @@ class TopRatedWidget extends \WP_Widget {
 		$limit = isset( $instance['limit'] ) ? (int) $instance['limit'] : 5;
 		?>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php esc_html_e( 'Title:', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>"><?php esc_html_e( 'Number of products:', 'ndv-reviews' ); ?></label>
+			<label for="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>"><?php esc_html_e( 'Number of products:', 'rosette-reviews' ); ?></label>
 			<input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'limit' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'limit' ) ); ?>" type="number" value="<?php echo esc_attr( $limit ); ?>" />
 		</p>
 		<?php

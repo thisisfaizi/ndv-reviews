@@ -1,6 +1,6 @@
 <?php
 /**
- * Importer: backfill native WooCommerce reviews into NDV Reviews.
+ * Importer: backfill native WooCommerce reviews into Rosette Reviews.
  *
  * @package NdvReviews
  */

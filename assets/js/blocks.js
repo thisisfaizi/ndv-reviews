@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — Gutenberg block registration (no build step; plain JS).
+ * Rosette Reviews — Gutenberg block registration (no build step; plain JS).
  * Blocks are server-rendered; the editor previews them with ServerSideRender
  * inside the block wrapper from useBlockProps (required by apiVersion 2).
  */
@@ -52,7 +52,7 @@
 	}
 
 	function productControl( props ) {
-		return numberControl( __( 'Product ID (0 = current product)', 'ndv-reviews' ), props.attributes, props.setAttributes, 'product_id' );
+		return numberControl( __( 'Product ID (0 = current product)', 'rosette-reviews' ), props.attributes, props.setAttributes, 'product_id' );
 	}
 
 	function simpleBlock( name, title, panelTitle ) {
@@ -67,13 +67,13 @@
 		} );
 	}
 
-	simpleBlock( 'ndv-reviews/summary', __( 'NDV Reviews: Summary', 'ndv-reviews' ), __( 'Source', 'ndv-reviews' ) );
-	simpleBlock( 'ndv-reviews/stars', __( 'NDV Reviews: Stars', 'ndv-reviews' ), __( 'Source', 'ndv-reviews' ) );
-	simpleBlock( 'ndv-reviews/form', __( 'NDV Reviews: Form', 'ndv-reviews' ), __( 'Form', 'ndv-reviews' ) );
+	simpleBlock( 'ndv-reviews/summary', __( 'Rosette Reviews: Summary', 'rosette-reviews' ), __( 'Source', 'rosette-reviews' ) );
+	simpleBlock( 'ndv-reviews/stars', __( 'Rosette Reviews: Stars', 'rosette-reviews' ), __( 'Source', 'rosette-reviews' ) );
+	simpleBlock( 'ndv-reviews/form', __( 'Rosette Reviews: Form', 'rosette-reviews' ), __( 'Form', 'rosette-reviews' ) );
 
 	blocks.registerBlockType( 'ndv-reviews/reviews', {
 		apiVersion: 2,
-		title: __( 'NDV Reviews: Reviews', 'ndv-reviews' ),
+		title: __( 'Rosette Reviews: Reviews', 'rosette-reviews' ),
 		icon: icon,
 		category: 'widgets',
 		attributes: {
@@ -81,12 +81,12 @@
 			per_page: { type: 'number', default: 10 },
 			orderby: { type: 'string', default: 'recent' }
 		},
-		edit: editor( 'ndv-reviews/reviews', __( 'Reviews', 'ndv-reviews' ), function ( props ) {
+		edit: editor( 'ndv-reviews/reviews', __( 'Reviews', 'rosette-reviews' ), function ( props ) {
 			return [
 				productControl( props ),
 				el( RangeControl, {
 					key: 'per_page',
-					label: __( 'Reviews per page', 'ndv-reviews' ),
+					label: __( 'Reviews per page', 'rosette-reviews' ),
 					value: props.attributes.per_page,
 					min: 1,
 					max: 50,
@@ -94,13 +94,13 @@
 				} ),
 				el( SelectControl, {
 					key: 'orderby',
-					label: __( 'Order by', 'ndv-reviews' ),
+					label: __( 'Order by', 'rosette-reviews' ),
 					value: props.attributes.orderby,
 					options: [
-						{ label: __( 'Most recent', 'ndv-reviews' ), value: 'recent' },
-						{ label: __( 'Most helpful', 'ndv-reviews' ), value: 'helpful' },
-						{ label: __( 'Highest rated', 'ndv-reviews' ), value: 'highest' },
-						{ label: __( 'Lowest rated', 'ndv-reviews' ), value: 'lowest' }
+						{ label: __( 'Most recent', 'rosette-reviews' ), value: 'recent' },
+						{ label: __( 'Most helpful', 'rosette-reviews' ), value: 'helpful' },
+						{ label: __( 'Highest rated', 'rosette-reviews' ), value: 'highest' },
+						{ label: __( 'Lowest rated', 'rosette-reviews' ), value: 'lowest' }
 					],
 					onChange: function ( v ) { props.setAttributes( { orderby: v } ); }
 				} )
@@ -123,7 +123,7 @@
 
 	blocks.registerBlockType( 'ndv-reviews/marquee', {
 		apiVersion: 2,
-		title: __( 'NDV Reviews: Reviews Marquee', 'ndv-reviews' ),
+		title: __( 'Rosette Reviews: Reviews Marquee', 'rosette-reviews' ),
 		icon: icon,
 		category: 'widgets',
 		attributes: {
@@ -140,93 +140,93 @@
 			pause: { type: 'boolean', default: true },
 			rows: { type: 'number', default: 1 }
 		},
-		edit: editor( 'ndv-reviews/marquee', __( 'Marquee', 'ndv-reviews' ), function ( props ) {
+		edit: editor( 'ndv-reviews/marquee', __( 'Marquee', 'rosette-reviews' ), function ( props ) {
 			var a = props.attributes;
 			var set = props.setAttributes;
 			return [
 				el( SelectControl, {
 					key: 'source',
-					label: __( 'Source', 'ndv-reviews' ),
+					label: __( 'Source', 'rosette-reviews' ),
 					value: a.source,
 					options: [
-						{ label: __( 'All products', 'ndv-reviews' ), value: 'all' },
-						{ label: __( 'Specific product', 'ndv-reviews' ), value: 'product' },
-						{ label: __( 'Category', 'ndv-reviews' ), value: 'category' }
+						{ label: __( 'All products', 'rosette-reviews' ), value: 'all' },
+						{ label: __( 'Specific product', 'rosette-reviews' ), value: 'product' },
+						{ label: __( 'Category', 'rosette-reviews' ), value: 'category' }
 					],
 					onChange: function ( v ) { set( { source: v } ); }
 				} ),
-				a.source === 'product' ? numberControl( __( 'Product ID', 'ndv-reviews' ), a, set, 'product_id' ) : null,
+				a.source === 'product' ? numberControl( __( 'Product ID', 'rosette-reviews' ), a, set, 'product_id' ) : null,
 				a.source === 'category' ? el( TextControl, {
 					key: 'category',
-					label: __( 'Category (slug or ID)', 'ndv-reviews' ),
+					label: __( 'Category (slug or ID)', 'rosette-reviews' ),
 					value: a.category,
 					onChange: function ( v ) { set( { category: v } ); }
 				} ) : null,
 				el( RangeControl, {
 					key: 'limit',
-					label: __( 'Number of reviews', 'ndv-reviews' ),
+					label: __( 'Number of reviews', 'rosette-reviews' ),
 					value: a.limit,
 					min: 1, max: 50,
 					onChange: function ( v ) { set( { limit: v || 20 } ); }
 				} ),
 				el( RangeControl, {
 					key: 'min_rating',
-					label: __( 'Minimum rating', 'ndv-reviews' ),
+					label: __( 'Minimum rating', 'rosette-reviews' ),
 					value: a.min_rating,
 					min: 0, max: 5,
 					onChange: function ( v ) { set( { min_rating: v || 0 } ); }
 				} ),
 				el( SelectControl, {
 					key: 'direction',
-					label: __( 'Direction', 'ndv-reviews' ),
+					label: __( 'Direction', 'rosette-reviews' ),
 					value: directionValue( a.direction ),
 					options: [
-						{ label: __( 'Left', 'ndv-reviews' ), value: 'left' },
-						{ label: __( 'Right', 'ndv-reviews' ), value: 'right' },
-						{ label: __( 'Up', 'ndv-reviews' ), value: 'up' },
-						{ label: __( 'Down', 'ndv-reviews' ), value: 'down' }
+						{ label: __( 'Left', 'rosette-reviews' ), value: 'left' },
+						{ label: __( 'Right', 'rosette-reviews' ), value: 'right' },
+						{ label: __( 'Up', 'rosette-reviews' ), value: 'up' },
+						{ label: __( 'Down', 'rosette-reviews' ), value: 'down' }
 					],
 					onChange: function ( v ) { set( { direction: v } ); }
 				} ),
 				el( SelectControl, {
 					key: 'rows',
-					label: __( 'Rows', 'ndv-reviews' ),
+					label: __( 'Rows', 'rosette-reviews' ),
 					value: String( a.rows ),
 					options: [
-						{ label: __( 'Single row', 'ndv-reviews' ), value: '1' },
-						{ label: __( 'Two rows (opposite directions)', 'ndv-reviews' ), value: '2' }
+						{ label: __( 'Single row', 'rosette-reviews' ), value: '1' },
+						{ label: __( 'Two rows (opposite directions)', 'rosette-reviews' ), value: '2' }
 					],
 					onChange: function ( v ) { set( { rows: parseInt( v, 10 ) || 1 } ); }
 				} ),
 				el( RangeControl, {
 					key: 'speed',
-					label: __( 'Loop duration (seconds)', 'ndv-reviews' ),
+					label: __( 'Loop duration (seconds)', 'rosette-reviews' ),
 					value: a.speed,
 					min: 5, max: 120,
 					onChange: function ( v ) { set( { speed: v || 40 } ); }
 				} ),
 				el( RangeControl, {
 					key: 'gap',
-					label: __( 'Gap between cards (px)', 'ndv-reviews' ),
+					label: __( 'Gap between cards (px)', 'rosette-reviews' ),
 					value: a.gap,
 					min: 0, max: 60,
 					onChange: function ( v ) { set( { gap: typeof v === 'number' ? v : 16 } ); }
 				} ),
 				el( ToggleControl, {
 					key: 'pause',
-					label: __( 'Pause on hover', 'ndv-reviews' ),
+					label: __( 'Pause on hover', 'rosette-reviews' ),
 					checked: a.pause,
 					onChange: function ( v ) { set( { pause: v } ); }
 				} ),
 				el( ToggleControl, {
 					key: 'verified',
-					label: __( 'Verified buyers only', 'ndv-reviews' ),
+					label: __( 'Verified buyers only', 'rosette-reviews' ),
 					checked: a.verified,
 					onChange: function ( v ) { set( { verified: v } ); }
 				} ),
 				el( ToggleControl, {
 					key: 'with_media',
-					label: __( 'Reviews with photos only', 'ndv-reviews' ),
+					label: __( 'Reviews with photos only', 'rosette-reviews' ),
 					checked: a.with_media,
 					onChange: function ( v ) { set( { with_media: v } ); }
 				} )

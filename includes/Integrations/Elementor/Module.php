@@ -12,7 +12,7 @@ use NdvReviews\Support\Registerable;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Registers the "NDV Reviews" Elementor widget category, the widgets, and the
+ * Registers the "Rosette Reviews" Elementor widget category, the widgets, and the
  * dynamic tags that power Loop Item bindings. Loads only when Elementor is
  * present; degrades gracefully otherwise (shortcodes/blocks still cover users).
  */
@@ -30,7 +30,7 @@ class Module implements Registerable {
 	}
 
 	/**
-	 * Add the NDV Reviews widget category.
+	 * Add the Rosette Reviews widget category.
 	 *
 	 * @param \Elementor\Elements_Manager $manager Elements manager.
 	 * @return void
@@ -39,7 +39,7 @@ class Module implements Registerable {
 		$manager->add_category(
 			'ndv-reviews',
 			array(
-				'title' => __( 'NDV Reviews', 'ndv-reviews' ),
+				'title' => __( 'Rosette Reviews', 'rosette-reviews' ),
 				'icon'  => 'eicon-star',
 			)
 		);
@@ -66,7 +66,7 @@ class Module implements Registerable {
 	 */
 	public function register_tags( $manager ) {
 		if ( method_exists( $manager, 'register_group' ) ) {
-			$manager->register_group( 'ndv-reviews', array( 'title' => __( 'NDV Reviews', 'ndv-reviews' ) ) );
+			$manager->register_group( 'ndv-reviews', array( 'title' => __( 'Rosette Reviews', 'rosette-reviews' ) ) );
 		}
 		$manager->register( new Tags\RatingValue() );
 		$manager->register( new Tags\ReviewCount() );

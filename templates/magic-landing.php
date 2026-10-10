@@ -24,9 +24,9 @@ defined( 'ABSPATH' ) || exit;
 if ( empty( $valid ) ) :
 	?>
 	<div class="ndvr-collect-card ndvr-collect-invalid">
-		<h1><?php esc_html_e( 'This link has expired', 'ndv-reviews' ); ?></h1>
-		<p><?php esc_html_e( 'Your review link is no longer valid. If you still have items to review, please request a fresh link or contact the store.', 'ndv-reviews' ); ?></p>
-		<p><a class="ndvr-collect-home" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Return to the store', 'ndv-reviews' ); ?></a></p>
+		<h1><?php esc_html_e( 'This link has expired', 'rosette-reviews' ); ?></h1>
+		<p><?php esc_html_e( 'Your review link is no longer valid. If you still have items to review, please request a fresh link or contact the store.', 'rosette-reviews' ); ?></p>
+		<p><a class="ndvr-collect-home" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Return to the store', 'rosette-reviews' ); ?></a></p>
 	</div>
 	<?php
 	return;
@@ -35,9 +35,9 @@ endif;
 if ( empty( $products ) ) :
 	?>
 	<div class="ndvr-collect-card">
-		<h1><?php esc_html_e( 'All done — thank you', 'ndv-reviews' ); ?></h1>
-		<p><?php esc_html_e( 'You have already reviewed everything from this order. We appreciate your feedback.', 'ndv-reviews' ); ?></p>
-		<p><a class="ndvr-collect-home" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Return to the store', 'ndv-reviews' ); ?></a></p>
+		<h1><?php esc_html_e( 'All done — thank you', 'rosette-reviews' ); ?></h1>
+		<p><?php esc_html_e( 'You have already reviewed everything from this order. We appreciate your feedback.', 'rosette-reviews' ); ?></p>
+		<p><a class="ndvr-collect-home" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Return to the store', 'rosette-reviews' ); ?></a></p>
 	</div>
 	<?php
 	return;
@@ -45,10 +45,10 @@ endif;
 ?>
 <div class="ndvr-collect" data-ajax-url="<?php echo esc_url( $ajax_url ); ?>" data-action="<?php echo esc_attr( $ajax_action ); ?>">
 	<header class="ndvr-collect-header">
-		<h1><?php esc_html_e( 'Share your feedback', 'ndv-reviews' ); ?></h1>
-		<p><?php esc_html_e( 'Tell other shoppers what you think. Each item has its own short form.', 'ndv-reviews' ); ?></p>
+		<h1><?php esc_html_e( 'Share your feedback', 'rosette-reviews' ); ?></h1>
+		<p><?php esc_html_e( 'Tell other shoppers what you think. Each item has its own short form.', 'rosette-reviews' ); ?></p>
 		<?php if ( ! empty( $is_test ) ) : ?>
-			<p class="ndvr-collect-test" role="note"><?php esc_html_e( 'This page was opened from a test email. It shows what the customer sees; reviews cannot be submitted from it.', 'ndv-reviews' ); ?></p>
+			<p class="ndvr-collect-test" role="note"><?php esc_html_e( 'This page was opened from a test email. It shows what the customer sees; reviews cannot be submitted from it.', 'rosette-reviews' ); ?></p>
 		<?php endif; ?>
 	</header>
 
@@ -87,40 +87,40 @@ endif;
 				<?php endif; ?>
 
 				<p class="ndvr-field">
-					<label><?php esc_html_e( 'Name shown with your review', 'ndv-reviews' ); ?>
+					<label><?php esc_html_e( 'Name shown with your review', 'rosette-reviews' ); ?>
 						<input type="text" name="author" maxlength="60" autocomplete="name" value="<?php echo esc_attr( isset( $default_author ) ? $default_author : '' ); ?>" />
 					</label>
 				</p>
 
 				<p class="ndvr-field">
-					<label><?php esc_html_e( 'Review title (optional)', 'ndv-reviews' ); ?>
+					<label><?php esc_html_e( 'Review title (optional)', 'rosette-reviews' ); ?>
 						<input type="text" name="ndvr_title" maxlength="150" />
 					</label>
 				</p>
 
 				<p class="ndvr-field">
-					<label><?php esc_html_e( 'Your review', 'ndv-reviews' ); ?> <span class="required">*</span>
+					<label><?php esc_html_e( 'Your review', 'rosette-reviews' ); ?> <span class="required">*</span>
 						<textarea name="comment" rows="5" required></textarea>
 					</label>
 				</p>
 
 				<fieldset class="ndvr-field ndvr-field-recommend">
-					<legend><?php esc_html_e( 'Would you recommend this product?', 'ndv-reviews' ); ?></legend>
-					<label><input type="radio" name="ndvr_recommend" value="yes" /> <?php esc_html_e( 'Yes', 'ndv-reviews' ); ?></label>
-					<label><input type="radio" name="ndvr_recommend" value="neutral" checked="checked" /> <?php esc_html_e( 'Neutral', 'ndv-reviews' ); ?></label>
-					<label><input type="radio" name="ndvr_recommend" value="no" /> <?php esc_html_e( 'No', 'ndv-reviews' ); ?></label>
+					<legend><?php esc_html_e( 'Would you recommend this product?', 'rosette-reviews' ); ?></legend>
+					<label><input type="radio" name="ndvr_recommend" value="yes" /> <?php esc_html_e( 'Yes', 'rosette-reviews' ); ?></label>
+					<label><input type="radio" name="ndvr_recommend" value="neutral" checked="checked" /> <?php esc_html_e( 'Neutral', 'rosette-reviews' ); ?></label>
+					<label><input type="radio" name="ndvr_recommend" value="no" /> <?php esc_html_e( 'No', 'rosette-reviews' ); ?></label>
 				</fieldset>
 
 				<?php if ( $settings->get( 'photo_uploads' ) ) : ?>
 					<p class="ndvr-field">
-						<label><?php esc_html_e( 'Add photos (optional)', 'ndv-reviews' ); ?>
+						<label><?php esc_html_e( 'Add photos (optional)', 'rosette-reviews' ); ?>
 							<input type="file" name="ndvr_photos[]" accept="image/jpeg,image/png,image/gif,image/webp" multiple="multiple" />
 						</label>
 					</p>
 				<?php endif; ?>
 
 				<p class="ndvr-field ndvr-field-consent">
-					<label><input type="checkbox" name="ndvr_consent" value="1" required /> <?php esc_html_e( 'I consent to my review being stored and published.', 'ndv-reviews' ); ?></label>
+					<label><input type="checkbox" name="ndvr_consent" value="1" required /> <?php esc_html_e( 'I consent to my review being stored and published.', 'rosette-reviews' ); ?></label>
 				</p>
 
 				<p class="ndvr-hp" aria-hidden="true" style="position:absolute;left:-9999px;">
@@ -132,7 +132,7 @@ endif;
 				<input type="hidden" name="nonce" value="<?php echo esc_attr( $nonce ); ?>" />
 
 				<div class="ndvr-collect-actions">
-					<button type="submit" class="ndvr-collect-submit"><?php esc_html_e( 'Submit review', 'ndv-reviews' ); ?></button>
+					<button type="submit" class="ndvr-collect-submit"><?php esc_html_e( 'Submit review', 'rosette-reviews' ); ?></button>
 					<span class="ndvr-form-message" role="status" aria-live="polite"></span>
 				</div>
 			</div>

@@ -523,7 +523,7 @@ final class Plugin {
 
 		printf(
 			'<div class="notice notice-warning"><p>%s</p></div>',
-			esc_html__( 'NDV Reviews requires WooCommerce to be installed and active.', 'ndv-reviews' )
+			esc_html__( 'Rosette Reviews requires WooCommerce to be installed and active.', 'rosette-reviews' )
 		);
 	}
 }

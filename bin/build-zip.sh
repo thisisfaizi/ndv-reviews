@@ -10,7 +10,7 @@
 # Usage: bin/build-zip.sh [output-dir]
 set -euo pipefail
 
-SLUG="ndv-reviews"
+SLUG="rosette-reviews"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${1:-${ROOT}/dist}"
 VERSION="$(grep -E '^\s*\*\s*Version:' "${ROOT}/${SLUG}.php" | head -1 | sed -E 's/.*Version:\s*//' | tr -d '[:space:]')"

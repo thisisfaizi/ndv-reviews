@@ -16,7 +16,7 @@ Provider-agnostic — the merchant supplies their own key; we never proxy or mar
 - **AiService** — **product summary** ("Customers say…"), per-review **sentiment** (−1..1), and **fake/spam score** (0..1). Everything is **cached in `ndvr_ai_meta`** so there is never a per-pageview API call; the summary regen is throttled (daily).
 - **Ai module** — on review approval, enrichment runs **async via Action Scheduler**; the "Customers say…" summary renders above the review list (free `ndv-reviews/after_summary` hook) and via `[ndvr-ai-summary]`. **Degrades gracefully**: no key or an API error simply hides the feature — never fatal.
 
-Configured under **NDV Reviews → Pro Settings → AI** (provider, key, optional model).
+Configured under **Rosette Reviews → Pro Settings → AI** (provider, key, optional model).
 
 > Free extension point added this phase: **`ndv-reviews/after_summary`** (fires below the summary box, before the list).
 

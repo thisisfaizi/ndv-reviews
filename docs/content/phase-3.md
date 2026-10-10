@@ -40,7 +40,7 @@ Status: **code-complete, lint-clean; pending a runtime pass.**
 
 ### How to verify
 
-1. **NDV Reviews → Review Reminders**: enable, set trigger = Completed, delay = 0 days, **Save**; click **Send test email** (check Local's Mailpit at the mail catcher).
+1. **Rosette Reviews → Review Reminders**: enable, set trigger = Completed, delay = 0 days, **Save**; click **Send test email** (check Local's Mailpit at the mail catcher).
 2. Set an order to Completed → a row appears in the log; once the queue runs (WooCommerce → Status → Scheduled Actions), status flips to `sent`.
 3. Open the emailed link → the multi-product page lists the order's products; submit one with a photo → "awaiting moderation"; reload the link → that product is gone.
 4. Approve it under **All Reviews**; click the email's **Unsubscribe** → confirm a later send is suppressed.

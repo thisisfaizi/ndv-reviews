@@ -41,6 +41,8 @@ class Settings {
 			'design_summary'      => 'panel',   // panel | compact.
 			'design_card'         => 'soft',    // soft | bordered | flat.
 			'design_rating'       => 'stars',   // stars | hearts | thumbs | emoji.
+			'design_rating_color' => '',        // star/heart colour; '' = built-in (amber stars, red hearts).
+			'design_bar_color'    => '',        // rating bar colour; '' = built-in (follows stars; criteria green).
 			'design_font'         => 'system', // system | serif | rounded | mono.
 			'design_scale'        => 'normal', // compact | normal | large.
 			'schema_mode'         => 'auto',   // auto | plugin | off.

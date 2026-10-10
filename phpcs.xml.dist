@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="NDV Reviews">
-	<description>Coding standards for the NDV Reviews plugin.</description>
+<ruleset name="Rosette Reviews">
+	<description>Coding standards for the Rosette Reviews plugin.</description>
 
 	<file>.</file>
 
@@ -26,7 +26,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="ndv-reviews"/>
+				<element value="rosette-reviews"/>
 			</property>
 		</properties>
 	</rule>

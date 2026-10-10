@@ -1,6 +1,6 @@
 # Design System — "Trust Panel"
 
-NDV Reviews ships a deliberate, modern visual identity — not the default WordPress look. The whole front end is self-contained and **theme-safe**: every component scopes its own design tokens under an `.ndvr-` root, sets `box-sizing`, and never relies on the host theme's colors or fonts.
+Rosette Reviews ships a deliberate, modern visual identity — not the default WordPress look. The whole front end is self-contained and **theme-safe**: every component scopes its own design tokens under an `.ndvr-` root, sets `box-sizing`, and never relies on the host theme's colors or fonts.
 
 ## Thesis
 
@@ -26,11 +26,11 @@ The **Trust Panel**: the big average numeral + the staggered **bar-fill animatio
 
 ## Quality floor
 
-Responsive to mobile, visible keyboard focus, `prefers-reduced-motion` respected (animations resolve to their final state), and a modern admin skin scoped to NDV Reviews screens only (`body.ndvr-admin`) so the rest of wp-admin is untouched.
+Responsive to mobile, visible keyboard focus, `prefers-reduced-motion` respected (animations resolve to their final state), and a modern admin skin scoped to Rosette Reviews screens only (`body.ndvr-admin`) so the rest of wp-admin is untouched.
 
 ## Design settings screen (free)
 
-**NDV Reviews → Design** lets the merchant choose how reviews look — with modern card selectors (an emerald check on the selected card, not the default WordPress look). Competitors gate design behind Pro; here it is **free**.
+**Rosette Reviews → Design** lets the merchant choose how reviews look — with modern card selectors (an emerald check on the selected card, not the default WordPress look). Competitors gate design behind Pro; here it is **free**.
 
 | Control | Options | Effect |
 |---|---|---|

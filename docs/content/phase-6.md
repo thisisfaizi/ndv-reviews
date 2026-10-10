@@ -22,7 +22,7 @@ On **order completed**, Pro builds the tokenized links with the **free plugin's 
 
 > Mailchimp uses the **customer magic link** (not a per-order link) because merge fields are per-contact and overwritten on each order — so it stays correct across repeat purchases (build-plan §21.5 caveat).
 
-All connectors are configured under **NDV Reviews → Pro Settings**, which **surfaces the exact merge tag to paste** for each platform.
+All connectors are configured under **Rosette Reviews → Pro Settings**, which **surfaces the exact merge tag to paste** for each platform.
 
 ## Acceptance criteria (§7.8, §21.4–21.7)
 

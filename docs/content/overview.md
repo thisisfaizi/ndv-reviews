@@ -1,6 +1,6 @@
-# NDV Reviews
+# Rosette Reviews
 
-**NDV Reviews** is a reliable, self-hosted product reviews plugin for **WooCommerce**, built by Nowdigiverse. It is designed as a faster, privacy-first alternative to ReviewX and WiserReview.
+**Rosette Reviews** is a reliable, self-hosted product reviews plugin for **WooCommerce**, built by Nowdigiverse. It is designed as a faster, privacy-first alternative to ReviewX and WiserReview.
 
 ## The one-line pitch
 

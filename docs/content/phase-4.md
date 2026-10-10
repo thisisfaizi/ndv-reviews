@@ -11,13 +11,13 @@
 `[ndvr-reviews]`, `[ndvr-summary]`, `[ndvr-criteria-graph]`, `[ndvr-stars]`, `[ndvr-marquee]` — plus `[ndvr-testimonial]` / `[ndvr-form]` from the testimonial module. All accept `product_id`/`post_id`, so they work on **any post type** (CPT support).
 
 ### Gutenberg blocks (`Integrations/Blocks.php`)
-Server-rendered (no build step): **NDV Reviews: Summary / Stars / Reviews / Reviews Marquee**, previewed in the editor via `wp.serverSideRender` with inspector controls.
+Server-rendered (no build step): **Rosette Reviews: Summary / Stars / Reviews / Reviews Marquee**, previewed in the editor via `wp.serverSideRender` with inspector controls.
 
 ### Classic widgets (`Integrations/Widgets/`)
 `WP_Widget` **Summary** and **Marquee** for non-block, non-Elementor themes — sharing the same renderer.
 
 ### Elementor (`Integrations/Elementor/`, build-plan §20)
-- Widget category **NDV Reviews** + widgets: **Star Rating, Review Summary, Review Section, Reviews Marquee**.
+- Widget category **Rosette Reviews** + widgets: **Star Rating, Review Summary, Review Section, Reviews Marquee**.
 - **Dynamic tags** (Loop Item bindings): **Product Rating Value**, **Product Review Count** — both read **cached** meta (no per-card query → loop-safe).
 - **Loop/theme-builder context resolution** with an **editor sample fallback** so widgets never appear empty while designing.
 
@@ -41,7 +41,7 @@ Status: **code-complete, lint-clean; storefront boot re-verified (0 console erro
 
 - ☑ Plugin boots with all integrations wired — product page renders clean.
 - ☐ Each shortcode **and** Gutenberg block renders; assets enqueue only where used.
-- ☐ Elementor widgets appear under NDV Reviews; dynamic tags resolve per loop product; no duplicate AggregateRating in a loop grid.
+- ☐ Elementor widgets appear under Rosette Reviews; dynamic tags resolve per loop product; no duplicate AggregateRating in a loop grid.
 - ☐ Classic widgets render in sidebars.
 - ☐ Woo-native + CSV import map correctly and are idempotent; export round-trips.
 - ☐ WP export/erase includes reviews/media/votes; consent recorded.

@@ -1,4 +1,4 @@
-=== NDV Reviews ===
+=== Rosette Reviews ===
 Contributors: nowdigiverse
 Tags: woocommerce reviews, product reviews, photo reviews, review reminder, rich snippets
 Requires at least: 6.0
@@ -12,7 +12,7 @@ Self-hosted WooCommerce product reviews with multi-criteria ratings, photo revie
 
 == Description ==
 
-NDV Reviews replaces the default WooCommerce reviews tab with a review section built for collecting and showing more reviews. It runs entirely on your own server: there is no account to create, no sending quota, and no review data leaves your site.
+Rosette Reviews replaces the default WooCommerce reviews tab with a review section built for collecting and showing more reviews. It runs entirely on your own server: there is no account to create, no sending quota, and no review data leaves your site.
 
 = Collect reviews =
 
@@ -32,7 +32,7 @@ NDV Reviews replaces the default WooCommerce reviews tab with a review section b
 * **Filters and sorting:** by star rating, with photos, verified only, topic tags, most recent, highest, lowest and most helpful.
 * **Helpful votes**, one per visitor.
 * **Reviews marquee:** a scrolling strip of reviews for home and landing pages, with pause control.
-* **Design settings:** accent color, list or grid layout, card style, rating icon (stars, hearts, thumbs, emoji), font and text size, with a live preview.
+* **Design settings:** accent color, rating icon (stars, hearts, thumbs, emoji) and its color, rating bar color, list or grid layout, card style, font and text size, with a live preview.
 
 = Works with your site =
 
@@ -59,7 +59,7 @@ NDV Reviews replaces the default WooCommerce reviews tab with a review section b
 * `[ndvr-marquee limit="20" direction="left" rows="1"]` – reviews marquee
 * `[ndvr-form product_id=""]` – review form
 
-= NDV Reviews Pro =
+= Rosette Reviews Pro =
 
 An optional paid add-on adds unlimited criteria, video reviews, admin replies, review-for-coupon rewards, product Q&A, AI review summaries (with your own API key), Google and Facebook review import, more display widgets and analytics. The free plugin is complete on its own and does not require it.
 
@@ -67,16 +67,16 @@ An optional paid add-on adds unlimited criteria, video reviews, admin replies, r
 
 This plugin connects to one external service, and only if you turn it on.
 
-**Google reCAPTCHA v3** (off by default). When enabled under NDV Reviews → Settings with your own site and secret keys, the review forms load Google's reCAPTCHA script (`https://www.google.com/recaptcha/api.js`) in the visitor's browser on pages that show a review form; that script sends browser and interaction data to Google. On submit, your server sends the resulting reCAPTCHA token and your secret key to `https://www.google.com/recaptcha/api/siteverify` to check whether the submission is automated. Google's [Terms of Service](https://policies.google.com/terms) and [Privacy Policy](https://policies.google.com/privacy) apply.
+**Google reCAPTCHA v3** (off by default). When enabled under Rosette Reviews → Settings with your own site and secret keys, the review forms load Google's reCAPTCHA script (`https://www.google.com/recaptcha/api.js`) in the visitor's browser on pages that show a review form; that script sends browser and interaction data to Google. On submit, your server sends the resulting reCAPTCHA token and your secret key to `https://www.google.com/recaptcha/api/siteverify` to check whether the submission is automated. Google's [Terms of Service](https://policies.google.com/terms) and [Privacy Policy](https://policies.google.com/privacy) apply.
 
 No other data is sent anywhere. Avatars on review cards are generated locally from the reviewer's initials.
 
 == Installation ==
 
 1. Install and activate WooCommerce.
-2. Install NDV Reviews from Plugins → Add New, or upload the `ndv-reviews` folder to `/wp-content/plugins/`.
+2. Install Rosette Reviews from Plugins → Add New, or upload the `rosette-reviews` folder to `/wp-content/plugins/`.
 3. Activate it. Reviews appear in the product Reviews tab straight away.
-4. Open **NDV Reviews → Overview** and follow the setup checklist: turn on reminder emails, set your design and import existing reviews.
+4. Open **Rosette Reviews → Overview** and follow the setup checklist: turn on reminder emails, set your design and import existing reviews.
 
 == Frequently Asked Questions ==
 
@@ -90,7 +90,7 @@ No. The plugin does not count or cap reviews, reminder emails or photos. Emails 
 
 = What happens to my existing WooCommerce reviews? =
 
-They stay where they are and keep showing. Use NDV Reviews → Import / Export to bring their ratings into the plugin's summary and filters. Deactivating or deleting NDV Reviews leaves WooCommerce reviews untouched.
+They stay where they are and keep showing. Use Rosette Reviews → Import / Export to bring their ratings into the plugin's summary and filters. Deactivating or deleting Rosette Reviews leaves WooCommerce reviews untouched.
 
 = Can customers review without an account? =
 
@@ -102,25 +102,26 @@ Reminders run on Action Scheduler, which relies on WP-Cron. If your site has lit
 
 = Will it conflict with my SEO plugin's schema? =
 
-NDV Reviews adds its rating and review data to WooCommerce's product schema instead of printing a second product, which avoids duplicate rating markup.
+Rosette Reviews adds its rating and review data to WooCommerce's product schema instead of printing a second product, which avoids duplicate rating markup.
 
 = Can I change how reviews look? =
 
-Use NDV Reviews → Design for colors and layout, or copy a file from the plugin's `templates/` folder into `yourtheme/ndv-reviews/` and edit it.
+Use Rosette Reviews → Design for colors and layout, or copy a file from the plugin's `templates/` folder into `yourtheme/ndv-reviews/` and edit it.
 
 = Is my data removed if I delete the plugin? =
 
-Only if you turn on "Remove all data on uninstall" in Settings. Reviews created by NDV Reviews are deleted then; native WooCommerce reviews are always kept.
+Only if you turn on "Remove all data on uninstall" in Settings. Reviews created by Rosette Reviews are deleted then; native WooCommerce reviews are always kept.
 
 == Screenshots ==
 
 1. Review section: rating summary, criteria bars, filters and review cards with photos.
 2. Review form with criteria ratings, photo upload and recommendation.
 3. Overview dashboard with setup checklist and moderation queue.
-4. All Reviews moderation screen with inline editing.
-5. Review reminder email settings, preview and delivery log.
+4. All Reviews moderation screen with status views, filters and bulk actions.
+5. Review reminder email settings and delivery log.
 6. Design settings with live preview.
 7. Reviews marquee.
+8. Reminder email preview.
 
 == Changelog ==
 

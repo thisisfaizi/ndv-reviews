@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — Design admin screen: preset swatches, live preview of the
+ * Rosette Reviews — Design admin screen: preset swatches, live preview of the
  * unsaved choices, reset confirmation. Vanilla JS, no jQuery.
  */
 ( function () {
@@ -49,6 +49,68 @@
 		return ( 1.05 / ( lum + 0.05 ) ) >= ( ( lum + 0.05 ) / 0.0603 ) ? '#ffffff' : '#181a1f';
 	}
 
+	// WCAG contrast of a colour against white (the cards' background).
+	function contrastOnWhite( hex ) {
+		var h = hex.replace( '#', '' );
+		if ( h.length !== 6 ) {
+			return 21;
+		}
+		var c = [ 0, 2, 4 ].map( function ( i ) {
+			var v = parseInt( h.substr( i, 2 ), 16 ) / 255;
+			return v <= 0.03928 ? v / 12.92 : Math.pow( ( v + 0.055 ) / 1.055, 2.4 );
+		} );
+		return 1.05 / ( 0.2126 * c[ 0 ] + 0.7152 * c[ 1 ] + 0.0722 * c[ 2 ] + 0.05 );
+	}
+
+	// Optional colours (rating icon, bars): the value only when "Use a custom color" is ticked.
+	var colorFields = document.querySelectorAll( '[data-ndvr-color]' );
+
+	function customColor( key ) {
+		var box = form.querySelector( 'input[name="' + key + '_custom"]' );
+		var picker = form.querySelector( 'input[name="' + key + '"]' );
+		return box && picker && box.checked ? picker.value : '';
+	}
+
+	function syncColorFields() {
+		Array.prototype.forEach.call( colorFields, function ( field ) {
+			var key = field.getAttribute( 'data-ndvr-color' );
+			var picker = field.querySelector( 'input[type="color"]' );
+			var warn = field.querySelector( '.ndvr-contrast-warning' );
+			var value = customColor( key );
+			field.classList.toggle( 'is-default', ! value );
+			if ( warn ) {
+				var ratio = value ? contrastOnWhite( value ) : 21;
+				warn.hidden = ratio >= 3;
+				var out = warn.querySelector( '.ndvr-contrast-ratio' );
+				if ( out ) {
+					out.textContent = ratio.toFixed( 1 );
+				}
+			}
+			if ( ! value && picker ) {
+				picker.value = picker.getAttribute( 'data-default' );
+			}
+		} );
+		// Rating icon option cards show the chosen colour too.
+		var rating = customColor( 'design_rating_color' );
+		Array.prototype.forEach.call( form.querySelectorAll( '.ndvr-glyph-star, .ndvr-glyph-heart' ), function ( g ) {
+			g.style.color = rating;
+		} );
+	}
+
+	Array.prototype.forEach.call( colorFields, function ( field ) {
+		var key = field.getAttribute( 'data-ndvr-color' );
+		var picker = field.querySelector( 'input[type="color"]' );
+		var box = form.querySelector( 'input[name="' + key + '_custom"]' );
+		if ( picker && box ) {
+			// Picking a colour means the merchant wants it: tick the box for them.
+			picker.addEventListener( 'input', function () {
+				box.checked = true;
+				syncColorFields();
+				update();
+			} );
+		}
+	} );
+
 	function checked( name ) {
 		var el = form.querySelector( 'input[name="' + name + '"]:checked' );
 		return el ? el.value : '';
@@ -76,6 +138,14 @@
 		var font = form.querySelector( '[name="design_font"]' ).value;
 		var scale = form.querySelector( '[name="design_scale"]' ).value;
 		var vars = '--ndvr-accent:' + input.value + ';--ndvr-accent-ink:' + inkFor( input.value ) + ';';
+		var rating = customColor( 'design_rating_color' );
+		if ( rating ) {
+			vars += '--ndvr-gold:' + rating + ';--ndvr-heart:' + rating + ';';
+		}
+		var bar = customColor( 'design_bar_color' );
+		if ( bar ) {
+			vars += '--ndvr-bar:' + bar + ';';
+		}
 		if ( fonts[ font ] ) {
 			vars += '--ndvr-font:' + fonts[ font ] + ';';
 		}
@@ -111,8 +181,10 @@
 
 	form.addEventListener( 'change', function () {
 		syncSwatches();
+		syncColorFields();
 		update();
 	} );
+	syncColorFields();
 	input.addEventListener( 'input', function () {
 		syncSwatches();
 		update();

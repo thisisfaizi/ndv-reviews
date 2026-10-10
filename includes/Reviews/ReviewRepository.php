@@ -81,7 +81,7 @@ class ReviewRepository {
 	public function create( array $data ) {
 		$product_id = isset( $data['product_id'] ) ? absint( $data['product_id'] ) : 0;
 		if ( ! $product_id || ! PostTypes::is_reviewable( $product_id ) ) {
-			return new \WP_Error( 'ndvr_invalid_product', __( 'This item cannot be reviewed.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_invalid_product', __( 'This item cannot be reviewed.', 'rosette-reviews' ) );
 		}
 
 		// Aggregates (and the comment itself) attach to the pool — identity by
@@ -90,7 +90,7 @@ class ReviewRepository {
 
 		$content = isset( $data['content'] ) ? trim( wp_kses_post( $data['content'] ) ) : '';
 		if ( '' === $content ) {
-			return new \WP_Error( 'ndvr_empty_content', __( 'Please write your review.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_empty_content', __( 'Please write your review.', 'rosette-reviews' ) );
 		}
 
 		$user_id = isset( $data['user_id'] ) ? absint( $data['user_id'] ) : 0;
@@ -104,10 +104,10 @@ class ReviewRepository {
 		}
 
 		if ( '' === $author ) {
-			return new \WP_Error( 'ndvr_missing_author', __( 'Please enter your name.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_missing_author', __( 'Please enter your name.', 'rosette-reviews' ) );
 		}
 		if ( ! is_email( $email ) ) {
-			return new \WP_Error( 'ndvr_missing_email', __( 'Please enter a valid email address.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_missing_email', __( 'Please enter a valid email address.', 'rosette-reviews' ) );
 		}
 
 		// A review without a rating would display but be left out of the product
@@ -118,7 +118,7 @@ class ReviewRepository {
 		if ( empty( $scores ) ) {
 			$plain_rating = isset( $data['rating'] ) && is_numeric( $data['rating'] ) ? (float) $data['rating'] : 0.0;
 			if ( $plain_rating < 1 || $plain_rating > 5 ) {
-				return new \WP_Error( 'ndvr_missing_rating', __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) );
+				return new \WP_Error( 'ndvr_missing_rating', __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) );
 			}
 		}
 
@@ -160,7 +160,7 @@ class ReviewRepository {
 		$comment_id = wp_insert_comment( wp_filter_comment( $commentdata ) );
 
 		if ( ! $comment_id ) {
-			return new \WP_Error( 'ndvr_insert_failed', __( 'Could not save your review. Please try again.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_insert_failed', __( 'Could not save your review. Please try again.', 'rosette-reviews' ) );
 		}
 
 		// Criteria scores (already validated above).

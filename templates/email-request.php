@@ -26,7 +26,7 @@ $ndvr_accent  = ! empty( $accent ) ? $accent : '#181a1f';
 $ndvr_btn_txt = ! empty( $accent_text ) ? $accent_text : '#ffffff';
 $ndvr_intro   = isset( $intro_html ) ? $intro_html : '';
 /* translators: %s: store name. */
-$ndvr_preheader = sprintf( __( 'Review the items from your recent %s order.', 'ndv-reviews' ), $ndvr_store );
+$ndvr_preheader = sprintf( __( 'Review the items from your recent %s order.', 'rosette-reviews' ), $ndvr_store );
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -59,13 +59,13 @@ $ndvr_preheader = sprintf( __( 'Review the items from your recent %s order.', 'n
 								<h1 style="margin:0 0 8px;font-size:22px;color:#111;">
 									<?php
 									/* translators: %s: customer first name. */
-									echo esc_html( '' !== $ndvr_name ? sprintf( __( 'Hi %s,', 'ndv-reviews' ), $ndvr_name ) : __( 'Hello,', 'ndv-reviews' ) );
+									echo esc_html( '' !== $ndvr_name ? sprintf( __( 'Hi %s,', 'rosette-reviews' ), $ndvr_name ) : __( 'Hello,', 'rosette-reviews' ) );
 									?>
 								</h1>
 								<p style="margin:0 0 16px;">
 									<?php
 									/* translators: %s: store name. */
-									echo esc_html( sprintf( __( 'Thank you for your order from %s. Could you tell other shoppers what you think of it? Your review helps them choose.', 'ndv-reviews' ), $ndvr_store ) );
+									echo esc_html( sprintf( __( 'Thank you for your order from %s. Could you tell other shoppers what you think of it? Your review helps them choose.', 'rosette-reviews' ), $ndvr_store ) );
 									?>
 								</p>
 							<?php endif; ?>
@@ -99,7 +99,7 @@ $ndvr_preheader = sprintf( __( 'Review the items from your recent %s order.', 'n
 					<tr>
 						<td align="center" style="padding:22px 32px 28px;">
 							<a href="<?php echo esc_url( $review_link ); ?>" style="background:<?php echo esc_attr( $ndvr_accent ); ?>;color:<?php echo esc_attr( $ndvr_btn_txt ); ?>;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:15px;font-weight:bold;display:inline-block;">
-								<?php esc_html_e( 'Write your review', 'ndv-reviews' ); ?>
+								<?php esc_html_e( 'Write your review', 'rosette-reviews' ); ?>
 							</a>
 						</td>
 					</tr>
@@ -110,8 +110,8 @@ $ndvr_preheader = sprintf( __( 'Review the items from your recent %s order.', 'n
 								<p style="margin:14px 0 0;font-size:11px;line-height:1.5;color:#999;"><?php echo esc_html( $ndvr_store . ' · ' . $store_address ); ?></p>
 							<?php endif; ?>
 							<p style="margin:14px 0 0;font-size:11px;color:#999;">
-								<?php esc_html_e( 'You received this email because you placed an order with us.', 'ndv-reviews' ); ?>
-								<a href="<?php echo esc_url( $unsub_link ); ?>" style="color:#999;"><?php esc_html_e( 'Unsubscribe from review requests', 'ndv-reviews' ); ?></a>
+								<?php esc_html_e( 'You received this email because you placed an order with us.', 'rosette-reviews' ); ?>
+								<a href="<?php echo esc_url( $unsub_link ); ?>" style="color:#999;"><?php esc_html_e( 'Unsubscribe from review requests', 'rosette-reviews' ); ?></a>
 							</p>
 						</td>
 					</tr>

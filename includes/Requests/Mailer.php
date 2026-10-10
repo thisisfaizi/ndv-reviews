@@ -70,7 +70,7 @@ class Mailer {
 	public function send_for_order( $order_id ) {
 		$order = function_exists( 'wc_get_order' ) ? wc_get_order( $order_id ) : null;
 		if ( ! $order ) {
-			return new \WP_Error( 'ndvr_no_order', __( 'Order not found.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_no_order', __( 'Order not found.', 'rosette-reviews' ) );
 		}
 
 		// The send is scheduled `reminder_delay_days` ahead of the qualifying
@@ -84,21 +84,21 @@ class Mailer {
 			array( 'cancelled', 'refunded', 'failed', 'trash' )
 		);
 		if ( in_array( $order->get_status(), $ineligible_statuses, true ) ) {
-			return new \WP_Error( 'ndvr_order_ineligible', __( 'Order is no longer eligible for a review request.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_order_ineligible', __( 'Order is no longer eligible for a review request.', 'rosette-reviews' ) );
 		}
 
 		$email = $order->get_billing_email();
 		if ( ! is_email( $email ) ) {
-			return new \WP_Error( 'ndvr_no_email', __( 'Order has no valid email.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_no_email', __( 'Order has no valid email.', 'rosette-reviews' ) );
 		}
 
 		if ( $this->is_suppressed( $email ) ) {
-			return new \WP_Error( 'ndvr_unsubscribed', __( 'Recipient has unsubscribed.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_unsubscribed', __( 'Recipient has unsubscribed.', 'rosette-reviews' ) );
 		}
 
 		$products = $this->reviewable->for_order( $order );
 		if ( empty( $products ) ) {
-			return new \WP_Error( 'ndvr_nothing_to_review', __( 'No reviewable products in this order.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_nothing_to_review', __( 'No reviewable products in this order.', 'rosette-reviews' ) );
 		}
 
 		$token = $this->tokens->create_order_token( $order_id, $email, $products, $order->get_customer_id() );
@@ -109,7 +109,7 @@ class Mailer {
 
 		$sent = wp_mail( $email, $subject, $body, $this->headers( $email ) );
 
-		return $sent ? true : new \WP_Error( 'ndvr_mail_failed', __( 'wp_mail() returned false.', 'ndv-reviews' ) );
+		return $sent ? true : new \WP_Error( 'ndvr_mail_failed', __( 'wp_mail() returned false.', 'rosette-reviews' ) );
 	}
 
 	/**
@@ -122,7 +122,7 @@ class Mailer {
 	 */
 	public function send_test( $to ) {
 		if ( ! is_email( $to ) ) {
-			return new \WP_Error( 'ndvr_test_email', __( 'Enter a valid email address.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_test_email', __( 'Enter a valid email address.', 'rosette-reviews' ) );
 		}
 
 		$sample = $this->sample();
@@ -135,14 +135,14 @@ class Mailer {
 
 		$subject = $sample['real']
 			/* translators: %s: email subject. */
-			? sprintf( __( '[Test] %s', 'ndv-reviews' ), $this->subject( $sample['order'], $link ) )
+			? sprintf( __( '[Test] %s', 'rosette-reviews' ), $this->subject( $sample['order'], $link ) )
 			/* translators: %s: email subject. */
-			: sprintf( __( '[Test, sample data: no completed orders yet] %s', 'ndv-reviews' ), $this->subject( $sample['order'], $link ) );
+			: sprintf( __( '[Test, sample data: no completed orders yet] %s', 'rosette-reviews' ), $this->subject( $sample['order'], $link ) );
 		$body    = $this->body( $sample['order'], $sample['products'], $link, $to );
 
 		$sent = wp_mail( $to, $subject, $body, $this->headers( $to ) );
 
-		return $sent ? true : new \WP_Error( 'ndvr_mail_failed', __( 'wp_mail() returned false — check your SMTP/mail configuration.', 'ndv-reviews' ) );
+		return $sent ? true : new \WP_Error( 'ndvr_mail_failed', __( 'wp_mail() returned false — check your SMTP/mail configuration.', 'rosette-reviews' ) );
 	}
 
 	/**
@@ -202,8 +202,8 @@ class Mailer {
 		// No completed order yet: an unsaved order object so templates (and
 		// theme overrides) can call the usual WC_Order getters.
 		$order = new \WC_Order();
-		$order->set_billing_first_name( __( 'Alex', 'ndv-reviews' ) );
-		$order->set_billing_last_name( __( 'Sample', 'ndv-reviews' ) );
+		$order->set_billing_first_name( __( 'Alex', 'rosette-reviews' ) );
+		$order->set_billing_last_name( __( 'Sample', 'rosette-reviews' ) );
 		$order->set_billing_email( 'customer@example.com' );
 
 		$products = get_posts(
@@ -267,7 +267,7 @@ class Mailer {
 		}
 
 		/* translators: %s: store name. */
-		return sprintf( __( 'How was your order from %s?', 'ndv-reviews' ), $this->store_name() );
+		return sprintf( __( 'How was your order from %s?', 'rosette-reviews' ), $this->store_name() );
 	}
 
 	/**
@@ -317,7 +317,7 @@ class Mailer {
 			esc_html(
 				sprintf(
 					/* translators: 1: customer first name, 2: review link. */
-					__( "Hi %1\$s,\n\nCould you review what you bought? Your review link:\n%2\$s", 'ndv-reviews' ),
+					__( "Hi %1\$s,\n\nCould you review what you bought? Your review link:\n%2\$s", 'rosette-reviews' ),
 					$order->get_billing_first_name(),
 					$link
 				)

@@ -32,7 +32,7 @@ class RatingValue extends \Elementor\Core\DynamicTags\Tag {
 	 * @return string
 	 */
 	public function get_title() {
-		return __( 'Product Rating Value', 'ndv-reviews' );
+		return __( 'Product Rating Value', 'rosette-reviews' );
 	}
 
 	/**

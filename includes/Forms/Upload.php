@@ -81,10 +81,10 @@ class Upload {
 
 			$check = wp_check_filetype_and_ext( $file['tmp_name'], $file['name'], $this->allowed );
 			if ( empty( $check['ext'] ) || ! in_array( $check['type'], $this->allowed, true ) ) {
-				return new \WP_Error( 'ndvr_upload_type', __( 'Only JPG, PNG, GIF, or WebP images are allowed.', 'ndv-reviews' ) );
+				return new \WP_Error( 'ndvr_upload_type', __( 'Only JPG, PNG, GIF, or WebP images are allowed.', 'rosette-reviews' ) );
 			}
 			if ( (int) $file['size'] > $max_size ) {
-				return new \WP_Error( 'ndvr_upload_size', __( 'One of your images is too large.', 'ndv-reviews' ) );
+				return new \WP_Error( 'ndvr_upload_size', __( 'One of your images is too large.', 'rosette-reviews' ) );
 			}
 
 			$accepted[] = $file;

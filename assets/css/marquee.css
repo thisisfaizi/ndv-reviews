@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — reviews marquee (Magic UI-style), vanilla CSS. Theme-safe.
+ * Rosette Reviews — reviews marquee (Magic UI-style), vanilla CSS. Theme-safe.
  *
  * Seamless loop: each .ndvr-marquee-group (an identical copy of the review set)
  * animates by exactly one group width + gap, so the next copy slides into the

@@ -18,7 +18,7 @@
 /.agents            export-ignore
 /PRODUCTION-PLAN.md export-ignore
 /README.md          export-ignore
-/NDV-Reviews-Feature-List.md export-ignore
+/Rosette-Reviews-Feature-List.md export-ignore
 /.github            export-ignore
 /bin                export-ignore
 /tests              export-ignore
@@ -32,3 +32,4 @@
 /.gitattributes     export-ignore
 /.gitignore         export-ignore
 /dist               export-ignore
+/.wordpress-org     export-ignore

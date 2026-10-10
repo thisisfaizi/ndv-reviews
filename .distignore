@@ -29,6 +29,9 @@ vendor/composer
 # Build sources (only assets/build/ ships)
 assets/src
 
+# WordPress.org SVN /assets (icons, banners, screenshots) — committed to SVN assets/, never to trunk
+.wordpress-org
+
 # Project planning & internal docs (not part of the product)
 build-plan.md
 claude.md
@@ -36,7 +39,7 @@ CLAUDE.md
 AGENTS.md
 .agents
 PRODUCTION-PLAN.md
-NDV-Reviews-Feature-List.md
+Rosette-Reviews-Feature-List.md
 README.md
 docs
 dist

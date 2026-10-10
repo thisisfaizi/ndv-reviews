@@ -1,5 +1,5 @@
 /**
- * NDV Reviews documentation site.
+ * Rosette Reviews documentation site.
  * Loads Markdown content files, renders them, and provides client-side search.
  * No build step, no framework — keep it dependency-free.
  */

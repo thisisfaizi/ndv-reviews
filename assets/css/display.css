@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — front-end "Trust Panel" design system.
+ * Rosette Reviews — front-end "Trust Panel" design system.
  * Self-contained and theme-safe: everything is scoped under .ndvr- roots and
  * never relies on the host theme's colors or fonts.
  *
@@ -186,7 +186,7 @@ button.ndvr-bar-row.is-current .ndvr-bar-track { background: var(--ndvr-line); }
 .ndvr-bar-fill {
 	display: block;
 	height: 100%;
-	background: var(--ndvr-gold);
+	background: var(--ndvr-bar, var(--ndvr-gold)); /* Design > Rating bar colour; else follows the stars. */
 	border-radius: 999px;
 	transform-origin: left center;
 	animation: ndvr-fill 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -212,7 +212,7 @@ button.ndvr-bar-row.is-current .ndvr-bar-track { background: var(--ndvr-line); }
 	font-size: 0.933em;
 }
 .ndvr-criterion-name { font-weight: 600; color: var(--ndvr-ink); }
-.ndvr-criterion-row .ndvr-bar-fill { background: var(--ndvr-verdant); }
+.ndvr-criterion-row .ndvr-bar-fill { background: var(--ndvr-bar, var(--ndvr-verdant)); }
 .ndvr-criterion-score { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ndvr-ink); }
 
 @keyframes ndvr-fill { from { transform: scaleX(0); } }

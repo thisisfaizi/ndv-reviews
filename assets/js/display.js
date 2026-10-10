@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — front-end display interactions (filter/sort/paginate, voting,
+ * Rosette Reviews — front-end display interactions (filter/sort/paginate, voting,
  * photo lightbox, "Write a review" disclosure). Vanilla JS, no jQuery.
  *
  * Every list is an independent instance (`.ndvr-reviews-instance`, or the

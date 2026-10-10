@@ -211,7 +211,7 @@ class Landing implements Registerable {
 	 */
 	public function handle_submit() {
 		if ( ! check_ajax_referer( self::NONCE, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Session expired. Please reload.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Session expired. Please reload.', 'rosette-reviews' ) ), 403 );
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- verified above.
@@ -221,19 +221,19 @@ class Landing implements Registerable {
 		$raw = isset( $input['token'] ) ? sanitize_text_field( $input['token'] ) : '';
 		$row = $this->tokens->resolve( $raw );
 		if ( ! $row ) {
-			wp_send_json_error( array( 'message' => __( 'This link is no longer valid. Please request a fresh one.', 'ndv-reviews' ) ), 410 );
+			wp_send_json_error( array( 'message' => __( 'This link is no longer valid. Please request a fresh one.', 'rosette-reviews' ) ), 410 );
 		}
 
 		if ( 'test' === $row->type ) {
-			wp_send_json_error( array( 'message' => __( 'This is a test link from the store admin. Reviews cannot be submitted from it.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'This is a test link from the store admin. Reviews cannot be submitted from it.', 'rosette-reviews' ) ), 403 );
 		}
 
 		$product_id = isset( $input['product_id'] ) ? absint( $input['product_id'] ) : 0;
 		if ( ! in_array( $product_id, $this->token_products( $row ), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'This product is not part of your review link.', 'ndv-reviews' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'This product is not part of your review link.', 'rosette-reviews' ) ), 400 );
 		}
 		if ( ! in_array( $product_id, $this->pending_products( $row ), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'This product has already been reviewed.', 'ndv-reviews' ) ), 409 );
+			wp_send_json_error( array( 'message' => __( 'This product has already been reviewed.', 'rosette-reviews' ) ), 409 );
 		}
 
 		// The resolved token authenticates the request, so the per-IP limit and
@@ -244,7 +244,7 @@ class Landing implements Registerable {
 		}
 
 		if ( empty( $input['ndvr_consent'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Please confirm consent to submit your review.', 'ndv-reviews' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'Please confirm consent to submit your review.', 'rosette-reviews' ) ), 400 );
 		}
 
 		// A rating-less review displays but is silently excluded from the
@@ -254,13 +254,13 @@ class Landing implements Registerable {
 		$raw_scores = isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ? $input['ndvr_criteria'] : array();
 		foreach ( $raw_scores as $val ) {
 			if ( is_scalar( $val ) && '' !== $val && ( ! is_numeric( $val ) || (float) $val < 0.5 || (float) $val > 5 ) ) {
-				wp_send_json_error( array( 'message' => __( 'Please choose a rating between 1 and 5 stars.', 'ndv-reviews' ) ), 400 );
+				wp_send_json_error( array( 'message' => __( 'Please choose a rating between 1 and 5 stars.', 'rosette-reviews' ) ), 400 );
 			}
 		}
 		$criteria = $this->reviews->valid_scores( $raw_scores );
 
 		if ( empty( $criteria ) ) {
-			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
 		}
 
 		// Theme overrides of the template may not have the name field, so an
@@ -317,8 +317,8 @@ class Landing implements Registerable {
 		wp_send_json_success(
 			array(
 				'message' => 'approved' === wp_get_comment_status( $result )
-					? __( 'Thank you. Your review is published.', 'ndv-reviews' )
-					: __( 'Thank you. Your review was submitted and is awaiting moderation.', 'ndv-reviews' ),
+					? __( 'Thank you. Your review is published.', 'rosette-reviews' )
+					: __( 'Thank you. Your review was submitted and is awaiting moderation.', 'rosette-reviews' ),
 			)
 		);
 	}
@@ -358,7 +358,7 @@ class Landing implements Registerable {
 		$last  = trim( sanitize_text_field( (string) $last ) );
 
 		if ( '' === $first ) {
-			return __( 'Customer', 'ndv-reviews' );
+			return __( 'Customer', 'rosette-reviews' );
 		}
 		if ( '' === $last ) {
 			return $first;
@@ -409,7 +409,7 @@ class Landing implements Registerable {
 	<meta charset="<?php bloginfo( 'charset' ); ?>" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="robots" content="noindex,nofollow" />
-	<title><?php esc_html_e( 'Write a review', 'ndv-reviews' ); ?> — <?php bloginfo( 'name' ); ?></title>
+	<title><?php esc_html_e( 'Write a review', 'rosette-reviews' ); ?> — <?php bloginfo( 'name' ); ?></title>
 		<?php
 		// This standalone page never calls wp_head()/wp_enqueue_scripts, so the
 		// shared tokens handle (normally registered by Support\Assets on that

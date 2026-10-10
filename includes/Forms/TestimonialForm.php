@@ -246,8 +246,8 @@ class TestimonialForm implements Registerable {
 
 		$product_id = isset( $input['product_id'] ) ? absint( $input['product_id'] ) : 0;
 
-		// No purchase requirement (see class docblock), but the target must be a
-		// published, reviewable post with reviews open.
+		// The target must be a published, reviewable post with reviews open;
+		// products also follow "verified owners only" (below).
 		if ( ! $this->accepts_reviews( $product_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'ndv-reviews' ) ), 403 );
 		}

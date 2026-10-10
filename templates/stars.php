@@ -20,9 +20,9 @@ defined( 'ABSPATH' ) || exit;
 		<?php
 		if ( $count > 0 ) {
 			/* translators: %s: number of reviews. */
-			echo esc_html( sprintf( _n( '(%s review)', '(%s reviews)', $count, 'ndv-reviews' ), number_format_i18n( $count ) ) );
+			echo esc_html( sprintf( _n( '(%s review)', '(%s reviews)', $count, 'rosette-reviews' ), number_format_i18n( $count ) ) );
 		} else {
-			esc_html_e( '(No reviews yet)', 'ndv-reviews' );
+			esc_html_e( '(No reviews yet)', 'rosette-reviews' );
 		}
 		?>
 	</span>

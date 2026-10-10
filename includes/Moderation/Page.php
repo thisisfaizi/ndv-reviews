@@ -94,8 +94,8 @@ class Page implements Registerable {
 	public function register_menu() {
 		add_submenu_page(
 			self::PARENT_SLUG,
-			__( 'All Reviews', 'ndv-reviews' ),
-			__( 'All Reviews', 'ndv-reviews' ),
+			__( 'All Reviews', 'rosette-reviews' ),
+			__( 'All Reviews', 'rosette-reviews' ),
 			self::CAPABILITY,
 			self::PAGE_SLUG,
 			array( $this, 'render' )
@@ -429,11 +429,11 @@ class Page implements Registerable {
 		$table->prepare_items();
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Reviews', 'ndv-reviews' ); ?></h1>
+			<h1><?php esc_html_e( 'Reviews', 'rosette-reviews' ); ?></h1>
 			<?php
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			if ( isset( $_GET['updated'] ) ) {
-				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Review updated.', 'ndv-reviews' ) . '</p></div>';
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Review updated.', 'rosette-reviews' ) . '</p></div>';
 			}
 			$table->views();
 			?>
@@ -445,7 +445,7 @@ class Page implements Registerable {
 					echo '<input type="hidden" name="status" value="' . esc_attr( sanitize_key( wp_unslash( $_GET['status'] ) ) ) . '" />';
 				}
 				// phpcs:enable WordPress.Security.NonceVerification.Recommended
-				$table->search_box( __( 'Search reviews', 'ndv-reviews' ), 'ndvr-review' );
+				$table->search_box( __( 'Search reviews', 'rosette-reviews' ), 'ndvr-review' );
 				wp_nonce_field( 'bulk-ndvr_reviews' );
 				$table->display();
 				?>
@@ -464,7 +464,7 @@ class Page implements Registerable {
 		$id      = isset( $_GET['review'] ) ? absint( wp_unslash( $_GET['review'] ) ) : 0;
 		$comment = get_comment( $id );
 		if ( ! $comment ) {
-			echo '<div class="wrap"><p>' . esc_html__( 'Review not found.', 'ndv-reviews' ) . '</p></div>';
+			echo '<div class="wrap"><p>' . esc_html__( 'Review not found.', 'rosette-reviews' ) . '</p></div>';
 			return;
 		}
 
@@ -477,10 +477,10 @@ class Page implements Registerable {
 		$media    = $this->query->media( $id );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Edit Review', 'ndv-reviews' ); ?></h1>
+			<h1><?php esc_html_e( 'Edit Review', 'rosette-reviews' ); ?></h1>
 			<?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
 			<?php if ( isset( $_GET['ndvr_error'] ) && 'rating' === sanitize_key( wp_unslash( $_GET['ndvr_error'] ) ) ) : ?>
-				<div class="notice notice-error"><p><?php esc_html_e( 'Not saved: a review needs at least one criteria rating.', 'ndv-reviews' ); ?></p></div>
+				<div class="notice notice-error"><p><?php esc_html_e( 'Not saved: a review needs at least one criteria rating.', 'rosette-reviews' ); ?></p></div>
 			<?php endif; ?>
 			<form method="post">
 				<?php wp_nonce_field( 'ndvr_edit_review' ); ?>
@@ -488,23 +488,23 @@ class Page implements Registerable {
 
 				<table class="form-table" role="presentation">
 					<tr>
-						<th><label for="ndvr_title"><?php esc_html_e( 'Title', 'ndv-reviews' ); ?></label></th>
+						<th><label for="ndvr_title"><?php esc_html_e( 'Title', 'rosette-reviews' ); ?></label></th>
 						<td><input name="ndvr_title" id="ndvr_title" type="text" class="regular-text" value="<?php echo esc_attr( $view['title'] ); ?>" /></td>
 					</tr>
 					<tr>
-						<th><label for="ndvr_tags"><?php esc_html_e( 'Topics', 'ndv-reviews' ); ?></label></th>
+						<th><label for="ndvr_tags"><?php esc_html_e( 'Topics', 'rosette-reviews' ); ?></label></th>
 						<td>
-							<input name="ndvr_tags" id="ndvr_tags" type="text" class="regular-text" value="<?php echo esc_attr( implode( ', ', \NdvReviews\Reviews\ReviewTags::get( $id ) ) ); ?>" placeholder="<?php esc_attr_e( 'e.g. fit, battery, support', 'ndv-reviews' ); ?>" />
-							<p class="description"><?php esc_html_e( 'Comma-separated. Shown as filter pills on the storefront.', 'ndv-reviews' ); ?></p>
+							<input name="ndvr_tags" id="ndvr_tags" type="text" class="regular-text" value="<?php echo esc_attr( implode( ', ', \NdvReviews\Reviews\ReviewTags::get( $id ) ) ); ?>" placeholder="<?php esc_attr_e( 'e.g. fit, battery, support', 'rosette-reviews' ); ?>" />
+							<p class="description"><?php esc_html_e( 'Comma-separated. Shown as filter pills on the storefront.', 'rosette-reviews' ); ?></p>
 						</td>
 					</tr>
 					<tr>
-						<th><label for="ndvr_content"><?php esc_html_e( 'Review', 'ndv-reviews' ); ?></label></th>
+						<th><label for="ndvr_content"><?php esc_html_e( 'Review', 'rosette-reviews' ); ?></label></th>
 						<td><textarea name="ndvr_content" id="ndvr_content" rows="6" class="large-text"><?php echo esc_textarea( $comment->comment_content ); ?></textarea></td>
 					</tr>
 					<?php if ( ! empty( $criteria ) ) : ?>
 						<tr>
-							<th><?php esc_html_e( 'Criteria ratings', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Criteria ratings', 'rosette-reviews' ); ?></th>
 							<td>
 								<?php foreach ( $criteria as $criterion ) : ?>
 									<?php
@@ -521,7 +521,7 @@ class Page implements Registerable {
 										<label>
 											<span style="display:inline-block;min-width:140px;"><?php echo esc_html( $criterion->name ); ?></span>
 											<select name="ndvr_criteria[<?php echo esc_attr( $criterion->id ); ?>]">
-												<option value="0"><?php esc_html_e( '—', 'ndv-reviews' ); ?></option>
+												<option value="0"><?php esc_html_e( '—', 'rosette-reviews' ); ?></option>
 												<?php foreach ( $steps as $step ) : ?>
 													<option value="<?php echo esc_attr( $step ); ?>" <?php selected( abs( $val - $step ) < 0.001 ); ?>><?php echo esc_html( (string) $step ); ?></option>
 												<?php endforeach; ?>
@@ -534,12 +534,12 @@ class Page implements Registerable {
 					<?php endif; ?>
 					<?php if ( ! empty( $media ) ) : ?>
 						<tr>
-							<th><?php esc_html_e( 'Photos', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Photos', 'rosette-reviews' ); ?></th>
 							<td>
 								<?php foreach ( $media as $m ) : ?>
 									<label style="display:inline-block;margin:0 12px 12px 0;text-align:center;">
 										<img src="<?php echo esc_url( $m['thumb'] ); ?>" style="width:80px;height:80px;object-fit:cover;display:block;border-radius:6px;" alt="" /><br>
-										<input type="checkbox" name="ndvr_remove_media[]" value="<?php echo esc_attr( $m['id'] ); ?>" /> <?php esc_html_e( 'Remove', 'ndv-reviews' ); ?>
+										<input type="checkbox" name="ndvr_remove_media[]" value="<?php echo esc_attr( $m['id'] ); ?>" /> <?php esc_html_e( 'Remove', 'rosette-reviews' ); ?>
 									</label>
 								<?php endforeach; ?>
 							</td>
@@ -548,8 +548,8 @@ class Page implements Registerable {
 				</table>
 
 				<p>
-					<button type="submit" name="ndvr_edit_save" value="1" class="button button-primary"><?php esc_html_e( 'Save review', 'ndv-reviews' ); ?></button>
-					<a href="<?php echo esc_url( add_query_arg( 'page', self::PAGE_SLUG, admin_url( 'admin.php' ) ) ); ?>" class="button"><?php esc_html_e( 'Back', 'ndv-reviews' ); ?></a>
+					<button type="submit" name="ndvr_edit_save" value="1" class="button button-primary"><?php esc_html_e( 'Save review', 'rosette-reviews' ); ?></button>
+					<a href="<?php echo esc_url( add_query_arg( 'page', self::PAGE_SLUG, admin_url( 'admin.php' ) ) ); ?>" class="button"><?php esc_html_e( 'Back', 'rosette-reviews' ); ?></a>
 				</p>
 			</form>
 		</div>

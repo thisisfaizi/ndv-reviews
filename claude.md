@@ -1,4 +1,4 @@
-# CLAUDE.md — NDV Reviews (free) system constraints
+# CLAUDE.md — Rosette Reviews (free; formerly NDV Reviews) system constraints
 
 > **This is the constraint set, not background reading.** Read it before touching code. `AGENTS.md` defines
 > *how the team works*; this file defines *what already exists* and *what you must not break*.
@@ -12,13 +12,13 @@ WordPress look.**
 ---
 
 ## 1. What this plugin is
-`ndv-reviews` — a self-hosted WooCommerce reviews plugin (multi-criteria ratings, photo reviews, verified-
+`rosette-reviews` — a self-hosted WooCommerce reviews plugin (multi-criteria ratings, photo reviews, verified-
 buyer badge, working reminder queue, rich schema). Free tier is fully functional with **zero external
 calls** by default. Destined for the WordPress.org directory. The paid add-on lives in the separate private
-repo `ndv-reviews-pro` and extends this plugin **only through documented hooks**.
+repo `rosette-reviews-pro` and extends this plugin **only through documented hooks**.
 
 ## 2. Architecture (how it boots)
-- Entry `ndv-reviews.php`: defines the `NDVR_*` constants, registers a PSR-4 autoloader
+- Entry `rosette-reviews.php`: defines the `NDVR_*` constants, registers a PSR-4 autoloader
   (`NdvReviews\ → includes/`), activation/deactivation hooks at file scope, the `before_woocommerce_init`
   HPOS + cart/checkout-blocks compat declaration, then boots `NdvReviews\Plugin` on `plugins_loaded` (only
   when WooCommerce is present; otherwise an admin notice, no fatal).
@@ -85,7 +85,7 @@ in `/.agents/CONTRACTS.md` — **that file is canonical.**
 
 ## 5. Conventions
 - `ndvr_` table prefix via `Db::table()`; PSR-4 `NdvReviews\`; DI container for services; `Registerable`
-  interface; `phpcs:ignore` only with a stated reason; text domain literal `'ndv-reviews'`, Domain Path
+  interface; `phpcs:ignore` only with a stated reason; text domain literal `'rosette-reviews'`, Domain Path
   `/languages`; every file guarded by `defined('ABSPATH')`. Match the numbered/section style of neighbours.
 - Version lives in **two places that must match**: the plugin header `Version:` and `NDVR_VERSION`.
 

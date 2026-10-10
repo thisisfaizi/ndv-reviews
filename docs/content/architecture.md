@@ -11,7 +11,7 @@
 
 ## Bootstrap flow
 
-1. `ndv-reviews.php` defines the central constants (`NDVR_*`), registers the autoloader, and hooks activation/deactivation at the top level.
+1. `rosette-reviews.php` defines the central constants (`NDVR_*`), registers the autoloader, and hooks activation/deactivation at the top level.
 2. WooCommerce feature compatibility (`custom_order_tables`, `cart_checkout_blocks`) is declared on `before_woocommerce_init`.
 3. On `plugins_loaded`, if WooCommerce is active, `NdvReviews\Plugin::instance()->boot()` runs. Otherwise a dismissible admin notice is shown and the plugin bails — **no fatal**.
 4. `boot()` loads i18n, registers service modules, and fires `do_action( 'ndv-reviews/loaded', $plugin )` — the entry point the Pro add-on hooks into.

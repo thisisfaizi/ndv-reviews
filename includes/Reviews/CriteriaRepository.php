@@ -122,7 +122,7 @@ class CriteriaRepository {
 
 		$name = isset( $data['name'] ) ? sanitize_text_field( $data['name'] ) : '';
 		if ( '' === $name ) {
-			return new \WP_Error( 'ndvr_criteria_name', __( 'Criterion name is required.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_criteria_name', __( 'Criterion name is required.', 'rosette-reviews' ) );
 		}
 
 		$status = ( isset( $data['status'] ) && 'inactive' === $data['status'] ) ? 'inactive' : 'active';
@@ -131,7 +131,7 @@ class CriteriaRepository {
 			return new \WP_Error(
 				'ndvr_criteria_cap',
 				/* translators: %d: maximum number of active criteria. */
-				sprintf( __( 'The free version supports up to %d active criteria. Upgrade to Pro for unlimited criteria.', 'ndv-reviews' ), $this->max_active() )
+				sprintf( __( 'The free version supports up to %d active criteria. Upgrade to Pro for unlimited criteria.', 'rosette-reviews' ), $this->max_active() )
 			);
 		}
 
@@ -148,7 +148,7 @@ class CriteriaRepository {
 			array( '%s', '%s', '%s', '%d', '%d', '%s' )
 		);
 
-		return $inserted ? (int) $wpdb->insert_id : new \WP_Error( 'ndvr_criteria_db', __( 'Could not save the criterion.', 'ndv-reviews' ) );
+		return $inserted ? (int) $wpdb->insert_id : new \WP_Error( 'ndvr_criteria_db', __( 'Could not save the criterion.', 'rosette-reviews' ) );
 	}
 
 	/**
@@ -163,7 +163,7 @@ class CriteriaRepository {
 
 		$existing = $this->find( $id );
 		if ( ! $existing ) {
-			return new \WP_Error( 'ndvr_criteria_missing', __( 'Criterion not found.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_criteria_missing', __( 'Criterion not found.', 'rosette-reviews' ) );
 		}
 
 		$fields = array();
@@ -172,7 +172,7 @@ class CriteriaRepository {
 		if ( isset( $data['name'] ) ) {
 			$name = sanitize_text_field( $data['name'] );
 			if ( '' === $name ) {
-				return new \WP_Error( 'ndvr_criteria_name', __( 'Criterion name is required.', 'ndv-reviews' ) );
+				return new \WP_Error( 'ndvr_criteria_name', __( 'Criterion name is required.', 'rosette-reviews' ) );
 			}
 			$fields['name'] = $name;
 			$format[]       = '%s';
@@ -188,7 +188,7 @@ class CriteriaRepository {
 				return new \WP_Error(
 					'ndvr_criteria_cap',
 					/* translators: %d: maximum number of active criteria. */
-					sprintf( __( 'The free version supports up to %d active criteria.', 'ndv-reviews' ), $this->max_active() )
+					sprintf( __( 'The free version supports up to %d active criteria.', 'rosette-reviews' ), $this->max_active() )
 				);
 			}
 			$fields['status'] = $status;
@@ -274,7 +274,7 @@ class CriteriaRepository {
 	private function last_active_error() {
 		return new \WP_Error(
 			'ndvr_criteria_last_active',
-			__( 'At least one criterion must stay active: reviews need a star rating. Add or activate another criterion first.', 'ndv-reviews' )
+			__( 'At least one criterion must stay active: reviews need a star rating. Add or activate another criterion first.', 'rosette-reviews' )
 		);
 	}
 
@@ -289,9 +289,9 @@ class CriteriaRepository {
 		}
 
 		$defaults = array(
-			__( 'Quality', 'ndv-reviews' ),
-			__( 'Value', 'ndv-reviews' ),
-			__( 'Service', 'ndv-reviews' ),
+			__( 'Quality', 'rosette-reviews' ),
+			__( 'Value', 'rosette-reviews' ),
+			__( 'Service', 'rosette-reviews' ),
 		);
 
 		$position = 0;

@@ -1,5 +1,5 @@
 /**
- * NDV Reviews — marquee accessibility + speed-normalization helper.
+ * Rosette Reviews — marquee accessibility + speed-normalization helper.
  * The scroll animation itself is pure CSS; this adds keyboard-pause on focus,
  * the visible pause/play button, and normalizes px/s across instances (see normalizeSpeed below). Vanilla
  * JS, no jQuery.

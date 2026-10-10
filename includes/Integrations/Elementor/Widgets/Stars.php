@@ -34,7 +34,7 @@ class Stars extends \Elementor\Widget_Base {
 	 * @return string
 	 */
 	public function get_title() {
-		return __( 'Star Rating', 'ndv-reviews' );
+		return __( 'Star Rating', 'rosette-reviews' );
 	}
 
 	/**
@@ -90,11 +90,11 @@ class Stars extends \Elementor\Widget_Base {
 	 * @return void
 	 */
 	protected function register_controls() {
-		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'ndv-reviews' ) ) );
+		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'rosette-reviews' ) ) );
 		$this->add_control(
 			'product_id',
 			array(
-				'label'       => __( 'Product ID (0 = current)', 'ndv-reviews' ),
+				'label'       => __( 'Product ID (0 = current)', 'rosette-reviews' ),
 				'type'        => \Elementor\Controls_Manager::NUMBER,
 				'default'     => 0,
 			)
@@ -104,23 +104,23 @@ class Stars extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style',
 			array(
-				'label' => __( 'Style', 'ndv-reviews' ),
+				'label' => __( 'Style', 'rosette-reviews' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
 		$this->add_control(
 			'star_size',
 			array(
-				'label'      => __( 'Star size', 'ndv-reviews' ),
+				'label'      => __( 'Star size', 'rosette-reviews' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array( 'px' => array( 'min' => 10, 'max' => 48 ) ),
 				'selectors'  => array( '{{WRAPPER}} .ndvr-stars-display' => 'font-size: {{SIZE}}{{UNIT}};' ),
 			)
 		);
-		$this->add_color_control( 'star_filled_color', __( 'Filled star color', 'ndv-reviews' ), array( '.ndvr-star-full', '.ndvr-star-half::after' ) );
-		$this->add_color_control( 'star_empty_color', __( 'Empty star color', 'ndv-reviews' ), array( '.ndvr-star-empty', '.ndvr-star-half' ) );
-		$this->add_color_control( 'count_color', __( 'Count text color', 'ndv-reviews' ), '.ndvr-stars-count' );
+		$this->add_color_control( 'star_filled_color', __( 'Filled star color', 'rosette-reviews' ), array( '.ndvr-star-full', '.ndvr-star-half::after' ) );
+		$this->add_color_control( 'star_empty_color', __( 'Empty star color', 'rosette-reviews' ), array( '.ndvr-star-empty', '.ndvr-star-half' ) );
+		$this->add_color_control( 'count_color', __( 'Count text color', 'rosette-reviews' ), '.ndvr-stars-count' );
 		$this->add_typography_control( 'count_typography', '.ndvr-stars-count' );
 		$this->end_controls_section();
 	}

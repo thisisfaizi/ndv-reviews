@@ -42,7 +42,7 @@ Status: **storefront runtime-verified** (product page renders summary + distribu
 ### How to verify
 
 1. Submit 2–3 reviews on a product (varying stars, one with a photo).
-2. **NDV Reviews → All Reviews**: approve/unapprove/spam/trash (row + bulk); open **Edit**, change a criterion and remove a photo, save.
+2. **Rosette Reviews → All Reviews**: approve/unapprove/spam/trash (row + bulk); open **Edit**, change a criterion and remove a photo, save.
 3. On the product, confirm the summary box, star-distribution + criteria bars, filter pills (star/verified/with-photos), sort dropdown, AJAX pagination, and the **Helpful** button all work.
 4. Run the product URL through Google's Rich Results Test — exactly one `AggregateRating` (WooCommerce's, reflecting our reviews); no duplicates.
 

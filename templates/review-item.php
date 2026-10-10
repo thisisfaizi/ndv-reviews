@@ -35,7 +35,7 @@ if ( empty( $review ) ) {
 				 */
 				if ( apply_filters( 'ndv-reviews/show_verified_badge', ! empty( $review['verified'] ), $review ) ) :
 					?>
-					<span class="ndvr-verified-badge"><?php esc_html_e( 'Verified buyer', 'ndv-reviews' ); ?></span>
+					<span class="ndvr-verified-badge"><?php esc_html_e( 'Verified buyer', 'rosette-reviews' ); ?></span>
 				<?php endif; ?>
 				<?php
 				/**
@@ -102,7 +102,7 @@ if ( empty( $review ) ) {
 		<div class="ndvr-review-media">
 			<?php foreach ( $review['media'] as $ndvr_m ) : ?>
 				<a class="ndvr-review-photo" href="<?php echo esc_url( $ndvr_m['url'] ); ?>" target="_blank" rel="noopener" data-elementor-open-lightbox="no">
-					<img src="<?php echo esc_url( $ndvr_m['thumb'] ); ?>" alt="<?php esc_attr_e( 'Customer photo', 'ndv-reviews' ); ?>" loading="lazy" />
+					<img src="<?php echo esc_url( $ndvr_m['thumb'] ); ?>" alt="<?php esc_attr_e( 'Customer photo', 'rosette-reviews' ); ?>" loading="lazy" />
 				</a>
 			<?php endforeach; ?>
 		</div>
@@ -120,9 +120,9 @@ if ( empty( $review ) ) {
 		if ( apply_filters( 'ndv-reviews/show_recommend', $ndvr_has_recommend, $review ) ) :
 			if ( 'yes' === $review['recommend'] ) :
 		?>
-				<span class="ndvr-recommend ndvr-recommend-yes"><?php esc_html_e( 'Recommends this product', 'ndv-reviews' ); ?></span>
+				<span class="ndvr-recommend ndvr-recommend-yes"><?php esc_html_e( 'Recommends this product', 'rosette-reviews' ); ?></span>
 			<?php elseif ( 'no' === $review['recommend'] ) : ?>
-				<span class="ndvr-recommend ndvr-recommend-no"><?php esc_html_e( 'Does not recommend', 'ndv-reviews' ); ?></span>
+				<span class="ndvr-recommend ndvr-recommend-no"><?php esc_html_e( 'Does not recommend', 'rosette-reviews' ); ?></span>
 		<?php
 			endif;
 		endif;
@@ -137,7 +137,7 @@ if ( empty( $review ) ) {
 		?>
 			<button type="button" class="ndvr-helpful" data-comment-id="<?php echo esc_attr( $review['id'] ); ?>" data-nonce="<?php echo esc_attr( $vote_nonce ); ?>">
 				<svg class="ndvr-helpful-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 10v11H3V10h4z"/><path d="M7 10l4-8a3 3 0 0 1 3 3v4h5.5a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.1 21H7"/></svg>
-				<?php esc_html_e( 'Helpful', 'ndv-reviews' ); ?>
+				<?php esc_html_e( 'Helpful', 'rosette-reviews' ); ?>
 				<span class="ndvr-helpful-count">(<?php echo esc_html( number_format_i18n( $review['helpful_up'] ) ); ?>)</span>
 			</button>
 		<?php endif; ?>

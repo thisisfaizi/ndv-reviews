@@ -31,7 +31,7 @@ $ndvr_style = sprintf(
 	max( 0, (int) $args['gap'] )
 );
 ?>
-<div class="<?php echo esc_attr( implode( ' ', $ndvr_classes ) ); ?>" style="<?php echo esc_attr( $ndvr_style ); ?>" role="region" aria-label="<?php esc_attr_e( 'Customer reviews', 'ndv-reviews' ); ?>">
+<div class="<?php echo esc_attr( implode( ' ', $ndvr_classes ) ); ?>" style="<?php echo esc_attr( $ndvr_style ); ?>" role="region" aria-label="<?php esc_attr_e( 'Customer reviews', 'rosette-reviews' ); ?>">
 	<div class="ndvr-marquee-track">
 		<?php for ( $ndvr_r = 0; $ndvr_r < $repeat; $ndvr_r++ ) : ?>
 			<div class="ndvr-marquee-group" <?php echo $ndvr_r > 0 ? 'aria-hidden="true"' : ''; ?>>
@@ -42,7 +42,7 @@ $ndvr_style = sprintf(
 							<span class="ndvr-marquee-name">
 								<?php echo esc_html( $ndvr_review['author'] ); ?>
 								<?php if ( ! empty( $ndvr_review['verified'] ) ) : ?>
-									<span class="ndvr-marquee-verified" title="<?php esc_attr_e( 'Verified buyer', 'ndv-reviews' ); ?>"><span aria-hidden="true">&#10003;</span><span class="screen-reader-text"><?php esc_html_e( 'Verified buyer', 'ndv-reviews' ); ?></span></span>
+									<span class="ndvr-marquee-verified" title="<?php esc_attr_e( 'Verified buyer', 'rosette-reviews' ); ?>"><span aria-hidden="true">&#10003;</span><span class="screen-reader-text"><?php esc_html_e( 'Verified buyer', 'rosette-reviews' ); ?></span></span>
 								<?php endif; ?>
 							</span>
 						</figcaption>

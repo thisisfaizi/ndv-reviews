@@ -35,7 +35,7 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 	 * @return string
 	 */
 	public function get_title() {
-		return __( 'Review Section', 'ndv-reviews' );
+		return __( 'Review Section', 'rosette-reviews' );
 	}
 
 	/**
@@ -91,11 +91,11 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 	 * @return void
 	 */
 	protected function register_controls() {
-		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'ndv-reviews' ) ) );
+		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'rosette-reviews' ) ) );
 		$this->add_control(
 			'product_id',
 			array(
-				'label'   => __( 'Product ID (0 = current)', 'ndv-reviews' ),
+				'label'   => __( 'Product ID (0 = current)', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::NUMBER,
 				'default' => 0,
 			)
@@ -103,7 +103,7 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'per_page',
 			array(
-				'label'   => __( 'Reviews per page', 'ndv-reviews' ),
+				'label'   => __( 'Reviews per page', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::NUMBER,
 				'default' => 10,
 			)
@@ -111,21 +111,21 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'orderby',
 			array(
-				'label'   => __( 'Order by', 'ndv-reviews' ),
+				'label'   => __( 'Order by', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::SELECT,
 				'default' => 'recent',
 				'options' => array(
-					'recent'  => __( 'Most recent', 'ndv-reviews' ),
-					'helpful' => __( 'Most helpful', 'ndv-reviews' ),
-					'highest' => __( 'Highest rated', 'ndv-reviews' ),
-					'lowest'  => __( 'Lowest rated', 'ndv-reviews' ),
+					'recent'  => __( 'Most recent', 'rosette-reviews' ),
+					'helpful' => __( 'Most helpful', 'rosette-reviews' ),
+					'highest' => __( 'Highest rated', 'rosette-reviews' ),
+					'lowest'  => __( 'Lowest rated', 'rosette-reviews' ),
 				),
 			)
 		);
 		$this->add_control(
 			'show_summary',
 			array(
-				'label'        => __( 'Show summary', 'ndv-reviews' ),
+				'label'        => __( 'Show summary', 'rosette-reviews' ),
 				'type'         => \Elementor\Controls_Manager::SWITCHER,
 				'default'      => 'yes',
 			)
@@ -135,7 +135,7 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_card',
 			array(
-				'label' => __( 'Card', 'ndv-reviews' ),
+				'label' => __( 'Card', 'rosette-reviews' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -157,7 +157,7 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'card_radius',
 			array(
-				'label'      => __( 'Border radius', 'ndv-reviews' ),
+				'label'      => __( 'Border radius', 'rosette-reviews' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array( 'px' => array( 'min' => 0, 'max' => 40 ) ),
@@ -167,7 +167,7 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 		$this->add_responsive_control(
 			'card_padding',
 			array(
-				'label'      => __( 'Padding', 'ndv-reviews' ),
+				'label'      => __( 'Padding', 'rosette-reviews' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em', '%' ),
 				'selectors'  => array( '{{WRAPPER}} .ndvr-review' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};' ),
@@ -185,23 +185,23 @@ class ReviewsWidget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style_content',
 			array(
-				'label' => __( 'Text & Badges', 'ndv-reviews' ),
+				'label' => __( 'Text & Badges', 'rosette-reviews' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
-		$this->add_color_control( 'author_color', __( 'Author name color', 'ndv-reviews' ), '.ndvr-review-name' );
+		$this->add_color_control( 'author_color', __( 'Author name color', 'rosette-reviews' ), '.ndvr-review-name' );
 		$this->add_typography_control( 'author_typography', '.ndvr-review-name' );
-		$this->add_color_control( 'verified_color', __( 'Verified badge color', 'ndv-reviews' ), '.ndvr-verified-badge' );
-		$this->add_color_control( 'stars_color', __( 'Stars color', 'ndv-reviews' ), array( '.ndvr-review-meta .ndvr-star-full', '.ndvr-review-meta .ndvr-star-half::after' ) );
-		$this->add_color_control( 'date_color', __( 'Date color', 'ndv-reviews' ), '.ndvr-review-date' );
+		$this->add_color_control( 'verified_color', __( 'Verified badge color', 'rosette-reviews' ), '.ndvr-verified-badge' );
+		$this->add_color_control( 'stars_color', __( 'Stars color', 'rosette-reviews' ), array( '.ndvr-review-meta .ndvr-star-full', '.ndvr-review-meta .ndvr-star-half::after' ) );
+		$this->add_color_control( 'date_color', __( 'Date color', 'rosette-reviews' ), '.ndvr-review-date' );
 		$this->add_typography_control( 'date_typography', '.ndvr-review-date' );
-		$this->add_color_control( 'title_color', __( 'Review title color', 'ndv-reviews' ), '.ndvr-review-title' );
+		$this->add_color_control( 'title_color', __( 'Review title color', 'rosette-reviews' ), '.ndvr-review-title' );
 		$this->add_typography_control( 'title_typography', '.ndvr-review-title' );
-		$this->add_color_control( 'body_color', __( 'Review text color', 'ndv-reviews' ), '.ndvr-review-body' );
+		$this->add_color_control( 'body_color', __( 'Review text color', 'rosette-reviews' ), '.ndvr-review-body' );
 		$this->add_typography_control( 'body_typography', '.ndvr-review-body' );
-		$this->add_color_control( 'helpful_color', __( 'Helpful button color', 'ndv-reviews' ), '.ndvr-helpful' );
-		$this->add_color_control( 'recommend_yes_color', __( 'Recommends color', 'ndv-reviews' ), '.ndvr-recommend-yes' );
-		$this->add_color_control( 'recommend_no_color', __( 'Does-not-recommend color', 'ndv-reviews' ), '.ndvr-recommend-no' );
+		$this->add_color_control( 'helpful_color', __( 'Helpful button color', 'rosette-reviews' ), '.ndvr-helpful' );
+		$this->add_color_control( 'recommend_yes_color', __( 'Recommends color', 'rosette-reviews' ), '.ndvr-recommend-yes' );
+		$this->add_color_control( 'recommend_no_color', __( 'Does-not-recommend color', 'rosette-reviews' ), '.ndvr-recommend-no' );
 		$this->end_controls_section();
 	}
 

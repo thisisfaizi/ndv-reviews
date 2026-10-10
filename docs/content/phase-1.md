@@ -18,7 +18,7 @@
 - **ReviewForm.php** — injects the multi-criteria field set into WooCommerce's native reviews area via `woocommerce_product_review_comment_form_args` (replacing Woo's single rating select), enqueues assets **only on product pages**, and processes submissions over **AJAX** (nonce + anti-spam + capability-free public endpoint with full validation). No page reload.
 
 ### Admin (`includes/Admin/`)
-- **CriteriaPage.php** — top-level "NDV Reviews" menu + **Rating Criteria** screen: add / activate / deactivate / delete criteria, all nonce- and capability-guarded (`manage_woocommerce`), with the free-cap upsell notice at 3 active.
+- **CriteriaPage.php** — top-level "Rosette Reviews" menu + **Rating Criteria** screen: add / activate / deactivate / delete criteria, all nonce- and capability-guarded (`manage_woocommerce`), with the free-cap upsell notice at 3 active.
 
 ### Front-end assets (`assets/build/`)
 - **reviews.css** — accessible star-rating control (radio-based, keyboard-operable, `prefers-reduced-motion` aware), recommend + consent fields, success/error messaging.
@@ -44,7 +44,7 @@ Two bugs, both fixed in 0.2.1:
 
 ### How to verify (one pass proves the set)
 
-1. **Re-activate** the plugin (Plugins screen → deactivate/activate) so default criteria (Quality/Value/Service) seed. Confirm under **NDV Reviews → Rating Criteria**.
+1. **Re-activate** the plugin (Plugins screen → deactivate/activate) so default criteria (Quality/Value/Service) seed. Confirm under **Rosette Reviews → Rating Criteria**.
 2. Open any product, scroll to **Reviews**, rate the criteria, write a review, attach a photo, accept consent, submit. Expect an inline "awaiting moderation" message (no reload).
 3. **Comments → Pending**: the review is there, unapproved. Approve it.
 4. Reload the product: the approved review shows in the reviews tab; the star aggregate updates.

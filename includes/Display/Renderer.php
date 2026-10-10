@@ -121,10 +121,10 @@ class Renderer implements Registerable {
 				'nonce'      => wp_create_nonce( self::NONCE ),
 				'voteAction' => Votes::AJAX_ACTION,
 				'i18n'       => array(
-					'photo' => __( 'Customer photo', 'ndv-reviews' ),
-					'close' => __( 'Close', 'ndv-reviews' ),
-					'prev'  => __( 'Previous photo', 'ndv-reviews' ),
-					'next'  => __( 'Next photo', 'ndv-reviews' ),
+					'photo' => __( 'Customer photo', 'rosette-reviews' ),
+					'close' => __( 'Close', 'rosette-reviews' ),
+					'prev'  => __( 'Previous photo', 'rosette-reviews' ),
+					'next'  => __( 'Next photo', 'rosette-reviews' ),
 				),
 			)
 		);
@@ -295,8 +295,8 @@ class Renderer implements Registerable {
 			return;
 		}
 		?>
-		<div class="ndvr-topic-pills" role="group" aria-label="<?php esc_attr_e( 'Filter by topic', 'ndv-reviews' ); ?>">
-			<button type="button" class="ndvr-topic is-current" data-filter="tag" data-value="" aria-pressed="true"><?php esc_html_e( 'All topics', 'ndv-reviews' ); ?></button>
+		<div class="ndvr-topic-pills" role="group" aria-label="<?php esc_attr_e( 'Filter by topic', 'rosette-reviews' ); ?>">
+			<button type="button" class="ndvr-topic is-current" data-filter="tag" data-value="" aria-pressed="true"><?php esc_html_e( 'All topics', 'rosette-reviews' ); ?></button>
 			<?php foreach ( $tags as $ndvr_tag => $ndvr_count ) : ?>
 				<button type="button" class="ndvr-topic" data-filter="tag" data-value="<?php echo esc_attr( $ndvr_tag ); ?>" aria-pressed="false">
 					<?php echo esc_html( ucwords( str_replace( '-', ' ', $ndvr_tag ) ) ); ?> <span class="ndvr-topic-count"><?php echo esc_html( number_format_i18n( $ndvr_count ) ); ?></span>
@@ -313,23 +313,23 @@ class Renderer implements Registerable {
 	 */
 	private function render_filter_bar() {
 		?>
-		<div class="ndvr-filter-bar" role="region" aria-label="<?php esc_attr_e( 'Filter reviews', 'ndv-reviews' ); ?>">
-			<div class="ndvr-filter-stars" role="group" aria-label="<?php esc_attr_e( 'Filter by star rating', 'ndv-reviews' ); ?>">
-				<button type="button" class="ndvr-filter is-current" data-filter="star" data-value="0" aria-pressed="true"><?php esc_html_e( 'All', 'ndv-reviews' ); ?></button>
+		<div class="ndvr-filter-bar" role="region" aria-label="<?php esc_attr_e( 'Filter reviews', 'rosette-reviews' ); ?>">
+			<div class="ndvr-filter-stars" role="group" aria-label="<?php esc_attr_e( 'Filter by star rating', 'rosette-reviews' ); ?>">
+				<button type="button" class="ndvr-filter is-current" data-filter="star" data-value="0" aria-pressed="true"><?php esc_html_e( 'All', 'rosette-reviews' ); ?></button>
 				<?php for ( $ndvr_s = 5; $ndvr_s >= 1; $ndvr_s-- ) : ?>
 					<?php /* translators: %d: star rating 1-5. */ ?>
-					<button type="button" class="ndvr-filter" data-filter="star" data-value="<?php echo esc_attr( $ndvr_s ); ?>" aria-pressed="false" aria-label="<?php echo esc_attr( sprintf( _n( '%d star', '%d stars', $ndvr_s, 'ndv-reviews' ), $ndvr_s ) ); ?>"><?php echo esc_html( number_format_i18n( $ndvr_s ) ); ?><span class="ndvr-filter-star" aria-hidden="true">&#9733;</span></button>
+					<button type="button" class="ndvr-filter" data-filter="star" data-value="<?php echo esc_attr( $ndvr_s ); ?>" aria-pressed="false" aria-label="<?php echo esc_attr( sprintf( _n( '%d star', '%d stars', $ndvr_s, 'rosette-reviews' ), $ndvr_s ) ); ?>"><?php echo esc_html( number_format_i18n( $ndvr_s ) ); ?><span class="ndvr-filter-star" aria-hidden="true">&#9733;</span></button>
 				<?php endfor; ?>
 			</div>
-			<label class="ndvr-filter-toggle"><input type="checkbox" data-filter="verified" /> <?php esc_html_e( 'Verified only', 'ndv-reviews' ); ?></label>
-			<label class="ndvr-filter-toggle"><input type="checkbox" data-filter="with_media" /> <?php esc_html_e( 'With photos', 'ndv-reviews' ); ?></label>
+			<label class="ndvr-filter-toggle"><input type="checkbox" data-filter="verified" /> <?php esc_html_e( 'Verified only', 'rosette-reviews' ); ?></label>
+			<label class="ndvr-filter-toggle"><input type="checkbox" data-filter="with_media" /> <?php esc_html_e( 'With photos', 'rosette-reviews' ); ?></label>
 			<label class="ndvr-sort">
-				<span class="screen-reader-text"><?php esc_html_e( 'Sort reviews', 'ndv-reviews' ); ?></span>
+				<span class="screen-reader-text"><?php esc_html_e( 'Sort reviews', 'rosette-reviews' ); ?></span>
 				<select data-filter="orderby">
-					<option value="recent"><?php esc_html_e( 'Most recent', 'ndv-reviews' ); ?></option>
-					<option value="helpful"><?php esc_html_e( 'Most helpful', 'ndv-reviews' ); ?></option>
-					<option value="highest"><?php esc_html_e( 'Highest rated', 'ndv-reviews' ); ?></option>
-					<option value="lowest"><?php esc_html_e( 'Lowest rated', 'ndv-reviews' ); ?></option>
+					<option value="recent"><?php esc_html_e( 'Most recent', 'rosette-reviews' ); ?></option>
+					<option value="helpful"><?php esc_html_e( 'Most helpful', 'rosette-reviews' ); ?></option>
+					<option value="highest"><?php esc_html_e( 'Highest rated', 'rosette-reviews' ); ?></option>
+					<option value="lowest"><?php esc_html_e( 'Lowest rated', 'rosette-reviews' ); ?></option>
 				</select>
 			</label>
 		</div>
@@ -360,7 +360,7 @@ class Renderer implements Registerable {
 
 		if ( ! $can_review ) {
 			echo '<p class="ndvr-verification-required woocommerce-verification-required">' .
-				esc_html__( 'Only logged in customers who have purchased this product may leave a review.', 'ndv-reviews' ) .
+				esc_html__( 'Only logged in customers who have purchased this product may leave a review.', 'rosette-reviews' ) .
 				'</p>';
 			echo '</div>';
 			return;
@@ -368,11 +368,11 @@ class Renderer implements Registerable {
 
 		$commenter    = wp_get_current_commenter();
 		$comment_form = array(
-			'title_reply'         => esc_html__( 'Add a review', 'ndv-reviews' ),
+			'title_reply'         => esc_html__( 'Add a review', 'rosette-reviews' ),
 			'title_reply_before'  => '<span id="reply-title" class="comment-reply-title ndvr-form-title">',
 			'title_reply_after'   => '</span>',
 			'comment_notes_after' => '',
-			'label_submit'        => esc_html__( 'Submit review', 'ndv-reviews' ),
+			'label_submit'        => esc_html__( 'Submit review', 'rosette-reviews' ),
 			'logged_in_as'        => '',
 			'comment_field'       => '',
 		);
@@ -396,7 +396,7 @@ class Renderer implements Registerable {
 	 */
 	public function ajax_list() {
 		if ( ! check_ajax_referer( self::NONCE, 'nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Session expired.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Session expired.', 'rosette-reviews' ) ), 403 );
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- verified above.

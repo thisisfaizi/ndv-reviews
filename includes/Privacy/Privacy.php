@@ -81,7 +81,7 @@ class Privacy implements Registerable {
 	 */
 	public function register_exporter( $exporters ) {
 		$exporters['ndv-reviews'] = array(
-			'exporter_friendly_name' => __( 'NDV Reviews', 'ndv-reviews' ),
+			'exporter_friendly_name' => __( 'Rosette Reviews', 'rosette-reviews' ),
 			'callback'               => array( $this, 'export' ),
 		);
 
@@ -96,7 +96,7 @@ class Privacy implements Registerable {
 	 */
 	public function register_eraser( $erasers ) {
 		$erasers['ndv-reviews'] = array(
-			'eraser_friendly_name' => __( 'NDV Reviews', 'ndv-reviews' ),
+			'eraser_friendly_name' => __( 'Rosette Reviews', 'rosette-reviews' ),
 			'callback'             => array( $this, 'erase' ),
 		);
 
@@ -145,27 +145,27 @@ class Privacy implements Registerable {
 			$id     = (int) $comment->comment_ID;
 			$fields = array(
 				array(
-					'name'  => __( 'Product', 'ndv-reviews' ),
+					'name'  => __( 'Product', 'rosette-reviews' ),
 					'value' => get_the_title( $comment->comment_post_ID ),
 				),
 				array(
-					'name'  => __( 'Name shown', 'ndv-reviews' ),
+					'name'  => __( 'Name shown', 'rosette-reviews' ),
 					'value' => $comment->comment_author,
 				),
 				array(
-					'name'  => __( 'Rating', 'ndv-reviews' ),
+					'name'  => __( 'Rating', 'rosette-reviews' ),
 					'value' => (string) get_comment_meta( $id, '_ndvr_overall_rating', true ),
 				),
 				array(
-					'name'  => __( 'Title', 'ndv-reviews' ),
+					'name'  => __( 'Title', 'rosette-reviews' ),
 					'value' => (string) get_comment_meta( $id, '_ndvr_title', true ),
 				),
 				array(
-					'name'  => __( 'Review', 'ndv-reviews' ),
+					'name'  => __( 'Review', 'rosette-reviews' ),
 					'value' => $comment->comment_content,
 				),
 				array(
-					'name'  => __( 'Date', 'ndv-reviews' ),
+					'name'  => __( 'Date', 'rosette-reviews' ),
 					'value' => $comment->comment_date,
 				),
 			);
@@ -175,7 +175,7 @@ class Privacy implements Registerable {
 			foreach ( (array) $scores as $score ) {
 				$fields[] = array(
 					/* translators: %s: rating criterion name. */
-					'name'  => sprintf( __( 'Rating: %s', 'ndv-reviews' ), $score->name ),
+					'name'  => sprintf( __( 'Rating: %s', 'rosette-reviews' ), $score->name ),
 					'value' => (string) (float) $score->rating,
 				);
 			}
@@ -184,14 +184,14 @@ class Privacy implements Registerable {
 			$photos = $wpdb->get_col( $wpdb->prepare( "SELECT url FROM `{$media}` WHERE comment_id = %d ORDER BY position ASC", $id ) );
 			foreach ( array_filter( (array) $photos ) as $url ) {
 				$fields[] = array(
-					'name'  => __( 'Photo', 'ndv-reviews' ),
+					'name'  => __( 'Photo', 'rosette-reviews' ),
 					'value' => esc_url( $url ),
 				);
 			}
 
 			$data[] = array(
 				'group_id'    => 'ndvr_reviews',
-				'group_label' => __( 'Product Reviews', 'ndv-reviews' ),
+				'group_label' => __( 'Product Reviews', 'rosette-reviews' ),
 				'item_id'     => 'ndvr-review-' . $id,
 				'data'        => $fields,
 			);
@@ -205,23 +205,23 @@ class Privacy implements Registerable {
 				foreach ( $this->requests->for_email( $email ) as $row ) {
 					$data[] = array(
 						'group_id'    => 'ndvr_review_requests',
-						'group_label' => __( 'Review request emails', 'ndv-reviews' ),
+						'group_label' => __( 'Review request emails', 'rosette-reviews' ),
 						'item_id'     => 'ndvr-request-' . (int) $row->id,
 						'data'        => array(
 							array(
-								'name'  => __( 'Order', 'ndv-reviews' ),
+								'name'  => __( 'Order', 'rosette-reviews' ),
 								'value' => (string) $row->order_id,
 							),
 							array(
-								'name'  => __( 'Status', 'ndv-reviews' ),
+								'name'  => __( 'Status', 'rosette-reviews' ),
 								'value' => (string) $row->status,
 							),
 							array(
-								'name'  => __( 'Scheduled', 'ndv-reviews' ),
+								'name'  => __( 'Scheduled', 'rosette-reviews' ),
 								'value' => (string) $row->scheduled_at,
 							),
 							array(
-								'name'  => __( 'Sent', 'ndv-reviews' ),
+								'name'  => __( 'Sent', 'rosette-reviews' ),
 								'value' => (string) $row->sent_at,
 							),
 						),
@@ -232,12 +232,12 @@ class Privacy implements Registerable {
 			if ( $this->mailer && $this->mailer->is_suppressed( $email ) ) {
 				$data[] = array(
 					'group_id'    => 'ndvr_review_requests',
-					'group_label' => __( 'Review request emails', 'ndv-reviews' ),
+					'group_label' => __( 'Review request emails', 'rosette-reviews' ),
 					'item_id'     => 'ndvr-unsubscribed',
 					'data'        => array(
 						array(
-							'name'  => __( 'Unsubscribed from review requests', 'ndv-reviews' ),
-							'value' => __( 'Yes', 'ndv-reviews' ),
+							'name'  => __( 'Unsubscribed from review requests', 'rosette-reviews' ),
+							'value' => __( 'Yes', 'rosette-reviews' ),
 						),
 					),
 				);
@@ -275,7 +275,7 @@ class Privacy implements Registerable {
 			$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				$wpdb->comments,
 				array(
-					'comment_author'       => __( 'Anonymous', 'ndv-reviews' ),
+					'comment_author'       => __( 'Anonymous', 'rosette-reviews' ),
 					'comment_author_email' => '',
 					'comment_author_IP'    => '',
 					'comment_author_url'   => '',

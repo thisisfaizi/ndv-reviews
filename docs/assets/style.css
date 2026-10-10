@@ -1,12 +1,14 @@
 :root {
-	--bg: #0f1117;
-	--panel: #161922;
-	--panel-2: #1d212d;
-	--border: #2a2f3d;
+	/* Rosette brand on dark: ink surfaces, Rose Light links, Prize Gold for Pro (brand/palette.json). */
+	--bg: #121317;
+	--panel: #181a1f;
+	--panel-2: #2a2d35;
+	--border: #363a45;
 	--text: #e6e8ee;
 	--muted: #9aa3b2;
-	--accent: #6c8cff;
-	--accent-2: #4ad6a0;
+	--accent: #f0738a;
+	--accent-2: #f6a93b;
+	--done: #4ad6a0;
 	--code-bg: #11141c;
 	--radius: 10px;
 	--maxw: 1180px;
@@ -39,14 +41,7 @@ a:hover { text-decoration: underline; }
 }
 
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
-.brand-mark {
-	background: linear-gradient(135deg, var(--accent), var(--accent-2));
-	color: #0b0d12;
-	padding: 4px 8px;
-	border-radius: 8px;
-	font-size: 14px;
-	letter-spacing: 0.5px;
-}
+.brand-logo { display: block; height: 30px; width: auto; }
 .brand-name { font-size: 18px; }
 .brand-name em { color: var(--muted); font-style: normal; font-weight: 400; }
 
@@ -149,9 +144,9 @@ a:hover { text-decoration: underline; }
 	margin-left: 6px;
 	vertical-align: middle;
 }
-.badge.free { background: rgba(74,214,160,.15); color: var(--accent-2); }
-.badge.pro { background: rgba(108,140,255,.15); color: var(--accent); }
-.badge.done { background: rgba(74,214,160,.15); color: var(--accent-2); }
+.badge.free { background: rgba(240,115,138,.15); color: var(--accent); }
+.badge.pro { background: rgba(246,169,59,.15); color: var(--accent-2); }
+.badge.done { background: rgba(74,214,160,.15); color: var(--done); }
 .badge.wip { background: rgba(255,196,76,.15); color: #ffc44c; }
 .badge.todo { background: rgba(154,163,178,.15); color: var(--muted); }
 
@@ -167,7 +162,7 @@ a:hover { text-decoration: underline; }
 .search-results .hit:hover { border-color: var(--accent); }
 .search-results .hit h4 { margin: 0 0 4px; }
 .search-results .hit p { margin: 0; color: var(--muted); font-size: 13px; }
-.search-results mark { background: rgba(108,140,255,.3); color: var(--text); border-radius: 3px; }
+.search-results mark { background: rgba(246,169,59,.28); color: var(--text); border-radius: 3px; }
 
 .loading { color: var(--muted); }
 

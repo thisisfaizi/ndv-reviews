@@ -92,11 +92,11 @@ class HealthCheck implements Registerable {
 
 		$dismiss = wp_nonce_url( add_query_arg( 'ndvr_health_dismiss', $signature ), self::NONCE );
 
-		echo '<div class="notice notice-warning"><p><strong>' . esc_html__( 'NDV Reviews: review reminders are not being sent on time.', 'ndv-reviews' ) . '</strong></p><ul style="list-style:disc;margin-left:20px;">';
+		echo '<div class="notice notice-warning"><p><strong>' . esc_html__( 'Rosette Reviews: review reminders are not being sent on time.', 'rosette-reviews' ) . '</strong></p><ul style="list-style:disc;margin-left:20px;">';
 		foreach ( $issues as $issue ) {
 			echo '<li>' . esc_html( $issue ) . '</li>';
 		}
-		echo '</ul><p><a href="' . esc_url( admin_url( 'admin.php?page=ndv-reviews-reminders' ) ) . '">' . esc_html__( 'Open the reminder log', 'ndv-reviews' ) . '</a> · <a href="' . esc_url( $dismiss ) . '">' . esc_html__( 'Dismiss', 'ndv-reviews' ) . '</a></p></div>';
+		echo '</ul><p><a href="' . esc_url( admin_url( 'admin.php?page=ndv-reviews-reminders' ) ) . '">' . esc_html__( 'Open the reminder log', 'rosette-reviews' ) . '</a> · <a href="' . esc_url( $dismiss ) . '">' . esc_html__( 'Dismiss', 'rosette-reviews' ) . '</a></p></div>';
 	}
 
 	/**
@@ -126,7 +126,7 @@ class HealthCheck implements Registerable {
 	 */
 	private function issues() {
 		if ( ! function_exists( 'as_get_scheduled_actions' ) ) {
-			return array( __( 'Action Scheduler is not available, so reminders cannot be queued. Make sure WooCommerce is active.', 'ndv-reviews' ) );
+			return array( __( 'Action Scheduler is not available, so reminders cannot be queued. Make sure WooCommerce is active.', 'rosette-reviews' ) );
 		}
 
 		$overdue = as_get_scheduled_actions(
@@ -150,14 +150,14 @@ class HealthCheck implements Registerable {
 					'%d review reminder is more than an hour past its send time. The background queue (Action Scheduler, run by WP-Cron) does not appear to be running.',
 					'%d review reminders are more than an hour past their send time. The background queue (Action Scheduler, run by WP-Cron) does not appear to be running.',
 					count( $overdue ),
-					'ndv-reviews'
+					'rosette-reviews'
 				),
 				count( $overdue )
 			),
 		);
 
 		if ( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) {
-			$issues[] = __( 'WP-Cron is disabled on this site (DISABLE_WP_CRON). A server cron job must request wp-cron.php regularly, for example every 5 minutes.', 'ndv-reviews' );
+			$issues[] = __( 'WP-Cron is disabled on this site (DISABLE_WP_CRON). A server cron job must request wp-cron.php regularly, for example every 5 minutes.', 'rosette-reviews' );
 		}
 
 		return $issues;

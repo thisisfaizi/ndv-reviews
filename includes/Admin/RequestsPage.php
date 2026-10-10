@@ -98,8 +98,8 @@ class RequestsPage implements Registerable {
 	public function register_menu() {
 		add_submenu_page(
 			self::PARENT_SLUG,
-			__( 'Review Reminders', 'ndv-reviews' ),
-			__( 'Review Reminders', 'ndv-reviews' ),
+			__( 'Review Reminders', 'rosette-reviews' ),
+			__( 'Review Reminders', 'rosette-reviews' ),
 			Caps::manage( 'reminders' ),
 			self::PAGE_SLUG,
 			array( $this, 'render' )
@@ -128,11 +128,11 @@ class RequestsPage implements Registerable {
 			$this->notices[] = $retried
 				? array(
 					'type'    => 'success',
-					'message' => __( 'Retry attempted. See the updated status below.', 'ndv-reviews' ),
+					'message' => __( 'Retry attempted. See the updated status below.', 'rosette-reviews' ),
 				)
 				: array(
 					'type'    => 'error',
-					'message' => __( 'Only failed requests can be retried.', 'ndv-reviews' ),
+					'message' => __( 'Only failed requests can be retried.', 'rosette-reviews' ),
 				);
 			return;
 		}
@@ -161,7 +161,7 @@ class RequestsPage implements Registerable {
 			);
 			$this->notices[] = array(
 				'type'    => 'success',
-				'message' => __( 'Settings saved.', 'ndv-reviews' ),
+				'message' => __( 'Settings saved.', 'rosette-reviews' ),
 			);
 		} elseif ( 'save_notify' === $do ) {
 			$mode = isset( $_POST['admin_notify'] ) ? sanitize_key( wp_unslash( $_POST['admin_notify'] ) ) : 'pending';
@@ -173,7 +173,7 @@ class RequestsPage implements Registerable {
 			);
 			$this->notices[] = array(
 				'type'    => 'success',
-				'message' => __( 'Notification settings saved.', 'ndv-reviews' ),
+				'message' => __( 'Notification settings saved.', 'rosette-reviews' ),
 			);
 		} elseif ( 'test' === $do ) {
 			$to              = isset( $_POST['test_email'] ) ? sanitize_email( wp_unslash( $_POST['test_email'] ) ) : '';
@@ -186,7 +186,7 @@ class RequestsPage implements Registerable {
 				: array(
 					'type'    => 'success',
 					/* translators: %s: email address. */
-					'message' => sprintf( __( 'Test email sent to %s.', 'ndv-reviews' ), $to ),
+					'message' => sprintf( __( 'Test email sent to %s.', 'rosette-reviews' ), $to ),
 				);
 		}
 	}
@@ -201,7 +201,7 @@ class RequestsPage implements Registerable {
 	public function render_preview() {
 		check_admin_referer( self::NONCE );
 		if ( ! current_user_can( Caps::manage( 'reminders' ) ) ) {
-			wp_die( esc_html__( 'You do not have permission to preview this email.', 'ndv-reviews' ), 403 );
+			wp_die( esc_html__( 'You do not have permission to preview this email.', 'rosette-reviews' ), 403 );
 		}
 
 		$overrides = array();
@@ -223,23 +223,23 @@ class RequestsPage implements Registerable {
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="robots" content="noindex,nofollow" />
-	<title><?php esc_html_e( 'Reminder email preview', 'ndv-reviews' ); ?></title>
+	<title><?php esc_html_e( 'Reminder email preview', 'rosette-reviews' ); ?></title>
 	<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f0f1;color:#1d2327;}header{padding:14px 20px;background:#fff;border-bottom:1px solid #dcdcde;}header p{margin:4px 0;font-size:13px;}iframe{display:block;width:100%;height:calc(100vh - 110px);border:0;background:#fff;}</style>
 </head>
 <body>
 	<header>
-		<p><strong><?php esc_html_e( 'Subject:', 'ndv-reviews' ); ?></strong> <?php echo esc_html( $preview['subject'] ); ?></p>
+		<p><strong><?php esc_html_e( 'Subject:', 'rosette-reviews' ); ?></strong> <?php echo esc_html( $preview['subject'] ); ?></p>
 		<p>
 			<?php
 			echo esc_html(
 				$preview['sample']
-					? __( 'Built from sample data because there is no completed order yet. The button links to your shop.', 'ndv-reviews' )
-					: __( 'Built from your most recent completed order. In the preview the button links to your shop; real emails link to the customer\'s review page.', 'ndv-reviews' )
+					? __( 'Built from sample data because there is no completed order yet. The button links to your shop.', 'rosette-reviews' )
+					: __( 'Built from your most recent completed order. In the preview the button links to your shop; real emails link to the customer\'s review page.', 'rosette-reviews' )
 			);
 			?>
 		</p>
 	</header>
-	<iframe sandbox="" title="<?php esc_attr_e( 'Email preview', 'ndv-reviews' ); ?>" srcdoc="<?php echo htmlspecialchars( $preview['html'], ENT_QUOTES, 'UTF-8', true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- double-encode so entities already escaped in the email stay text inside srcdoc (esc_attr() would not re-encode them). ?>"></iframe>
+	<iframe sandbox="" title="<?php esc_attr_e( 'Email preview', 'rosette-reviews' ); ?>" srcdoc="<?php echo htmlspecialchars( $preview['html'], ENT_QUOTES, 'UTF-8', true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- double-encode so entities already escaped in the email stay text inside srcdoc (esc_attr() would not re-encode them). ?>"></iframe>
 </body>
 </html>
 		<?php
@@ -254,11 +254,11 @@ class RequestsPage implements Registerable {
 	 */
 	private function status_label( $status ) {
 		$labels = array(
-			'scheduled' => __( 'Scheduled', 'ndv-reviews' ),
-			'sent'      => __( 'Sent', 'ndv-reviews' ),
-			'failed'    => __( 'Failed', 'ndv-reviews' ),
-			'cancelled' => __( 'Not sent', 'ndv-reviews' ),
-			'converted' => __( 'Reviewed', 'ndv-reviews' ),
+			'scheduled' => __( 'Scheduled', 'rosette-reviews' ),
+			'sent'      => __( 'Sent', 'rosette-reviews' ),
+			'failed'    => __( 'Failed', 'rosette-reviews' ),
+			'cancelled' => __( 'Not sent', 'rosette-reviews' ),
+			'converted' => __( 'Reviewed', 'rosette-reviews' ),
 		);
 
 		return isset( $labels[ $status ] ) ? $labels[ $status ] : $status;
@@ -283,26 +283,26 @@ class RequestsPage implements Registerable {
 		$admin    = get_option( 'admin_email' );
 		$notify   = (string) $s->get( 'admin_notify', 'pending' );
 		/* translators: %s: store name. */
-		$default_subject = sprintf( __( 'How was your order from %s?', 'ndv-reviews' ), get_bloginfo( 'name' ) );
+		$default_subject = sprintf( __( 'How was your order from %s?', 'rosette-reviews' ), get_bloginfo( 'name' ) );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Review Reminders', 'ndv-reviews' ); ?></h1>
+			<h1><?php esc_html_e( 'Review Reminders', 'rosette-reviews' ); ?></h1>
 
 			<?php foreach ( $this->notices as $notice ) : ?>
 				<div class="notice notice-<?php echo 'error' === $notice['type'] ? 'error' : 'success'; ?> is-dismissible"><p><?php echo esc_html( $notice['message'] ); ?></p></div>
 			<?php endforeach; ?>
 
 			<div class="ndvr-card">
-				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Reminder settings', 'ndv-reviews' ); ?></h2></div>
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Reminder settings', 'rosette-reviews' ); ?></h2></div>
 				<form method="post">
 					<?php wp_nonce_field( self::NONCE ); ?>
 					<table class="form-table" role="presentation">
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Enable reminders', 'ndv-reviews' ); ?></th>
-							<td><label><input type="checkbox" name="reminder_enabled" value="1" <?php checked( (bool) $s->get( 'reminder_enabled' ) ); ?> /> <?php esc_html_e( 'Send a review-request email after an order reaches the chosen status.', 'ndv-reviews' ); ?></label></td>
+							<th scope="row"><?php esc_html_e( 'Enable reminders', 'rosette-reviews' ); ?></th>
+							<td><label><input type="checkbox" name="reminder_enabled" value="1" <?php checked( (bool) $s->get( 'reminder_enabled' ) ); ?> /> <?php esc_html_e( 'Send a review-request email after an order reaches the chosen status.', 'rosette-reviews' ); ?></label></td>
 						</tr>
 						<tr>
-							<th scope="row"><label for="reminder_status"><?php esc_html_e( 'Trigger status', 'ndv-reviews' ); ?></label></th>
+							<th scope="row"><label for="reminder_status"><?php esc_html_e( 'Trigger status', 'rosette-reviews' ); ?></label></th>
 							<td>
 								<select name="reminder_status" id="reminder_status">
 									<?php foreach ( $statuses as $key => $label ) : ?>
@@ -313,102 +313,102 @@ class RequestsPage implements Registerable {
 							</td>
 						</tr>
 						<tr>
-							<th scope="row"><label for="reminder_delay_days"><?php esc_html_e( 'Delay (days)', 'ndv-reviews' ); ?></label></th>
-							<td><input type="number" min="0" name="reminder_delay_days" id="reminder_delay_days" value="<?php echo esc_attr( $s->get( 'reminder_delay_days' ) ); ?>" class="small-text" /> <?php esc_html_e( 'days after the trigger status.', 'ndv-reviews' ); ?></td>
+							<th scope="row"><label for="reminder_delay_days"><?php esc_html_e( 'Delay (days)', 'rosette-reviews' ); ?></label></th>
+							<td><input type="number" min="0" name="reminder_delay_days" id="reminder_delay_days" value="<?php echo esc_attr( $s->get( 'reminder_delay_days' ) ); ?>" class="small-text" /> <?php esc_html_e( 'days after the trigger status.', 'rosette-reviews' ); ?></td>
 						</tr>
 						<tr>
-							<th scope="row"><label for="reminder_subject"><?php esc_html_e( 'Email subject', 'ndv-reviews' ); ?></label></th>
+							<th scope="row"><label for="reminder_subject"><?php esc_html_e( 'Email subject', 'rosette-reviews' ); ?></label></th>
 							<td>
 								<input type="text" name="reminder_subject" id="reminder_subject" class="large-text" value="<?php echo esc_attr( $s->get( 'reminder_subject' ) ); ?>" placeholder="<?php echo esc_attr( $default_subject ); ?>" />
-								<p class="description"><?php esc_html_e( 'Leave empty to use the default shown. Merge tags: {customer_name}, {store_name}, {order_number}, {review_link}.', 'ndv-reviews' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Leave empty to use the default shown. Merge tags: {customer_name}, {store_name}, {order_number}, {review_link}.', 'rosette-reviews' ); ?></p>
 							</td>
 						</tr>
 						<tr>
-							<th scope="row"><label for="reminder_body"><?php esc_html_e( 'Email text', 'ndv-reviews' ); ?></label></th>
+							<th scope="row"><label for="reminder_body"><?php esc_html_e( 'Email text', 'rosette-reviews' ); ?></label></th>
 							<td>
-								<textarea name="reminder_body" id="reminder_body" class="large-text" rows="7" placeholder="<?php echo esc_attr( __( "Hi {customer_name},\n\nThank you for your order from {store_name}. Could you tell other shoppers what you think of it? Your review helps them choose.", 'ndv-reviews' ) ); ?>"><?php echo esc_textarea( (string) $s->get( 'reminder_body' ) ); ?></textarea>
-								<p class="description"><?php esc_html_e( 'The text above the product list. Your store logo or name, the ordered products, the "Write your review" button and the unsubscribe link are always added around it. Leave empty to use the default text shown.', 'ndv-reviews' ); ?></p>
-								<p class="description"><?php esc_html_e( 'Merge tags: {customer_name} (billing first name), {store_name}, {order_number}, {review_link} (the customer\'s review page URL). Line breaks become paragraphs; basic HTML such as links and bold text is allowed.', 'ndv-reviews' ); ?></p>
+								<textarea name="reminder_body" id="reminder_body" class="large-text" rows="7" placeholder="<?php echo esc_attr( __( "Hi {customer_name},\n\nThank you for your order from {store_name}. Could you tell other shoppers what you think of it? Your review helps them choose.", 'rosette-reviews' ) ); ?>"><?php echo esc_textarea( (string) $s->get( 'reminder_body' ) ); ?></textarea>
+								<p class="description"><?php esc_html_e( 'The text above the product list. Your store logo or name, the ordered products, the "Write your review" button and the unsubscribe link are always added around it. Leave empty to use the default text shown.', 'rosette-reviews' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Merge tags: {customer_name} (billing first name), {store_name}, {order_number}, {review_link} (the customer\'s review page URL). Line breaks become paragraphs; basic HTML such as links and bold text is allowed.', 'rosette-reviews' ); ?></p>
 							</td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'From', 'ndv-reviews' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'From', 'rosette-reviews' ); ?></th>
 							<td>
-								<input type="text" name="from_name" value="<?php echo esc_attr( $s->get( 'from_name' ) ); ?>" placeholder="<?php esc_attr_e( 'From name', 'ndv-reviews' ); ?>" />
-								<input type="email" name="from_email" value="<?php echo esc_attr( $s->get( 'from_email' ) ); ?>" placeholder="<?php esc_attr_e( 'from@example.com', 'ndv-reviews' ); ?>" />
-								<p class="description"><?php esc_html_e( 'Leave both empty to use the WordPress default sender.', 'ndv-reviews' ); ?></p>
+								<input type="text" name="from_name" value="<?php echo esc_attr( $s->get( 'from_name' ) ); ?>" placeholder="<?php esc_attr_e( 'From name', 'rosette-reviews' ); ?>" />
+								<input type="email" name="from_email" value="<?php echo esc_attr( $s->get( 'from_email' ) ); ?>" placeholder="<?php esc_attr_e( 'from@example.com', 'rosette-reviews' ); ?>" />
+								<p class="description"><?php esc_html_e( 'Leave both empty to use the WordPress default sender.', 'rosette-reviews' ); ?></p>
 							</td>
 						</tr>
 						<tr>
-							<th scope="row"><label for="token_expiry_days"><?php esc_html_e( 'Link expiry (days)', 'ndv-reviews' ); ?></label></th>
+							<th scope="row"><label for="token_expiry_days"><?php esc_html_e( 'Link expiry (days)', 'rosette-reviews' ); ?></label></th>
 							<td>
 								<input type="number" min="0" name="token_expiry_days" id="token_expiry_days" value="<?php echo esc_attr( $s->get( 'token_expiry_days' ) ); ?>" class="small-text" />
-								<p class="description"><?php esc_html_e( 'How long the review link in each email keeps working. 0 = never expires. Applies to emails sent from now on.', 'ndv-reviews' ); ?></p>
+								<p class="description"><?php esc_html_e( 'How long the review link in each email keeps working. 0 = never expires. Applies to emails sent from now on.', 'rosette-reviews' ); ?></p>
 							</td>
 						</tr>
 					</table>
 					<p>
-						<button type="submit" name="ndvr_requests_do" value="save" class="button button-primary"><?php esc_html_e( 'Save settings', 'ndv-reviews' ); ?></button>
-						<button type="submit" class="button" formaction="<?php echo esc_url( admin_url( 'admin-post.php?action=' . self::PREVIEW_ACTION ) ); ?>" formtarget="_blank"><?php esc_html_e( 'Preview email', 'ndv-reviews' ); ?></button>
+						<button type="submit" name="ndvr_requests_do" value="save" class="button button-primary"><?php esc_html_e( 'Save settings', 'rosette-reviews' ); ?></button>
+						<button type="submit" class="button" formaction="<?php echo esc_url( admin_url( 'admin-post.php?action=' . self::PREVIEW_ACTION ) ); ?>" formtarget="_blank"><?php esc_html_e( 'Preview email', 'rosette-reviews' ); ?></button>
 					</p>
 				</form>
 			</div>
 
 			<div class="ndvr-card">
-				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Send a test', 'ndv-reviews' ); ?></h2></div>
-				<p class="description"><?php esc_html_e( 'Sends the saved email, built from your most recent completed order (or sample data if there is none). Its review link works for 24 hours and shows the real review page, but reviews cannot be submitted from it.', 'ndv-reviews' ); ?></p>
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Send a test', 'rosette-reviews' ); ?></h2></div>
+				<p class="description"><?php esc_html_e( 'Sends the saved email, built from your most recent completed order (or sample data if there is none). Its review link works for 24 hours and shows the real review page, but reviews cannot be submitted from it.', 'rosette-reviews' ); ?></p>
 				<form method="post">
 					<?php wp_nonce_field( self::NONCE ); ?>
 					<input type="email" name="test_email" value="<?php echo esc_attr( $admin ); ?>" class="regular-text" />
-					<button type="submit" name="ndvr_requests_do" value="test" class="button"><?php esc_html_e( 'Send test email', 'ndv-reviews' ); ?></button>
+					<button type="submit" name="ndvr_requests_do" value="test" class="button"><?php esc_html_e( 'Send test email', 'rosette-reviews' ); ?></button>
 				</form>
 			</div>
 
 			<div class="ndvr-card">
-				<div class="ndvr-card-header"><h2><?php esc_html_e( 'New review notifications', 'ndv-reviews' ); ?></h2></div>
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'New review notifications', 'rosette-reviews' ); ?></h2></div>
 				<form method="post">
 					<?php wp_nonce_field( self::NONCE ); ?>
 					<table class="form-table" role="presentation">
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Email me when a review is posted', 'ndv-reviews' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Email me when a review is posted', 'rosette-reviews' ); ?></th>
 							<td>
 								<fieldset>
-									<label><input type="radio" name="admin_notify" value="pending" <?php checked( 'pending', $notify ); ?> /> <?php esc_html_e( 'Only reviews awaiting approval', 'ndv-reviews' ); ?></label><br />
-									<label><input type="radio" name="admin_notify" value="all" <?php checked( 'all', $notify ); ?> /> <?php esc_html_e( 'Every new review', 'ndv-reviews' ); ?></label><br />
-									<label><input type="radio" name="admin_notify" value="off" <?php checked( 'off', $notify ); ?> /> <?php esc_html_e( 'Off', 'ndv-reviews' ); ?></label>
+									<label><input type="radio" name="admin_notify" value="pending" <?php checked( 'pending', $notify ); ?> /> <?php esc_html_e( 'Only reviews awaiting approval', 'rosette-reviews' ); ?></label><br />
+									<label><input type="radio" name="admin_notify" value="all" <?php checked( 'all', $notify ); ?> /> <?php esc_html_e( 'Every new review', 'rosette-reviews' ); ?></label><br />
+									<label><input type="radio" name="admin_notify" value="off" <?php checked( 'off', $notify ); ?> /> <?php esc_html_e( 'Off', 'rosette-reviews' ); ?></label>
 								</fieldset>
-								<p class="description"><?php esc_html_e( 'Imported reviews and reviews added by an admin do not send an email.', 'ndv-reviews' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Imported reviews and reviews added by an admin do not send an email.', 'rosette-reviews' ); ?></p>
 							</td>
 						</tr>
 						<tr>
-							<th scope="row"><label for="admin_notify_email"><?php esc_html_e( 'Send to', 'ndv-reviews' ); ?></label></th>
+							<th scope="row"><label for="admin_notify_email"><?php esc_html_e( 'Send to', 'rosette-reviews' ); ?></label></th>
 							<td><input type="email" name="admin_notify_email" id="admin_notify_email" class="regular-text" value="<?php echo esc_attr( (string) $s->get( 'admin_notify_email', '' ) ); ?>" placeholder="<?php echo esc_attr( $admin ); ?>" />
-								<p class="description"><?php esc_html_e( 'Leave empty to use the site admin email shown.', 'ndv-reviews' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Leave empty to use the site admin email shown.', 'rosette-reviews' ); ?></p>
 							</td>
 						</tr>
 					</table>
-					<p><button type="submit" name="ndvr_requests_do" value="save_notify" class="button button-primary"><?php esc_html_e( 'Save notification settings', 'ndv-reviews' ); ?></button></p>
+					<p><button type="submit" name="ndvr_requests_do" value="save_notify" class="button button-primary"><?php esc_html_e( 'Save notification settings', 'rosette-reviews' ); ?></button></p>
 				</form>
 			</div>
 
 			<div class="ndvr-card">
-				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Request log', 'ndv-reviews' ); ?></h2></div>
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Request log', 'rosette-reviews' ); ?></h2></div>
 				<table class="widefat striped">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'ID', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Order', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Email', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Status', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Scheduled', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Sent', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Note', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Actions', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'ID', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Order', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Email', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Status', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Scheduled', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Sent', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Note', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Actions', 'rosette-reviews' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php if ( empty( $log['items'] ) ) : ?>
-							<tr><td colspan="8"><?php esc_html_e( 'No review requests yet.', 'ndv-reviews' ); ?></td></tr>
+							<tr><td colspan="8"><?php esc_html_e( 'No review requests yet.', 'rosette-reviews' ); ?></td></tr>
 						<?php endif; ?>
 						<?php foreach ( $log['items'] as $row ) : ?>
 							<?php
@@ -431,7 +431,7 @@ class RequestsPage implements Registerable {
 								<td><?php echo esc_html( $row->error ? $row->error : '' ); ?></td>
 								<td>
 									<?php if ( 'failed' === $row->status ) : ?>
-										<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'ndvr_retry' => $row->id, 'paged' => $paged ), admin_url( 'admin.php' ) ), self::NONCE ) ); ?>"><?php esc_html_e( 'Retry', 'ndv-reviews' ); ?></a>
+										<a class="button button-small" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'ndvr_retry' => $row->id, 'paged' => $paged ), admin_url( 'admin.php' ) ), self::NONCE ) ); ?>"><?php esc_html_e( 'Retry', 'rosette-reviews' ); ?></a>
 									<?php endif; ?>
 								</td>
 							</tr>
@@ -444,7 +444,7 @@ class RequestsPage implements Registerable {
 							<span class="displaying-num">
 								<?php
 								/* translators: %s: number of requests. */
-								echo esc_html( sprintf( _n( '%s request', '%s requests', $log['total'], 'ndv-reviews' ), number_format_i18n( $log['total'] ) ) );
+								echo esc_html( sprintf( _n( '%s request', '%s requests', $log['total'], 'rosette-reviews' ), number_format_i18n( $log['total'] ) ) );
 								?>
 							</span>
 							<?php

@@ -1,13 +1,13 @@
 # AGENTS.md — Multi-Agent Protocol (@mention routing + loop engineering)
 
-**Repo:** `ndv-reviews` — *NDV Reviews for WooCommerce* (the **free base plugin**).
+**Repo:** `rosette-reviews` — *Rosette Reviews* (formerly NDV Reviews; the **free base plugin**, WP.org slug `rosette-reviews`).
 
 This file defines **how the team works**: roles, wiring, and the execution loop.
 `CLAUDE.md` defines **what the system is**: the existing modules, the hook surface, and the conventions.
 
 **Read `CLAUDE.md` first. Always. It is the constraint set, not background reading.**
 
-**Sibling repo:** `../ndv-reviews-pro/` — the paid add-on. It is a **separate git repo and a separate
+**Sibling repo:** `../rosette-reviews-pro/` — the paid add-on. It is a **separate git repo and a separate
 plugin** (private). It consumes this plugin's hooks and boots on `ndv-reviews/loaded`. It has its own
 `AGENTS.md`. Read §3.9 before you touch anything it depends on.
 
@@ -186,7 +186,8 @@ Task row format:
 - **No phone-home, no bundled marketplace SDK, no analytics, no external asset loading.** All JS/CSS local.
   Licensing lives in the Pro add-on — never here. (Opt-in Google reCAPTCHA is the one external call, and it
   must be **disclosed in `readme.txt`**.)
-- **Text domain is the literal string `'ndv-reviews'`** in every i18n call — never a variable/constant.
+- **Text domain is the literal string `'rosette-reviews'`** in every i18n call — never a variable/constant.
+  (Renamed from `'ndv-reviews'` on 2026-10-09 to match the WordPress.org slug; every OTHER `ndv-reviews` identifier stays.)
   `Domain Path: /languages`.
 - **No translations bundled** beyond the `.pot`.
 - **GPLv2-or-later** headers intact; every bundled asset GPL-compatible (the in-repo `Vendor\QrEncoder` is

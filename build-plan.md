@@ -1,6 +1,6 @@
-# NDV Reviews — WooCommerce Reviews Plugin: Complete Build Plan
+# Rosette Reviews — WooCommerce Reviews Plugin: Complete Build Plan
 
-> **Name:** `NDV Reviews` — a Nowdigiverse product. Naming, prefixes, namespace, and table prefix are centralized in §13 if anything needs to change later.
+> **Name:** `Rosette Reviews` — a Nowdigiverse product. Naming, prefixes, namespace, and table prefix are centralized in §13 if anything needs to change later.
 > **Audience for this document:** an autonomous AI software engineer (Claude Code). This is a build spec, not marketing copy. Build in the phase order of §15. Every feature lists a **Tier (Free/Pro)** and **Acceptance Criteria**.
 > **Goal:** A faster, more reliable, privacy-first competitor to **ReviewX** (reviewx.io, self-hosted plugin) and **WiserReview** (wiserreview.com, metered SaaS) that ships a genuinely useful free version on WordPress.org and a Pro add-on with everything they charge for — plus the features they're missing or do badly.
 > **Revision:** Plan v1.3. v1.1 added a WiserReview competitive pass (QR collection, Google/Facebook review import, standalone testimonial forms, topic filters, AI highlight, social auto-posting, bulk campaigns, expanded widgets, connectors, team roles — §19). v1.2 added Elementor + Loop Builder compatibility (§20). v1.3 adds the **tokenized multi-product review-collection link** with WooCommerce + Klaviyo + Mailchimp + Brevo + universal-webhook distribution (§21) and the **Reviews Marquee + traditional/classic widgets** (§22). All threaded into the split (§4), widgets (§9), integrations (§10), and phases (§15).
@@ -169,8 +169,8 @@ No account, no email capture, no data sync as a precondition of use. Any cloud/A
 ### 5.3 Two-plugin architecture
 
 ```
-ndv-reviews/            (FREE — WordPress.org)
-ndv-reviews-pro/        (PRO  — sold/licensed separately, requires free as dependency)
+rosette-reviews/        (FREE — WordPress.org)
+rosette-reviews-pro/    (PRO  — sold/licensed separately, requires free as dependency)
 ```
 
 - Free plugin exposes a **stable internal API** (actions, filters, service container) that Pro hooks into. Pro **never** edits free files.
@@ -439,18 +439,18 @@ Prefix `ndv-reviews` / short alias `ndvr`. Provide BOTH a shortcode and a Gutenb
 
 | Purpose | Shortcode | Block | Tier |
 |---|---|---|---|
-| Full review list | `[ndvr-reviews product_id=""]` | NDV Reviews: Reviews | Free |
-| Summary box | `[ndvr-summary product_id=""]` | NDV Reviews: Summary | Free |
-| Criteria graph | `[ndvr-criteria-graph product_id=""]` | NDV Reviews: Criteria | Free |
-| Star rating + count | `[ndvr-stars post_id=""]` | NDV Reviews: Stars | Free |
-| Review/submit form | `[ndvr-form product_id=""]` | NDV Reviews: Form | Free |
+| Full review list | `[ndvr-reviews product_id=""]` | Rosette Reviews: Reviews | Free |
+| Summary box | `[ndvr-summary product_id=""]` | Rosette Reviews: Summary | Free |
+| Criteria graph | `[ndvr-criteria-graph product_id=""]` | Rosette Reviews: Criteria | Free |
+| Star rating + count | `[ndvr-stars post_id=""]` | Rosette Reviews: Stars | Free |
+| Review/submit form | `[ndvr-form product_id=""]` | Rosette Reviews: Form | Free |
 | Profile photo uploader | `[ndvr-avatar]` | — | Free |
-| Reviews carousel | `[ndvr-carousel]` | NDV Reviews: Carousel | Pro |
-| UGC photo gallery | `[ndvr-gallery]` | NDV Reviews: Gallery | Pro |
-| Floating badge | `[ndvr-badge]` | NDV Reviews: Badge | Pro |
-| All-reviews / wall | `[ndvr-wall]` | NDV Reviews: Wall | Pro |
-| Q&A | `[ndvr-qa product_id=""]` | NDV Reviews: Q&A | Pro |
-| Reviews marquee (Magic UI-style) | `[ndvr-marquee]` | NDV Reviews: Reviews Marquee | Free (basic) / Pro (advanced) |
+| Reviews carousel | `[ndvr-carousel]` | Rosette Reviews: Carousel | Pro |
+| UGC photo gallery | `[ndvr-gallery]` | Rosette Reviews: Gallery | Pro |
+| Floating badge | `[ndvr-badge]` | Rosette Reviews: Badge | Pro |
+| All-reviews / wall | `[ndvr-wall]` | Rosette Reviews: Wall | Pro |
+| Q&A | `[ndvr-qa product_id=""]` | Rosette Reviews: Q&A | Pro |
+| Reviews marquee (Magic UI-style) | `[ndvr-marquee]` | Rosette Reviews: Reviews Marquee | Free (basic) / Pro (advanced) |
 | Multi-product review form (token link) | `[ndvr-collect]` (token-driven landing) | — | Free |
 
 Each shortcode/block also ships as a **classic `WP_Widget`** (Appearance → Widgets) and, where listed, an **Elementor widget** — all sharing one renderer (see §20, §22).
@@ -497,7 +497,7 @@ Authoritative source: `developer.wordpress.org/plugins/wordpress-org/detailed-pl
 7. **No tracking without consent** — **no analytics, telemetry, or "phone home" by default.** Any usage tracking is strictly opt-in via an explicit, unchecked consent control, with disclosure. (Default posture: we collect nothing.)
 8. **No sending executable code via third-party systems** — the free plugin must **never fetch and run remote PHP/JS** (no loading Pro code from our server, no remote "addon installers" that execute code, no CDN-loaded executable logic). Updates come only through the standard WP update API. Pro is installed by the user as a separate plugin.
 9. **Nothing illegal/dishonest/morally offensive** — n/a by design; also see the §19.5 anti-review-gating rule.
-10. **No external links/credits on the public site without explicit opt-in** — **no "Powered by NDV Reviews" / backlinks injected into the front end** unless the admin explicitly enables it (default off).
+10. **No external links/credits on the public site without explicit opt-in** — **no "Powered by Rosette Reviews" / backlinks injected into the front end** unless the admin explicitly enables it (default off).
 11. **Don't hijack the admin dashboard** — upsell/onboarding is **contained to the plugin's own screens**, dismissible, and non-blocking. No site-wide nag banners, no admin-wide redirects, no interstitials on activation beyond a single dismissible welcome.
 12. **Readme must not spam** — `readme.txt` is honest, not keyword-stuffed; tags ≤ 5 relevant terms; no competitor names or affiliate spam in tags/description.
 13. **Use WordPress's default libraries** — use **WP-bundled** jQuery (if needed), Underscore, React/`@wordpress/element`, etc.; **do not re-bundle** your own copy of a library WP already ships. Use Action Scheduler (already bundled by Woo).
@@ -517,8 +517,8 @@ Authoritative source: `developer.wordpress.org/plugins/wordpress-org/detailed-pl
 - **ESLint** (`@wordpress/eslint-plugin`) + **stylelint** for JS/CSS.
 
 ### 12.4 Naming & trademark (specific to this plugin)
-- Display name **"NDV Reviews"** is safe (NDV = Nowdigiverse's own mark; "Reviews" is generic). **Do not begin the name with another's trademark.**
-- **Do NOT put "WooCommerce" or "WordPress" in the plugin name or slug** (e.g. not "NDV Reviews for WooCommerce" as the registered name). Describe WooCommerce/Woo compatibility in the **description** body instead. Never attempt look-alike workarounds ("WooReviews", "WuuCommerce") — the team rejects those.
+- Display name **"Rosette Reviews"** (renamed from NDV Reviews 2026-10-09). "Reviews" is generic; **"Rosette" still needs a trademark search** (USPTO/EUIPO, software class) before launch. **Do not begin the name with another's trademark.**
+- **Do NOT put "WooCommerce" or "WordPress" in the plugin name or slug** (e.g. not "Rosette Reviews for WooCommerce" as the registered name). Describe WooCommerce/Woo compatibility in the **description** body instead. Never attempt look-alike workarounds ("WooReviews", "WuuCommerce") — the team rejects those.
 - Slug = `ndv-reviews`; text domain must equal the slug (§13).
 
 ### 12.5 Security requirements (review-critical, also §11)
@@ -558,7 +558,7 @@ Single source of truth so the brand can change in one pass:
 - CSS/JS handle + class prefix: `ndvr-`
 - DB table prefix: `{$wpdb->prefix}ndvr_` (constant `NDVR_TABLE_PREFIX`)
 - Option keys: `ndv_reviews_settings`, `ndv_reviews_pro_settings`
-- Pro add-on: folder `ndv-reviews-pro`, namespace `NdvReviews\Pro\`, license-gated (see §5.3)
+- Pro add-on: folder `rosette-reviews-pro`, namespace `NdvReviews\Pro\`, license-gated (see §5.3)
 Define `NDVR_SLUG`, `NDVR_NAME`, `NDVR_TEXTDOMAIN` constants; reference everywhere. Renaming = change constants + slugs + readme + asset folder.
 
 ---
@@ -787,10 +787,10 @@ CREATE TABLE ndvr_campaigns (
 First-class Elementor support is a **Phase 4 (free)** requirement — many stores build their PDP and product grids with Elementor Theme Builder + Loop Builder, so review widgets must work there, not just on the default Woo template.
 
 ### 20.1 Native widgets — *Free*
-Register via `elementor/widgets/register` (with back-compat fallback to `widgets_registered`) into a **"NDV Reviews"** widget category. Each widget exposes Controls-API style controls (star color/size, typography, gap, alignment, layout) and content controls (source: current product / specific ID / category / all; counts; filters).
+Register via `elementor/widgets/register` (with back-compat fallback to `widgets_registered`) into a **"Rosette Reviews"** widget category. Each widget exposes Controls-API style controls (star color/size, typography, gap, alignment, layout) and content controls (source: current product / specific ID / category / all; counts; filters).
 
 Widgets: **Star Rating** (aggregate stars + count), **Review Summary** (avg + distribution + criteria bars), **Review List**, **Review Form**, **Review Section** (all-in-one — the analog to ReviewX's "Product Data Tabs" widget, for Theme Builder Single Product templates where native Woo tabs are removed). Pro adds: **Carousel, UGC Gallery, Floating Badge, Wall, Q&A, Avatar/Video carousel, Nudges/Inline snippet**.
-**AC:** ☐ Widgets appear under the NDV Reviews category. ☐ Style + content controls work and live-update in the editor. ☐ Review Section renders the full review experience inside a Theme Builder Single Product template.
+**AC:** ☐ Widgets appear under the Rosette Reviews category. ☐ Style + content controls work and live-update in the editor. ☐ Review Section renders the full review experience inside a Theme Builder Single Product template.
 
 ### 20.2 Dynamic Tags — *Free (this is what powers Loop Items)*
 Register via `elementor/dynamic_tags/register`: **Product Rating Value** (`NUMBER_CATEGORY`), **Product Review Count** (`NUMBER_CATEGORY`), **Star Rating HTML** (`TEXT_CATEGORY` / `POST_META_CATEGORY`). These let a product's rating be bound onto *any* Elementor element inside a Loop Item template — not only our widgets (e.g. bind count into a Heading, or stars into an HTML/Icon element).
@@ -910,7 +910,7 @@ Controls: direction **horizontal/vertical**, **reverse**, **speed** (`--duration
 
 **Accessibility (required):** honor `prefers-reduced-motion` (pause/disable animation, offer a static list); marquee is a labeled list (`aria-label`, e.g. "Customer reviews"); keyboard users can pause; never put critical-only info solely in motion.
 
-**Delivery:** available as **shortcode `[ndvr-marquee]`**, **Gutenberg block** (NDV Reviews: Reviews Marquee), **Elementor widget** (per §20, with editor preview + conditional asset loading), and **classic widget** (per §22.2). Lazy-load media; assets enqueue once.
+**Delivery:** available as **shortcode `[ndvr-marquee]`**, **Gutenberg block** (Rosette Reviews: Reviews Marquee), **Elementor widget** (per §20, with editor preview + conditional asset loading), and **classic widget** (per §22.2). Lazy-load media; assets enqueue once.
 **AC:** ☐ Seamless infinite loop with no visible jump at the wrap point. ☐ Pause-on-hover + `prefers-reduced-motion` both work. ☐ Horizontal + vertical + multi-row render correctly and are responsive. ☐ Gradient edges match background. ☐ Source filters return the right reviews. ☐ Renders as shortcode, block, Elementor widget, and classic widget from one underlying component.
 
 ### 22.2 Traditional (classic) widgets — *Free*
@@ -921,7 +921,7 @@ Beyond blocks/Elementor, register **classic `WP_Widget` widgets** (Appearance �
 - **Phase 4 (free):** basic marquee (single-row) + all classic widgets.
 - **Phase 8 (Pro widgets):** advanced marquee (vertical/multi-row/gradient/video/filters), added to the §7.12 / §19.8 widget catalog.
 
-> Add `[ndvr-marquee]` (shortcode), **NDV Reviews: Reviews Marquee** (block), an **Elementor** widget, and a **classic widget** to the §9 catalog. The marquee is a flagship social-proof piece — make it the showcase widget on the plugin's demo page.
+> Add `[ndvr-marquee]` (shortcode), **Rosette Reviews: Reviews Marquee** (block), an **Elementor** widget, and a **classic widget** to the §9 catalog. The marquee is a flagship social-proof piece — make it the showcase widget on the plugin's demo page.
 
 ---
 

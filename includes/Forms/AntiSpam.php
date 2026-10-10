@@ -54,7 +54,7 @@ class AntiSpam {
 	public function check( array $input, $authenticated = false ) {
 		// 1. Honeypot — bots fill hidden fields.
 		if ( ! empty( $input[ self::HONEYPOT ] ) ) {
-			return new \WP_Error( 'ndvr_spam_honeypot', __( 'Your submission could not be processed.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_spam_honeypot', __( 'Your submission could not be processed.', 'rosette-reviews' ) );
 		}
 
 		if ( true === $authenticated ) {
@@ -111,7 +111,7 @@ class AntiSpam {
 		$key   = $this->rate_key();
 		$count = (int) get_transient( $key );
 		if ( $count >= $max ) {
-			return new \WP_Error( 'ndvr_spam_rate', __( 'You are submitting reviews too quickly. Please try again later.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_spam_rate', __( 'You are submitting reviews too quickly. Please try again later.', 'rosette-reviews' ) );
 		}
 
 		// Count this attempt now — before body validation can fail — so failures
@@ -159,7 +159,7 @@ class AntiSpam {
 		}
 
 		if ( '' === $token ) {
-			return new \WP_Error( 'ndvr_spam_captcha', __( 'Captcha verification failed. Please reload and try again.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_spam_captcha', __( 'Captcha verification failed. Please reload and try again.', 'rosette-reviews' ) );
 		}
 
 		$response = wp_remote_post(
@@ -188,7 +188,7 @@ class AntiSpam {
 		$threshold = (float) apply_filters( 'ndv-reviews/recaptcha_threshold', 0.5 );
 
 		if ( empty( $body['success'] ) || ( isset( $body['score'] ) && (float) $body['score'] < $threshold ) ) {
-			return new \WP_Error( 'ndvr_spam_captcha', __( 'Captcha verification failed. Please try again.', 'ndv-reviews' ) );
+			return new \WP_Error( 'ndvr_spam_captcha', __( 'Captcha verification failed. Please try again.', 'rosette-reviews' ) );
 		}
 
 		return true;

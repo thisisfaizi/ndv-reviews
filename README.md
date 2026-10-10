@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD041 -->
 <p align="center">
-  <strong>NDV Reviews</strong><br>
+  <strong>Rosette Reviews</strong><br>
   <em>Reliable, self-hosted product reviews for WooCommerce.</em>
 </p>
 
@@ -14,7 +14,7 @@
 
 ---
 
-**NDV Reviews** is a faster, privacy-first WooCommerce reviews plugin — a genuinely useful free version on WordPress.org plus a Pro add-on for automation, AI, and extra channels. A [Nowdigiverse](https://nowdigiverse.com) product.
+**Rosette Reviews** is a faster, privacy-first WooCommerce reviews plugin — a genuinely useful free version on WordPress.org plus a Pro add-on for automation, AI, and extra channels. A [Nowdigiverse](https://nowdigiverse.com) product.
 
 Built as a better alternative to ReviewX and WiserReview:
 
@@ -31,19 +31,19 @@ See the [Free vs Pro breakdown](docs/content/free-vs-pro.md). The free plugin sh
 ## Repository layout
 
 ```
-ndv-reviews/            FREE plugin (this repo) — WordPress.org-bound
-  ndv-reviews.php       Bootstrap, constants, activation
+rosette-reviews/        FREE plugin (this repo) — WordPress.org-bound
+  rosette-reviews.php       Bootstrap, constants, activation
   includes/             PSR-4 (NdvReviews\) classes
   assets/               Blocks + admin + frontend sources
   templates/            Theme-overridable templates
   docs/                 Documentation site (HTML/CSS/JS + Markdown)
   languages/            i18n .pot
-ndv-reviews-pro/        PRO add-on (separate private repo) — license-gated
+rosette-reviews-pro/    PRO add-on (separate private repo) — license-gated
 ```
 
 ## Installation
 
-1. Copy the `ndv-reviews` folder into `wp-content/plugins/`.
+1. Copy the `rosette-reviews` folder into `wp-content/plugins/` (keep that folder name — the Pro add-on's `Requires Plugins` header looks for that slug).
 2. Activate it from the Plugins screen (WooCommerce must be active).
 
 No `composer install` is required — the plugin ships a runtime PSR-4 autoloader. Composer/npm are only needed for development tooling.
@@ -63,7 +63,7 @@ npm install
 npm run build          # production build
 npm run start          # watch mode
 npm run lint:js
-npm run makepot        # regenerate languages/ndv-reviews.pot
+npm run makepot        # regenerate languages/rosette-reviews.pot
 ```
 
 The build is gated on **Plugin Check (PCP) = 0 errors** and **PHPCS = 0 errors** before every release.

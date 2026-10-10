@@ -70,20 +70,20 @@ class Csv {
 		);
 
 		if ( ! is_readable( $file ) ) {
-			$result['errors'][] = __( 'CSV file could not be read.', 'ndv-reviews' );
+			$result['errors'][] = __( 'CSV file could not be read.', 'rosette-reviews' );
 			return $result;
 		}
 
 		$handle = fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 		if ( ! $handle ) {
-			$result['errors'][] = __( 'CSV file could not be opened.', 'ndv-reviews' );
+			$result['errors'][] = __( 'CSV file could not be opened.', 'rosette-reviews' );
 			return $result;
 		}
 
 		$header = fgetcsv( $handle, 0, ',', '"', '\\' );
 		if ( ! $header ) {
 			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-			$result['errors'][] = __( 'CSV has no header row.', 'ndv-reviews' );
+			$result['errors'][] = __( 'CSV has no header row.', 'rosette-reviews' );
 			return $result;
 		}
 		// Spreadsheet apps often save a UTF-8 byte-order mark before the first column name.
@@ -115,22 +115,22 @@ class Csv {
 			$rating_raw = $get( 'rating' );
 
 			if ( ! $product_id || '' === $content ) {
-				$this->skip( $result, __( 'missing product_id or content', 'ndv-reviews' ) );
+				$this->skip( $result, __( 'missing product_id or content', 'rosette-reviews' ) );
 				continue;
 			}
 			if ( ! is_numeric( $rating_raw ) || (float) $rating_raw < 1 || (float) $rating_raw > 5 ) {
-				$this->skip( $result, __( 'rating not between 1 and 5', 'ndv-reviews' ) );
+				$this->skip( $result, __( 'rating not between 1 and 5', 'rosette-reviews' ) );
 				continue;
 			}
 			if ( empty( $criteria_ids ) ) {
-				$this->skip( $result, __( 'no active rating criteria', 'ndv-reviews' ) );
+				$this->skip( $result, __( 'no active rating criteria', 'rosette-reviews' ) );
 				continue;
 			}
 
 			$pool_id = Pool::resolve_id( $product_id );
 			$hash    = $this->hash( $pool_id, $email, $content );
 			if ( $this->exists( $pool_id, $email, $content, $hash ) ) {
-				$this->skip( $result, __( 'already imported', 'ndv-reviews' ) );
+				$this->skip( $result, __( 'already imported', 'rosette-reviews' ) );
 				continue;
 			}
 
@@ -141,7 +141,7 @@ class Csv {
 			$created = $this->reviews->create(
 				array(
 					'product_id' => $product_id,
-					'author'     => $get( 'author' ) ? $get( 'author' ) : __( 'Anonymous', 'ndv-reviews' ),
+					'author'     => $get( 'author' ) ? $get( 'author' ) : __( 'Anonymous', 'rosette-reviews' ),
 					'email'      => $email,
 					'content'    => $content,
 					'title'      => $get( 'title' ),

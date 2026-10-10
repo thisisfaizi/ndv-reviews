@@ -122,8 +122,8 @@ class ReviewForm implements Registerable {
 		}
 
 		wp_die(
-			esc_html__( 'Your review was not submitted: the star rating could not be sent. Please enable JavaScript and try again.', 'ndv-reviews' ),
-			esc_html__( 'Review not submitted', 'ndv-reviews' ),
+			esc_html__( 'Your review was not submitted: the star rating could not be sent. Please enable JavaScript and try again.', 'rosette-reviews' ),
+			esc_html__( 'Review not submitted', 'rosette-reviews' ),
 			array(
 				'response'  => 400,
 				'back_link' => true,
@@ -161,7 +161,7 @@ class ReviewForm implements Registerable {
 		}
 		return '<p class="must-log-in">' . sprintf(
 			/* translators: %s: login URL */
-			__( 'You must be <a href="%s">logged in</a> to post a review.', 'ndv-reviews' ),
+			__( 'You must be <a href="%s">logged in</a> to post a review.', 'rosette-reviews' ),
 			esc_url( wp_login_url( (string) apply_filters( 'the_permalink', get_permalink() ) ) )
 		) . '</p>';
 	}
@@ -197,9 +197,9 @@ class ReviewForm implements Registerable {
 				'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
 				'siteKey' => $this->settings->get( 'recaptcha_enabled' ) ? (string) $this->settings->get( 'recaptcha_site_key' ) : false,
 				'i18n'    => array(
-					'submitting' => __( 'Submitting…', 'ndv-reviews' ),
-					'thanks'     => __( 'Thank you. Your review has been submitted and is awaiting moderation.', 'ndv-reviews' ),
-					'error'      => __( 'Something went wrong. Please try again.', 'ndv-reviews' ),
+					'submitting' => __( 'Submitting…', 'rosette-reviews' ),
+					'thanks'     => __( 'Thank you. Your review has been submitted and is awaiting moderation.', 'rosette-reviews' ),
+					'error'      => __( 'Something went wrong. Please try again.', 'rosette-reviews' ),
 				),
 			)
 		);
@@ -267,7 +267,7 @@ class ReviewForm implements Registerable {
 										<span class="screen-reader-text">
 											<?php
 											/* translators: %d: number of stars. */
-											echo esc_html( sprintf( _n( '%d star', '%d stars', $star, 'ndv-reviews' ), $star ) );
+											echo esc_html( sprintf( _n( '%d star', '%d stars', $star, 'rosette-reviews' ), $star ) );
 											?>
 										</span>
 									</label>
@@ -279,31 +279,31 @@ class ReviewForm implements Registerable {
 			<?php endif; ?>
 
 			<p class="ndvr-field ndvr-field-title comment-form-title">
-				<label for="ndvr-title"><?php esc_html_e( 'Review title (optional)', 'ndv-reviews' ); ?></label>
+				<label for="ndvr-title"><?php esc_html_e( 'Review title (optional)', 'rosette-reviews' ); ?></label>
 				<input id="ndvr-title" name="ndvr_title" type="text" maxlength="150" />
 			</p>
 
 			<p class="ndvr-field ndvr-field-comment comment-form-comment">
-				<label for="comment"><?php esc_html_e( 'Your review', 'ndv-reviews' ); ?>&nbsp;<span class="required">*</span></label>
+				<label for="comment"><?php esc_html_e( 'Your review', 'rosette-reviews' ); ?>&nbsp;<span class="required">*</span></label>
 				<textarea id="comment" name="comment" cols="45" rows="6" required></textarea>
 			</p>
 
 			<fieldset class="ndvr-field ndvr-field-recommend">
-				<legend><?php esc_html_e( 'Would you recommend this product?', 'ndv-reviews' ); ?></legend>
-				<label><input type="radio" name="ndvr_recommend" value="yes" /> <?php esc_html_e( 'Yes', 'ndv-reviews' ); ?></label>
-				<label><input type="radio" name="ndvr_recommend" value="neutral" checked="checked" /> <?php esc_html_e( 'Neutral', 'ndv-reviews' ); ?></label>
-				<label><input type="radio" name="ndvr_recommend" value="no" /> <?php esc_html_e( 'No', 'ndv-reviews' ); ?></label>
+				<legend><?php esc_html_e( 'Would you recommend this product?', 'rosette-reviews' ); ?></legend>
+				<label><input type="radio" name="ndvr_recommend" value="yes" /> <?php esc_html_e( 'Yes', 'rosette-reviews' ); ?></label>
+				<label><input type="radio" name="ndvr_recommend" value="neutral" checked="checked" /> <?php esc_html_e( 'Neutral', 'rosette-reviews' ); ?></label>
+				<label><input type="radio" name="ndvr_recommend" value="no" /> <?php esc_html_e( 'No', 'rosette-reviews' ); ?></label>
 			</fieldset>
 
 			<?php if ( $this->settings->get( 'photo_uploads' ) ) : ?>
 				<div class="ndvr-field ndvr-field-photos">
-					<label for="ndvr-photos"><?php esc_html_e( 'Add photos (optional)', 'ndv-reviews' ); ?></label>
+					<label for="ndvr-photos"><?php esc_html_e( 'Add photos (optional)', 'rosette-reviews' ); ?></label>
 					<div class="ndvr-upload-wrapper">
 						<input id="ndvr-photos" name="ndvr_photos[]" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple="multiple" />
 						<div class="ndvr-upload-zone" aria-hidden="true">
 							<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" ry="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-							<span class="ndvr-upload-text"><?php esc_html_e( 'Click or drag photos here', 'ndv-reviews' ); ?></span>
-							<span class="ndvr-upload-hint"><?php esc_html_e( 'JPEG · PNG · WEBP', 'ndv-reviews' ); ?></span>
+							<span class="ndvr-upload-text"><?php esc_html_e( 'Click or drag photos here', 'rosette-reviews' ); ?></span>
+							<span class="ndvr-upload-hint"><?php esc_html_e( 'JPEG · PNG · WEBP', 'rosette-reviews' ); ?></span>
 							<span class="ndvr-upload-count"></span>
 						</div>
 					</div>
@@ -323,13 +323,13 @@ class ReviewForm implements Registerable {
 			<p class="ndvr-field ndvr-field-consent">
 				<label>
 					<input type="checkbox" name="ndvr_consent" value="1" required />
-					<?php esc_html_e( 'I consent to my review and details being stored and published.', 'ndv-reviews' ); ?>
+					<?php esc_html_e( 'I consent to my review and details being stored and published.', 'rosette-reviews' ); ?>
 				</label>
 			</p>
 
 			<?php // Honeypot — visually hidden, must stay empty. ?>
 			<p class="ndvr-hp" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;">
-				<label for="<?php echo esc_attr( AntiSpam::HONEYPOT ); ?>"><?php esc_html_e( 'Leave this field empty', 'ndv-reviews' ); ?></label>
+				<label for="<?php echo esc_attr( AntiSpam::HONEYPOT ); ?>"><?php esc_html_e( 'Leave this field empty', 'rosette-reviews' ); ?></label>
 				<input type="text" id="<?php echo esc_attr( AntiSpam::HONEYPOT ); ?>" name="<?php echo esc_attr( AntiSpam::HONEYPOT ); ?>" tabindex="-1" autocomplete="off" />
 			</p>
 
@@ -349,15 +349,15 @@ class ReviewForm implements Registerable {
 	 */
 	public function handle_submit() {
 		if ( ! check_ajax_referer( self::NONCE_ACTION, 'ndvr_nonce', false ) ) {
-			wp_send_json_error( array( 'message' => __( 'Your session expired. Please reload the page.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Your session expired. Please reload the page.', 'rosette-reviews' ) ), 403 );
 		}
 
 		if ( ! $this->settings->get( 'enable_reviews', true ) ) {
-			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'rosette-reviews' ) ), 403 );
 		}
 
 		if ( ! $this->settings->get( 'allow_guest_reviews', true ) && ! is_user_logged_in() ) {
-			wp_send_json_error( array( 'message' => __( 'You must be logged in to submit a review.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'You must be logged in to submit a review.', 'rosette-reviews' ) ), 403 );
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- verified above.
@@ -381,15 +381,15 @@ class ReviewForm implements Registerable {
 		// re-derives the SAME rule render_form() already computes, so a store
 		// that requires verified purchases can't be bypassed by skipping the UI).
 		if ( 'publish' !== get_post_status( $product_id ) || ! comments_open( $product_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Reviews are not open for this item.', 'rosette-reviews' ) ), 403 );
 		}
 		$verification_required = 'yes' === get_option( 'woocommerce_review_rating_verification_required' );
 		if ( $verification_required && ! ( is_user_logged_in() && wc_customer_bought_product( '', get_current_user_id(), $product_id ) ) ) {
-			wp_send_json_error( array( 'message' => __( 'Only logged in customers who have purchased this product may leave a review.', 'ndv-reviews' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Only logged in customers who have purchased this product may leave a review.', 'rosette-reviews' ) ), 403 );
 		}
 
 		if ( empty( $input['ndvr_consent'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'Please confirm consent to submit your review.', 'ndv-reviews' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'Please confirm consent to submit your review.', 'rosette-reviews' ) ), 400 );
 		}
 
 		// Require at least one valid star rating (active criterion, 0.5-5) — a
@@ -398,7 +398,7 @@ class ReviewForm implements Registerable {
 		// stores attachments; create() repeats the same check.
 		$criteria = $this->reviews->valid_scores( isset( $input['ndvr_criteria'] ) && is_array( $input['ndvr_criteria'] ) ? $input['ndvr_criteria'] : array() );
 		if ( empty( $criteria ) ) {
-			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'ndv-reviews' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'Please give a star rating before submitting your review.', 'rosette-reviews' ) ), 400 );
 		}
 
 		// Photos (uploaded via FormData) — only after the cheap validations above.
@@ -443,7 +443,7 @@ class ReviewForm implements Registerable {
 
 		wp_send_json_success(
 			array(
-				'message' => __( 'Thank you. Your review has been submitted and is awaiting moderation.', 'ndv-reviews' ),
+				'message' => __( 'Thank you. Your review has been submitted and is awaiting moderation.', 'rosette-reviews' ),
 			)
 		);
 	}

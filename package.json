@@ -1,5 +1,5 @@
 {
-	"name": "ndv-reviews",
+	"name": "rosette-reviews",
 	"version": "0.9.0",
 	"description": "Reliable, self-hosted reviews for WooCommerce.",
 	"author": "Nowdigiverse",
@@ -12,7 +12,7 @@
 		"lint:js": "wp-scripts lint-js",
 		"lint:css": "wp-scripts lint-style",
 		"format": "wp-scripts format",
-		"makepot": "wp i18n make-pot . languages/ndv-reviews.pot --slug=ndv-reviews"
+		"makepot": "wp i18n make-pot . languages/rosette-reviews.pot --slug=rosette-reviews"
 	},
 	"devDependencies": {
 		"@wordpress/scripts": "^30.0.0",

@@ -14,7 +14,7 @@ use NdvReviews\Reviews\CriteriaRepository;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Registers the Rating Criteria screen (under the NDV Reviews menu owned by DashboardPage).
+ * Registers the Rating Criteria screen (under the Rosette Reviews menu owned by DashboardPage).
  */
 class CriteriaPage implements Registerable {
 
@@ -63,8 +63,8 @@ class CriteriaPage implements Registerable {
 	public function register_menu() {
 		add_submenu_page(
 			self::MENU_SLUG,
-			__( 'Rating Criteria', 'ndv-reviews' ),
-			__( 'Rating Criteria', 'ndv-reviews' ),
+			__( 'Rating Criteria', 'rosette-reviews' ),
+			__( 'Rating Criteria', 'rosette-reviews' ),
 			Caps::manage( 'criteria' ),
 			self::PAGE_SLUG,
 			array( $this, 'render' )
@@ -82,7 +82,7 @@ class CriteriaPage implements Registerable {
 		}
 
 		if ( ! current_user_can( Caps::manage( 'criteria' ) ) ) {
-			wp_die( esc_html__( 'You are not allowed to manage review criteria.', 'ndv-reviews' ) );
+			wp_die( esc_html__( 'You are not allowed to manage review criteria.', 'rosette-reviews' ) );
 		}
 
 		check_admin_referer( self::NONCE );
@@ -92,19 +92,19 @@ class CriteriaPage implements Registerable {
 		if ( 'add' === $do ) {
 			$name   = isset( $_POST['ndvr_name'] ) ? sanitize_text_field( wp_unslash( $_POST['ndvr_name'] ) ) : '';
 			$result = $this->criteria->insert( array( 'name' => $name ) );
-			$this->push_result( $result, __( 'Criterion added.', 'ndv-reviews' ) );
+			$this->push_result( $result, __( 'Criterion added.', 'rosette-reviews' ) );
 		} elseif ( 'delete' === $do ) {
 			$id = isset( $_POST['ndvr_id'] ) ? absint( $_POST['ndvr_id'] ) : 0;
 			$result = $this->criteria->delete( $id );
 			if ( false === $result ) {
-				$result = new \WP_Error( 'ndvr_criteria_missing', __( 'That criterion no longer exists.', 'ndv-reviews' ) );
+				$result = new \WP_Error( 'ndvr_criteria_missing', __( 'That criterion no longer exists.', 'rosette-reviews' ) );
 			}
-			$this->push_result( $result, __( 'Criterion deleted.', 'ndv-reviews' ) );
+			$this->push_result( $result, __( 'Criterion deleted.', 'rosette-reviews' ) );
 		} elseif ( 'toggle' === $do ) {
 			$id      = isset( $_POST['ndvr_id'] ) ? absint( $_POST['ndvr_id'] ) : 0;
 			$status  = isset( $_POST['ndvr_status'] ) && 'active' === $_POST['ndvr_status'] ? 'active' : 'inactive';
 			$result  = $this->criteria->update( $id, array( 'status' => $status ) );
-			$this->push_result( $result, __( 'Criterion updated.', 'ndv-reviews' ) );
+			$this->push_result( $result, __( 'Criterion updated.', 'rosette-reviews' ) );
 		}
 	}
 
@@ -145,7 +145,7 @@ class CriteriaPage implements Registerable {
 		$at_cap   = $active >= $max;
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Rating Criteria', 'ndv-reviews' ); ?></h1>
+			<h1><?php esc_html_e( 'Rating Criteria', 'rosette-reviews' ); ?></h1>
 
 			<?php foreach ( $this->notices as $notice ) : ?>
 				<div class="notice notice-<?php echo 'error' === $notice['type'] ? 'error' : 'success'; ?> is-dismissible">
@@ -154,12 +154,12 @@ class CriteriaPage implements Registerable {
 			<?php endforeach; ?>
 
 			<div class="ndvr-card">
-				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Active criteria', 'ndv-reviews' ); ?></h2></div>
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Active criteria', 'rosette-reviews' ); ?></h2></div>
 				<p class="description">
 					<?php
 					printf(
 						/* translators: 1: active count, 2: max allowed. */
-						esc_html__( 'Customers rate each active criterion when leaving a review. Active: %1$d of %2$d.', 'ndv-reviews' ),
+						esc_html__( 'Customers rate each active criterion when leaving a review. Active: %1$d of %2$d.', 'rosette-reviews' ),
 						(int) $active,
 						(int) $max
 					);
@@ -169,33 +169,33 @@ class CriteriaPage implements Registerable {
 				<table class="widefat striped">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Name', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Status', 'ndv-reviews' ); ?></th>
-							<th><?php esc_html_e( 'Actions', 'ndv-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Name', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Status', 'rosette-reviews' ); ?></th>
+							<th><?php esc_html_e( 'Actions', 'rosette-reviews' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php if ( empty( $all ) ) : ?>
-							<tr><td colspan="3"><?php esc_html_e( 'No criteria yet.', 'ndv-reviews' ); ?></td></tr>
+							<tr><td colspan="3"><?php esc_html_e( 'No criteria yet.', 'rosette-reviews' ); ?></td></tr>
 						<?php endif; ?>
 						<?php foreach ( $all as $criterion ) : ?>
 							<tr>
 								<td><?php echo esc_html( $criterion->name ); ?></td>
-								<td><?php echo esc_html( 'active' === $criterion->status ? __( 'Active', 'ndv-reviews' ) : __( 'Inactive', 'ndv-reviews' ) ); ?></td>
+								<td><?php echo esc_html( 'active' === $criterion->status ? __( 'Active', 'rosette-reviews' ) : __( 'Inactive', 'rosette-reviews' ) ); ?></td>
 								<td>
 									<form method="post" style="display:inline;">
 										<?php wp_nonce_field( self::NONCE ); ?>
 										<input type="hidden" name="ndvr_id" value="<?php echo esc_attr( $criterion->id ); ?>" />
 										<input type="hidden" name="ndvr_status" value="<?php echo 'active' === $criterion->status ? 'inactive' : 'active'; ?>" />
 										<button type="submit" name="ndvr_criteria_do" value="toggle" class="button button-small">
-											<?php echo esc_html( 'active' === $criterion->status ? __( 'Deactivate', 'ndv-reviews' ) : __( 'Activate', 'ndv-reviews' ) ); ?>
+											<?php echo esc_html( 'active' === $criterion->status ? __( 'Deactivate', 'rosette-reviews' ) : __( 'Activate', 'rosette-reviews' ) ); ?>
 										</button>
 									</form>
-									<form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Delete this criterion and its scores?', 'ndv-reviews' ) ); ?>');">
+									<form method="post" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Delete this criterion and its scores?', 'rosette-reviews' ) ); ?>');">
 										<?php wp_nonce_field( self::NONCE ); ?>
 										<input type="hidden" name="ndvr_id" value="<?php echo esc_attr( $criterion->id ); ?>" />
 										<button type="submit" name="ndvr_criteria_do" value="delete" class="button button-small button-link-delete">
-											<?php esc_html_e( 'Delete', 'ndv-reviews' ); ?>
+											<?php esc_html_e( 'Delete', 'rosette-reviews' ); ?>
 										</button>
 									</form>
 								</td>
@@ -206,7 +206,7 @@ class CriteriaPage implements Registerable {
 			</div>
 
 			<div class="ndvr-card">
-				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Add a criterion', 'ndv-reviews' ); ?></h2></div>
+				<div class="ndvr-card-header"><h2><?php esc_html_e( 'Add a criterion', 'rosette-reviews' ); ?></h2></div>
 
 				<?php if ( $at_cap ) : ?>
 					<div class="notice notice-info inline">
@@ -214,7 +214,7 @@ class CriteriaPage implements Registerable {
 							<?php
 							printf(
 								/* translators: %d: max criteria. */
-								esc_html__( 'The free version supports up to %d active criteria. NDV Reviews Pro removes this limit.', 'ndv-reviews' ),
+								esc_html__( 'The free version supports up to %d active criteria. Rosette Reviews Pro removes this limit.', 'rosette-reviews' ),
 								(int) $max
 							);
 							?>
@@ -223,9 +223,9 @@ class CriteriaPage implements Registerable {
 				<?php else : ?>
 					<form method="post">
 						<?php wp_nonce_field( self::NONCE ); ?>
-						<input type="text" name="ndvr_name" required maxlength="191" placeholder="<?php esc_attr_e( 'e.g. Comfort', 'ndv-reviews' ); ?>" />
+						<input type="text" name="ndvr_name" required maxlength="191" placeholder="<?php esc_attr_e( 'e.g. Comfort', 'rosette-reviews' ); ?>" />
 						<button type="submit" name="ndvr_criteria_do" value="add" class="button button-primary">
-							<?php esc_html_e( 'Add criterion', 'ndv-reviews' ); ?>
+							<?php esc_html_e( 'Add criterion', 'rosette-reviews' ); ?>
 						</button>
 					</form>
 				<?php endif; ?>

@@ -1,7 +1,7 @@
 # Phase 5 — Pro Foundation {badge:wip:CODE-COMPLETE}
 
 > **Goal (build-plan §15):** Pro plugin bootstrap, license provider + feature flags, unlimited criteria, video reviews, rating styles, anonymous/highlight/country, admin reply.
-> Pro lives in a **separate private repository** (`ndv-reviews-pro`) and is installed as its own plugin.
+> Pro lives in a **separate private repository** (`rosette-reviews-pro`) and is installed as its own plugin.
 
 ## Architecture — the free ↔ Pro boundary
 

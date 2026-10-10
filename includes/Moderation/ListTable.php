@@ -83,12 +83,12 @@ class ListTable extends \WP_List_Table {
 	public function get_columns() {
 		return array(
 			'cb'      => '<input type="checkbox" />',
-			'author'  => __( 'Author', 'ndv-reviews' ),
-			'rating'  => __( 'Rating', 'ndv-reviews' ),
-			'review'  => __( 'Review', 'ndv-reviews' ),
-			'product' => __( 'Product', 'ndv-reviews' ),
-			'media'   => __( 'Photos', 'ndv-reviews' ),
-			'date'    => __( 'Date', 'ndv-reviews' ),
+			'author'  => __( 'Author', 'rosette-reviews' ),
+			'rating'  => __( 'Rating', 'rosette-reviews' ),
+			'review'  => __( 'Review', 'rosette-reviews' ),
+			'product' => __( 'Product', 'rosette-reviews' ),
+			'media'   => __( 'Photos', 'rosette-reviews' ),
+			'date'    => __( 'Date', 'rosette-reviews' ),
 		);
 	}
 
@@ -101,11 +101,11 @@ class ListTable extends \WP_List_Table {
 		$base    = menu_page_url( $this->page_slug, false );
 		$current = $this->current_status();
 		$views   = array(
-			'all'       => __( 'All', 'ndv-reviews' ),
-			'moderated' => __( 'Pending', 'ndv-reviews' ),
-			'approved'  => __( 'Approved', 'ndv-reviews' ),
-			'spam'      => __( 'Spam', 'ndv-reviews' ),
-			'trash'     => __( 'Trash', 'ndv-reviews' ),
+			'all'       => __( 'All', 'rosette-reviews' ),
+			'moderated' => __( 'Pending', 'rosette-reviews' ),
+			'approved'  => __( 'Approved', 'rosette-reviews' ),
+			'spam'      => __( 'Spam', 'rosette-reviews' ),
+			'trash'     => __( 'Trash', 'rosette-reviews' ),
 		);
 
 		$out = array();
@@ -127,22 +127,22 @@ class ListTable extends \WP_List_Table {
 		$view = $this->current_status();
 		if ( 'trash' === $view ) {
 			return array(
-				'untrash' => __( 'Restore', 'ndv-reviews' ),
-				'delete'  => __( 'Delete permanently', 'ndv-reviews' ),
+				'untrash' => __( 'Restore', 'rosette-reviews' ),
+				'delete'  => __( 'Delete permanently', 'rosette-reviews' ),
 			);
 		}
 		if ( 'spam' === $view ) {
 			return array(
-				'unspam' => __( 'Not spam', 'ndv-reviews' ),
-				'delete' => __( 'Delete permanently', 'ndv-reviews' ),
+				'unspam' => __( 'Not spam', 'rosette-reviews' ),
+				'delete' => __( 'Delete permanently', 'rosette-reviews' ),
 			);
 		}
 
 		return array(
-			'approve'   => __( 'Approve', 'ndv-reviews' ),
-			'unapprove' => __( 'Unapprove', 'ndv-reviews' ),
-			'spam'      => __( 'Mark as spam', 'ndv-reviews' ),
-			'trash'     => __( 'Move to trash', 'ndv-reviews' ),
+			'approve'   => __( 'Approve', 'rosette-reviews' ),
+			'unapprove' => __( 'Unapprove', 'rosette-reviews' ),
+			'spam'      => __( 'Mark as spam', 'rosette-reviews' ),
+			'trash'     => __( 'Move to trash', 'rosette-reviews' ),
 		);
 	}
 
@@ -163,14 +163,14 @@ class ListTable extends \WP_List_Table {
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		?>
 		<div class="alignleft actions">
-			<input type="number" name="product_id" value="<?php echo $product ? esc_attr( $product ) : ''; ?>" placeholder="<?php esc_attr_e( 'Product ID', 'ndv-reviews' ); ?>" style="width:110px;" />
+			<input type="number" name="product_id" value="<?php echo $product ? esc_attr( $product ) : ''; ?>" placeholder="<?php esc_attr_e( 'Product ID', 'rosette-reviews' ); ?>" style="width:110px;" />
 			<select name="star">
-				<option value="0"><?php esc_html_e( 'All ratings', 'ndv-reviews' ); ?></option>
+				<option value="0"><?php esc_html_e( 'All ratings', 'rosette-reviews' ); ?></option>
 				<?php for ( $s = 5; $s >= 1; $s-- ) : ?>
 					<option value="<?php echo esc_attr( $s ); ?>" <?php selected( $star, $s ); ?>><?php echo esc_html( $s ); ?> ★</option>
 				<?php endfor; ?>
 			</select>
-			<?php submit_button( __( 'Filter', 'ndv-reviews' ), '', 'filter_action', false ); ?>
+			<?php submit_button( __( 'Filter', 'rosette-reviews' ), '', 'filter_action', false ); ?>
 		</div>
 		<?php
 	}
@@ -254,29 +254,29 @@ class ListTable extends \WP_List_Table {
 	 */
 	public function column_author( $item ) {
 		$id      = (int) $item->comment_ID;
-		$name    = $item->comment_author ? $item->comment_author : __( 'Anonymous', 'ndv-reviews' );
+		$name    = $item->comment_author ? $item->comment_author : __( 'Anonymous', 'rosette-reviews' );
 		$actions = array();
 		$status  = (string) $item->comment_approved;
 
 		if ( 'trash' === $status || 'spam' === $status ) {
 			if ( 'trash' === $status ) {
-				$actions['untrash'] = $this->action_link( 'untrash', $id, __( 'Restore', 'ndv-reviews' ) );
+				$actions['untrash'] = $this->action_link( 'untrash', $id, __( 'Restore', 'rosette-reviews' ) );
 			} else {
-				$actions['unspam'] = $this->action_link( 'unspam', $id, __( 'Not spam', 'ndv-reviews' ) );
+				$actions['unspam'] = $this->action_link( 'unspam', $id, __( 'Not spam', 'rosette-reviews' ) );
 			}
-			$actions['delete'] = $this->action_link( 'delete', $id, __( 'Delete permanently', 'ndv-reviews' ) );
+			$actions['delete'] = $this->action_link( 'delete', $id, __( 'Delete permanently', 'rosette-reviews' ) );
 
 			return '<strong>' . esc_html( $name ) . '</strong><br><span class="ndvr-email">' . esc_html( $item->comment_author_email ) . '</span>' . $this->row_actions( $actions );
 		}
 
 		if ( '1' !== $status ) {
-			$actions['approve'] = $this->action_link( 'approve', $id, __( 'Approve', 'ndv-reviews' ) );
+			$actions['approve'] = $this->action_link( 'approve', $id, __( 'Approve', 'rosette-reviews' ) );
 		} else {
-			$actions['unapprove'] = $this->action_link( 'unapprove', $id, __( 'Unapprove', 'ndv-reviews' ) );
+			$actions['unapprove'] = $this->action_link( 'unapprove', $id, __( 'Unapprove', 'rosette-reviews' ) );
 		}
-		$actions['edit']  = sprintf( '<a href="%s">%s</a>', esc_url( $this->edit_url( $id ) ), esc_html__( 'Edit', 'ndv-reviews' ) );
-		$actions['spam']  = $this->action_link( 'spam', $id, __( 'Spam', 'ndv-reviews' ) );
-		$actions['trash'] = $this->action_link( 'trash', $id, __( 'Trash', 'ndv-reviews' ) );
+		$actions['edit']  = sprintf( '<a href="%s">%s</a>', esc_url( $this->edit_url( $id ) ), esc_html__( 'Edit', 'rosette-reviews' ) );
+		$actions['spam']  = $this->action_link( 'spam', $id, __( 'Spam', 'rosette-reviews' ) );
+		$actions['trash'] = $this->action_link( 'trash', $id, __( 'Trash', 'rosette-reviews' ) );
 
 		return '<strong>' . esc_html( $name ) . '</strong><br><span class="ndvr-email">' . esc_html( $item->comment_author_email ) . '</span>' . $this->row_actions( $actions );
 	}

@@ -19,13 +19,13 @@ jobs:
       - name: Build clean plugin tree
         run: |
           mkdir -p build
-          git archive --format=tar --prefix=ndv-reviews/ HEAD | tar -x -C build
-          ls -la build/ndv-reviews
+          git archive --format=tar --prefix=rosette-reviews/ HEAD | tar -x -C build
+          ls -la build/rosette-reviews
 
       - name: Run Plugin Check
         uses: wordpress/plugin-check-action@v1
         with:
-          build-dir: ./build/ndv-reviews
+          build-dir: ./build/rosette-reviews
           # Errors fail the job; warnings are reported but non-blocking.
           categories: |
             general

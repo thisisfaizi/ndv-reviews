@@ -2,8 +2,8 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: NDV Reviews – Product Reviews for WooCommerce 1.0.0\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/ndv-reviews\n"
+"Project-Id-Version: Rosette Reviews – Product Reviews for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/rosette-reviews\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -12,30 +12,30 @@ msgstr ""
 "POT-Creation-Date: 2026-10-08T05:23:36+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
-"X-Domain: ndv-reviews\n"
+"X-Domain: rosette-reviews\n"
 
 #. Plugin Name of the plugin
-#: ndv-reviews.php
-msgid "NDV Reviews – Product Reviews for WooCommerce"
+#: rosette-reviews.php
+msgid "Rosette Reviews – Product Reviews for WooCommerce"
 msgstr ""
 
 #. Plugin URI of the plugin
-#: ndv-reviews.php
-msgid "https://nowdigiverse.com/ndv-reviews"
+#: rosette-reviews.php
+msgid "https://nowdigiverse.com/rosette-reviews"
 msgstr ""
 
 #. Description of the plugin
-#: ndv-reviews.php
+#: rosette-reviews.php
 msgid "Reliable, self-hosted reviews for WooCommerce — multi-criteria ratings, photo reviews, working reminders, and rich schema. No account or external service required."
 msgstr ""
 
 #. Author of the plugin
-#: ndv-reviews.php
+#: rosette-reviews.php
 msgid "Nowdigiverse"
 msgstr ""
 
 #. Author URI of the plugin
-#: ndv-reviews.php
+#: rosette-reviews.php
 msgid "https://nowdigiverse.com"
 msgstr ""
 
@@ -125,7 +125,7 @@ msgstr ""
 #. translators: %d: max criteria.
 #: includes/Admin/CriteriaPage.php:217
 #, php-format
-msgid "The free version supports up to %d active criteria. NDV Reviews Pro removes this limit."
+msgid "The free version supports up to %d active criteria. Rosette Reviews Pro removes this limit."
 msgstr ""
 
 #: includes/Admin/CriteriaPage.php:226
@@ -142,7 +142,7 @@ msgstr ""
 #: includes/Integrations/Elementor/Module.php:69
 #: includes/Privacy/Privacy.php:84
 #: includes/Privacy/Privacy.php:99
-msgid "NDV Reviews"
+msgid "Rosette Reviews"
 msgstr ""
 
 #: includes/Admin/DashboardPage.php:77
@@ -899,7 +899,7 @@ msgid "Off: add no review schema"
 msgstr ""
 
 #: includes/Admin/SettingsPage.php:242
-msgid "Delete all NDV Reviews data when the plugin is uninstalled"
+msgid "Delete all Rosette Reviews data when the plugin is uninstalled"
 msgstr ""
 
 #: includes/Admin/ToolsPage.php:101
@@ -945,7 +945,7 @@ msgid "Import native WooCommerce reviews"
 msgstr ""
 
 #: includes/Admin/ToolsPage.php:215
-msgid "Enrich existing WooCommerce reviews with NDV Reviews data (verified status, helpful counter, aggregates). Safe to run more than once."
+msgid "Enrich existing WooCommerce reviews with Rosette Reviews data (verified status, helpful counter, aggregates). Safe to run more than once."
 msgstr ""
 
 #: includes/Admin/ToolsPage.php:218
@@ -1631,7 +1631,7 @@ msgid "Criteria label color"
 msgstr ""
 
 #: includes/Integrations/Widgets/MarqueeWidget.php:25
-msgid "NDV Reviews: Marquee"
+msgid "Rosette Reviews: Marquee"
 msgstr ""
 
 #: includes/Integrations/Widgets/MarqueeWidget.php:26
@@ -1660,7 +1660,7 @@ msgid "Minimum rating:"
 msgstr ""
 
 #: includes/Integrations/Widgets/RatingBadgeWidget.php:25
-msgid "NDV Reviews: Rating Badge"
+msgid "Rosette Reviews: Rating Badge"
 msgstr ""
 
 #: includes/Integrations/Widgets/RatingBadgeWidget.php:26
@@ -1673,7 +1673,7 @@ msgid "Product ID (0 = current):"
 msgstr ""
 
 #: includes/Integrations/Widgets/RecentReviewsWidget.php:26
-msgid "NDV Reviews: Recent Reviews"
+msgid "Rosette Reviews: Recent Reviews"
 msgstr ""
 
 #: includes/Integrations/Widgets/RecentReviewsWidget.php:27
@@ -1686,7 +1686,7 @@ msgstr ""
 
 #: includes/Integrations/Widgets/SummaryWidget.php:25
 #: assets/js/blocks.js:70
-msgid "NDV Reviews: Summary"
+msgid "Rosette Reviews: Summary"
 msgstr ""
 
 #: includes/Integrations/Widgets/SummaryWidget.php:26
@@ -1694,7 +1694,7 @@ msgid "Rating summary for a product."
 msgstr ""
 
 #: includes/Integrations/Widgets/TopRatedWidget.php:25
-msgid "NDV Reviews: Top-Rated Products"
+msgid "Rosette Reviews: Top-Rated Products"
 msgstr ""
 
 #: includes/Integrations/Widgets/TopRatedWidget.php:26
@@ -1868,7 +1868,7 @@ msgid "Back"
 msgstr ""
 
 #: includes/Plugin.php:526
-msgid "NDV Reviews requires WooCommerce to be installed and active."
+msgid "Rosette Reviews requires WooCommerce to be installed and active."
 msgstr ""
 
 #: includes/Privacy/Privacy.php:152
@@ -1939,11 +1939,11 @@ msgid "Open this review"
 msgstr ""
 
 #: includes/Requests/AdminNotify.php:174
-msgid "You can change or turn off these emails under NDV Reviews > Review Reminders."
+msgid "You can change or turn off these emails under Rosette Reviews > Review Reminders."
 msgstr ""
 
 #: includes/Requests/HealthCheck.php:95
-msgid "NDV Reviews: review reminders are not being sent on time."
+msgid "Rosette Reviews: review reminders are not being sent on time."
 msgstr ""
 
 #: includes/Requests/HealthCheck.php:99
@@ -2290,11 +2290,11 @@ msgid "Product ID (0 = current product)"
 msgstr ""
 
 #: assets/js/blocks.js:71
-msgid "NDV Reviews: Stars"
+msgid "Rosette Reviews: Stars"
 msgstr ""
 
 #: assets/js/blocks.js:72
-msgid "NDV Reviews: Form"
+msgid "Rosette Reviews: Form"
 msgstr ""
 
 #: assets/js/blocks.js:72
@@ -2302,11 +2302,11 @@ msgid "Form"
 msgstr ""
 
 #: assets/js/blocks.js:76
-msgid "NDV Reviews: Reviews"
+msgid "Rosette Reviews: Reviews"
 msgstr ""
 
 #: assets/js/blocks.js:126
-msgid "NDV Reviews: Reviews Marquee"
+msgid "Rosette Reviews: Reviews Marquee"
 msgstr ""
 
 #: assets/js/blocks.js:143

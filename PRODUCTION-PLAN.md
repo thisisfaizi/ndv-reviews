@@ -1,4 +1,4 @@
-# NDV Reviews — Marquee Overhaul + Production-Grade Plan
+# Rosette Reviews — Marquee Overhaul + Production-Grade Plan
 
 Status: **PLAN ONLY — no code yet.** Sourced from three code audits (marquee deep-dive, free-plugin
 audit, Pro-plugin audit) run 2026-07. Severity: 🔴 Critical · 🟠 High · 🟡 Medium · ⚪ Low.

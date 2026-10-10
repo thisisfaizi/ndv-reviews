@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name:       NDV Reviews
- * Plugin URI:        https://nowdigiverse.com/ndv-reviews
+ * Plugin Name:       Rosette Reviews
+ * Plugin URI:        https://nowdigiverse.com/rosette-reviews
  * Description:        Reliable, self-hosted reviews for WooCommerce — multi-criteria ratings, photo reviews, working reminders, and rich schema. No account or external service required.
  * Version:           1.0.0
  * Requires at least: 6.0
@@ -10,13 +10,13 @@
  * Author URI:        https://nowdigiverse.com
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       ndv-reviews
+ * Text Domain:       rosette-reviews
  * Domain Path:       /languages
  * Requires Plugins:  woocommerce
  * WC requires at least: 8.0
  * WC tested up to:      11.2
  *
- * NDV Reviews is free software: you can redistribute it and/or modify it under
+ * Rosette Reviews is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 2 of the License, or (at your option) any later version.
  *
@@ -33,9 +33,9 @@ defined( 'ABSPATH' ) || exit;
  */
 define( 'NDVR_VERSION', '1.0.0' );
 define( 'NDVR_DB_VERSION', '2' );
-define( 'NDVR_SLUG', 'ndv-reviews' );
-define( 'NDVR_NAME', 'NDV Reviews' );
-define( 'NDVR_TEXTDOMAIN', 'ndv-reviews' );
+define( 'NDVR_SLUG', 'rosette-reviews' );
+define( 'NDVR_NAME', 'Rosette Reviews' );
+define( 'NDVR_TEXTDOMAIN', 'rosette-reviews' );
 define( 'NDVR_TABLE_PREFIX', 'ndvr_' );
 define( 'NDVR_OPTION_SETTINGS', 'ndv_reviews_settings' );
 define( 'NDVR_OPTION_DB_VERSION', 'ndv_reviews_db_version' );

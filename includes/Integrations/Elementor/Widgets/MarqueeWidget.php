@@ -33,7 +33,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 	 * @return string
 	 */
 	public function get_title() {
-		return __( 'Reviews Marquee', 'ndv-reviews' );
+		return __( 'Reviews Marquee', 'rosette-reviews' );
 	}
 
 	/**
@@ -89,23 +89,23 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 	 * @return void
 	 */
 	protected function register_controls() {
-		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'ndv-reviews' ) ) );
+		$this->start_controls_section( 'content', array( 'label' => __( 'Content', 'rosette-reviews' ) ) );
 		$this->add_control(
 			'source',
 			array(
-				'label'   => __( 'Source', 'ndv-reviews' ),
+				'label'   => __( 'Source', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::SELECT,
 				'default' => 'all',
 				'options' => array(
-					'all'      => __( 'All products', 'ndv-reviews' ),
-					'category' => __( 'Category', 'ndv-reviews' ),
+					'all'      => __( 'All products', 'rosette-reviews' ),
+					'category' => __( 'Category', 'rosette-reviews' ),
 				),
 			)
 		);
 		$this->add_control(
 			'category',
 			array(
-				'label'     => __( 'Category (slug or ID)', 'ndv-reviews' ),
+				'label'     => __( 'Category (slug or ID)', 'rosette-reviews' ),
 				'type'      => \Elementor\Controls_Manager::TEXT,
 				'condition' => array( 'source' => 'category' ),
 			)
@@ -113,19 +113,19 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'rows',
 			array(
-				'label'   => __( 'Rows', 'ndv-reviews' ),
+				'label'   => __( 'Rows', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::SELECT,
 				'default' => '1',
 				'options' => array(
-					'1' => __( 'Single row', 'ndv-reviews' ),
-					'2' => __( 'Two rows (crisscross)', 'ndv-reviews' ),
+					'1' => __( 'Single row', 'rosette-reviews' ),
+					'2' => __( 'Two rows (crisscross)', 'rosette-reviews' ),
 				),
 			)
 		);
 		$this->add_control(
 			'min_rating',
 			array(
-				'label'   => __( 'Minimum rating', 'ndv-reviews' ),
+				'label'   => __( 'Minimum rating', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::NUMBER,
 				'default' => 0,
 				'min'     => 0,
@@ -135,7 +135,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'limit',
 			array(
-				'label'   => __( 'Number of reviews', 'ndv-reviews' ),
+				'label'   => __( 'Number of reviews', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::NUMBER,
 				'default' => 20,
 			)
@@ -143,7 +143,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'speed',
 			array(
-				'label'   => __( 'Speed (seconds)', 'ndv-reviews' ),
+				'label'   => __( 'Speed (seconds)', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::NUMBER,
 				'default' => 40,
 			)
@@ -151,21 +151,21 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'direction',
 			array(
-				'label'   => __( 'Direction', 'ndv-reviews' ),
+				'label'   => __( 'Direction', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::SELECT,
 				'default' => 'left',
 				'options' => array(
-					'left'  => __( 'Left', 'ndv-reviews' ),
-					'right' => __( 'Right', 'ndv-reviews' ),
-					'up'    => __( 'Up (vertical)', 'ndv-reviews' ),
-					'down'  => __( 'Down (vertical)', 'ndv-reviews' ),
+					'left'  => __( 'Left', 'rosette-reviews' ),
+					'right' => __( 'Right', 'rosette-reviews' ),
+					'up'    => __( 'Up (vertical)', 'rosette-reviews' ),
+					'down'  => __( 'Down (vertical)', 'rosette-reviews' ),
 				),
 			)
 		);
 		$this->add_control(
 			'gap',
 			array(
-				'label'   => __( 'Gap (px)', 'ndv-reviews' ),
+				'label'   => __( 'Gap (px)', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::NUMBER,
 				'default' => 16,
 				'min'     => 0,
@@ -175,7 +175,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'pause',
 			array(
-				'label'   => __( 'Pause on hover', 'ndv-reviews' ),
+				'label'   => __( 'Pause on hover', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::SWITCHER,
 				'default' => 'yes',
 			)
@@ -183,7 +183,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'verified',
 			array(
-				'label'   => __( 'Verified buyers only', 'ndv-reviews' ),
+				'label'   => __( 'Verified buyers only', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::SWITCHER,
 				'default' => '',
 			)
@@ -191,7 +191,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'with_media',
 			array(
-				'label'   => __( 'With photos only', 'ndv-reviews' ),
+				'label'   => __( 'With photos only', 'rosette-reviews' ),
 				'type'    => \Elementor\Controls_Manager::SWITCHER,
 				'default' => '',
 			)
@@ -201,7 +201,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->start_controls_section(
 			'style',
 			array(
-				'label' => __( 'Style', 'ndv-reviews' ),
+				'label' => __( 'Style', 'rosette-reviews' ),
 				'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
 			)
 		);
@@ -223,7 +223,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'card_radius',
 			array(
-				'label'      => __( 'Card border radius', 'ndv-reviews' ),
+				'label'      => __( 'Card border radius', 'rosette-reviews' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array( 'px' => array( 'min' => 0, 'max' => 40 ) ),
@@ -233,7 +233,7 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'card_padding',
 			array(
-				'label'      => __( 'Card padding', 'ndv-reviews' ),
+				'label'      => __( 'Card padding', 'rosette-reviews' ),
 				'type'       => \Elementor\Controls_Manager::DIMENSIONS,
 				'size_units' => array( 'px', 'em', '%' ),
 				'selectors'  => array( '{{WRAPPER}} .ndvr-marquee-card' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};' ),
@@ -249,18 +249,18 @@ class MarqueeWidget extends \Elementor\Widget_Base {
 		$this->add_control(
 			'card_width',
 			array(
-				'label'      => __( 'Card width', 'ndv-reviews' ),
+				'label'      => __( 'Card width', 'rosette-reviews' ),
 				'type'       => \Elementor\Controls_Manager::SLIDER,
 				'size_units' => array( 'px' ),
 				'range'      => array( 'px' => array( 'min' => 180, 'max' => 480 ) ),
 				'selectors'  => array( '{{WRAPPER}} .ndvr-marquee-card' => 'width: {{SIZE}}{{UNIT}};' ),
 			)
 		);
-		$this->add_color_control( 'name_color', __( 'Reviewer name color', 'ndv-reviews' ), '.ndvr-marquee-name' );
+		$this->add_color_control( 'name_color', __( 'Reviewer name color', 'rosette-reviews' ), '.ndvr-marquee-name' );
 		$this->add_typography_control( 'name_typography', '.ndvr-marquee-name' );
-		$this->add_color_control( 'verified_color', __( 'Verified badge color', 'ndv-reviews' ), '.ndvr-marquee-verified' );
-		$this->add_color_control( 'stars_color', __( 'Stars color', 'ndv-reviews' ), array( '.ndvr-marquee-stars .ndvr-star-full', '.ndvr-marquee-stars .ndvr-star-half::after' ) );
-		$this->add_color_control( 'body_color', __( 'Review text color', 'ndv-reviews' ), '.ndvr-marquee-body' );
+		$this->add_color_control( 'verified_color', __( 'Verified badge color', 'rosette-reviews' ), '.ndvr-marquee-verified' );
+		$this->add_color_control( 'stars_color', __( 'Stars color', 'rosette-reviews' ), array( '.ndvr-marquee-stars .ndvr-star-full', '.ndvr-marquee-stars .ndvr-star-half::after' ) );
+		$this->add_color_control( 'body_color', __( 'Review text color', 'rosette-reviews' ), '.ndvr-marquee-body' );
 		$this->add_typography_control( 'body_typography', '.ndvr-marquee-body' );
 		$this->end_controls_section();
 	}

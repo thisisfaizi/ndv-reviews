@@ -31,7 +31,7 @@ class Html {
 		$out = '<span class="ndvr-stars-display" role="img" aria-label="' . esc_attr(
 			sprintf(
 				/* translators: %s: rating out of 5. */
-				__( 'Rated %s out of 5', 'ndv-reviews' ),
+				__( 'Rated %s out of 5', 'rosette-reviews' ),
 				number_format_i18n( $rating, 1 )
 			)
 		) . '">';

@@ -261,7 +261,31 @@ class RequestRepository {
 		}
 
 		$wpdb->update( Db::table( 'requests' ), $fields, array( 'id' => absint( $id ) ), $format, array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+		// A request that was not sent gives its dedupe key back, so a later
+		// legitimate request (a follow-up after re-enabling, RR-06) can be
+		// queued. NULL is set with a separate query (wpdb formats can't write NULL).
+		if ( 'cancelled' === $status ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$wpdb->query( $wpdb->prepare( 'UPDATE `' . Db::table( 'requests' ) . '` SET dedupe_key = NULL WHERE id = %d', absint( $id ) ) );
+		}
 		$this->flush_stats();
+	}
+
+	/**
+	 * Whether an order already has a sent (or converted) request of a source.
+	 *
+	 * @param int    $order_id Order id.
+	 * @param string $source   auto|manual|followup|campaign.
+	 * @param string $origin   free|pro.
+	 * @return bool
+	 */
+	public function has_sent( $order_id, $source, $origin = 'free' ) {
+		global $wpdb;
+		$table = Db::table( 'requests' );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (bool) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM `{$table}` WHERE order_id = %d AND source = %s AND origin = %s AND status IN ( 'sent', 'converted' ) LIMIT 1", absint( $order_id ), sanitize_key( $source ), 'pro' === $origin ? 'pro' : 'free' ) );
 	}
 
 	/**

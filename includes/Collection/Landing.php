@@ -171,31 +171,58 @@ class Landing implements Registerable {
 		// resolve() rejects. Show the thank-you state for it rather than
 		// "expired"; submissions stay blocked because handle_submit() uses
 		// resolve().
+		$lang_row = $row;
 		if ( ! $row ) {
 			$any = $this->tokens->lookup( $raw );
 			if ( $any && 'used' === $any->status ) {
-				$valid = true;
+				$valid    = true;
+				$lang_row = $any;
 			}
 		}
 
-		$html = View::render(
-			'magic-landing.php',
-			array(
-				'valid'          => $valid,
-				'token'          => $raw,
-				'products'       => $pending,
-				'criteria'       => $this->criteria->get_active(),
-				'settings'       => $this->settings,
-				'nonce'          => wp_create_nonce( self::NONCE ),
-				'ajax_url'       => admin_url( 'admin-ajax.php' ),
-				'ajax_action'    => self::AJAX_ACTION,
-				'default_author' => $row ? $this->default_author( $row, $request ) : '',
-				'is_test'        => $row && 'test' === $row->type,
-			)
-		);
+		// RR-08: the whole page (head included) speaks the order's language,
+		// even if the link didn't carry it.
+		$lang  = $this->order_lang( $lang_row );
+		$build = function () use ( $valid, $raw, $pending, $row, $request ) {
+			$html = View::render(
+				'magic-landing.php',
+				array(
+					'valid'          => $valid,
+					'token'          => $raw,
+					'products'       => $pending,
+					'criteria'       => $this->criteria->get_active(),
+					'settings'       => $this->settings,
+					'nonce'          => wp_create_nonce( self::NONCE ),
+					'ajax_url'       => admin_url( 'admin-ajax.php' ),
+					'ajax_action'    => self::AJAX_ACTION,
+					'default_author' => $row ? $this->default_author( $row, $request ) : '',
+					'is_test'        => $row && 'test' === $row->type,
+				)
+			);
+			$this->output_page( $html );
+		};
+		\NdvReviews\Plugin::instance()->container()->get( 'multilingual' )->with_locale( $lang['locale'], $build, $lang['code'] );
 
-		$this->output_page( $html );
 		exit;
+	}
+
+	/**
+	 * The language of the order a token belongs to (both '' when unknown).
+	 *
+	 * @param object|null $row Token row.
+	 * @return array{code:string,locale:string}
+	 */
+	private function order_lang( $row ) {
+		$none = array(
+			'code'   => '',
+			'locale' => '',
+		);
+		if ( ! $row || empty( $row->order_id ) || ! function_exists( 'wc_get_order' ) ) {
+			return $none;
+		}
+		$order = wc_get_order( (int) $row->order_id );
+
+		return $order instanceof \WC_Order ? \NdvReviews\Plugin::instance()->container()->get( 'multilingual' )->order_language( $order ) : $none;
 	}
 
 	/**
@@ -261,6 +288,11 @@ class Landing implements Registerable {
 		if ( ! $row ) {
 			wp_send_json_error( array( 'message' => __( 'This link is no longer valid. Please request a fresh one.', 'rosette-reviews' ) ), 410 );
 		}
+		// RR-08: the customer's messages in the order's language. An error
+		// response ends the request; the review itself is stored in the site
+		// language (see below).
+		$lang     = $this->order_lang( $row );
+		$switched = '' !== $lang['locale'] && switch_to_locale( $lang['locale'] );
 
 		if ( 'test' === $row->type ) {
 			wp_send_json_error( array( 'message' => __( 'This is a test link from the store admin. Reviews cannot be submitted from it.', 'rosette-reviews' ) ), 403 );
@@ -327,6 +359,16 @@ class Landing implements Registerable {
 			wp_send_json_error( array( 'message' => __( 'This link is no longer valid. Please request a fresh one.', 'rosette-reviews' ) ), 410 );
 		}
 
+		// Everything a new review sets off (the store's "new review" email,
+		// add-on alerts) runs in the site language: switch back as it fires.
+		// Validation messages before that stay in the customer's language.
+		$restore = static function () use ( &$switched ) {
+			if ( $switched ) {
+				restore_previous_locale();
+				$switched = false;
+			}
+		};
+		add_action( 'ndv-reviews/review_created', $restore, PHP_INT_MIN );
 		$result = $this->reviews->create(
 			array(
 				'product_id' => $product_id,
@@ -344,6 +386,7 @@ class Landing implements Registerable {
 				'approved'   => 0,
 			)
 		);
+		remove_action( 'ndv-reviews/review_created', $restore, PHP_INT_MIN );
 
 		if ( is_wp_error( $result ) ) {
 			// Delete orphaned uploads when body validation fails (no media flood),
@@ -362,6 +405,7 @@ class Landing implements Registerable {
 			update_comment_meta( $result, 'verified', 1 );
 		}
 
+		call_user_func( $restore );
 		$this->tokens->mark_product( (int) $row->id, $product_id, 'reviewed' );
 
 		// The first review through a request's link converts it.
@@ -375,13 +419,16 @@ class Landing implements Registerable {
 			do_action( 'ndv-reviews/request_converted', (int) $request->id, (int) $result );
 		}
 
-		wp_send_json_success(
-			array(
-				'message' => 'approved' === wp_get_comment_status( $result )
+		$approved = 'approved' === wp_get_comment_status( $result );
+		$message  = \NdvReviews\Plugin::instance()->container()->get( 'multilingual' )->with_locale(
+			$lang['locale'],
+			static function () use ( $approved ) {
+				return $approved
 					? __( 'Thank you. Your review is published.', 'rosette-reviews' )
-					: __( 'Thank you. Your review was submitted and is awaiting moderation.', 'rosette-reviews' ),
-			)
+					: __( 'Thank you. Your review was submitted and is awaiting moderation.', 'rosette-reviews' );
+			}
 		);
+		wp_send_json_success( array( 'message' => $message ) );
 	}
 
 	/**
@@ -526,7 +573,7 @@ class Landing implements Registerable {
 	<main class="ndvr-collect-main">
 		<?php echo $inner; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 	</main>
-	<?php
+		<?php
 		wp_enqueue_script( 'ndvr-collect', NDVR_URL . 'assets/js/collect.js', array(), NDVR_VERSION, true );
 
 		/**
@@ -536,7 +583,7 @@ class Landing implements Registerable {
 		 * @param string[] $handles Script handles.
 		 */
 		wp_print_scripts( self::registered_handles( (array) apply_filters( 'ndv-reviews/landing_script_handles', array( 'ndvr-collect' ) ), 'script' ) );
-	?>
+		?>
 </body>
 </html>
 		<?php

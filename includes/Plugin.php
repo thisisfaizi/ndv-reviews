@@ -308,9 +308,23 @@ final class Plugin {
 		);
 
 		$c->set(
+			'multilingual',
+			static function ( $c ) {
+				return new \NdvReviews\Integrations\Multilingual( $c->get( 'settings' ) );
+			}
+		);
+
+		$c->set(
+			'consent',
+			static function ( $c ) {
+				return new \NdvReviews\Requests\Consent( $c->get( 'settings' ) );
+			}
+		);
+
+		$c->set(
 			'followups',
 			static function ( $c ) {
-				return new \NdvReviews\Requests\Followups( $c->get( 'settings' ), $c->get( 'scheduler' ) );
+				return new \NdvReviews\Requests\Followups( $c->get( 'settings' ), $c->get( 'scheduler' ), $c->get( 'request_repository' ) );
 			}
 		);
 
@@ -508,6 +522,8 @@ final class Plugin {
 			$this->container->get( 'scheduler' ),
 			$this->container->get( 'order_actions' ),
 			$this->container->get( 'followups' ),
+			$this->container->get( 'consent' ),
+			$this->container->get( 'multilingual' ),
 			new \NdvReviews\Requests\Exclusions(),
 			$this->container->get( 'request_tracking' ),
 			$this->container->get( 'transparency' ),

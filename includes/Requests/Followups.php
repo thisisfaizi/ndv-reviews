@@ -40,14 +40,23 @@ class Followups implements Registerable {
 	private $scheduler;
 
 	/**
+	 * Request repository.
+	 *
+	 * @var RequestRepository
+	 */
+	private $requests;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Settings  $settings  Settings.
-	 * @param Scheduler $scheduler Scheduler.
+	 * @param Settings          $settings  Settings.
+	 * @param Scheduler         $scheduler Scheduler.
+	 * @param RequestRepository $requests  Request repository.
 	 */
-	public function __construct( Settings $settings, Scheduler $scheduler ) {
+	public function __construct( Settings $settings, Scheduler $scheduler, RequestRepository $requests ) {
 		$this->settings  = $settings;
 		$this->scheduler = $scheduler;
+		$this->requests  = $requests;
 	}
 
 	/**
@@ -147,6 +156,17 @@ class Followups implements Registerable {
 	 */
 	public function at_send( $eligible, $order, $context ) {
 		$context = is_array( $context ) ? $context : array();
+
+		// A manual request sent before the order reached the reminder status
+		// may already have earned its follow-up: once the customer got a
+		// reminder, the later automatic "first" email would be a third email
+		// arriving after the reminder. It is skipped.
+		if ( 'free' === ( $context['origin'] ?? '' ) && 'auto' === ( $context['source'] ?? '' ) && 1 === (int) ( $context['step'] ?? 1 )
+			&& 'send' === ( $context['stage'] ?? '' ) && ! is_wp_error( $eligible )
+			&& $order instanceof \WC_Order && $this->requests->has_sent( $order->get_id(), 'followup', 'free' ) ) {
+			return new \WP_Error( 'ndvr_already_requested', __( 'The customer already got a review request and a reminder for this order.', 'rosette-reviews' ) );
+		}
+
 		if ( 'free' !== ( $context['origin'] ?? '' ) || 'followup' !== ( $context['source'] ?? '' ) ) {
 			return $eligible;
 		}
@@ -159,7 +179,7 @@ class Followups implements Registerable {
 		}
 
 		$order_id = $order instanceof \WC_Order ? (int) $order->get_id() : 0;
-		$request  = ! empty( $context['request_id'] ) ? \NdvReviews\Plugin::instance()->container()->get( 'request_repository' )->find( (int) $context['request_id'] ) : null;
+		$request  = ! empty( $context['request_id'] ) ? $this->requests->find( (int) $context['request_id'] ) : null;
 
 		/**
 		 * Filter whether a free follow-up reminder is sent.
@@ -186,7 +206,7 @@ class Followups implements Registerable {
 	 */
 	public function transparency_fact( $facts ) {
 		$facts             = is_array( $facts ) ? $facts : array();
-		$facts['followup'] = (bool) $this->settings->get( 'followup_enabled' );
+		$facts['followup'] = (bool) $this->settings->get( 'followup_enabled' ) && (bool) $this->settings->get( 'reminder_enabled' );
 
 		return $facts;
 	}
@@ -296,7 +316,8 @@ class Followups implements Registerable {
 	 * @return void
 	 */
 	public function render_body( $value ) {
-		$default = sprintf( $this->default_texts()['body'], '{store_name}' );
+		/* translators: %s: the default follow-up text. */
+		$default = sprintf( __( "Hi {customer_name},\n\n%s", 'rosette-reviews' ), sprintf( $this->default_texts()['body'], '{store_name}' ) );
 		?>
 		<tr>
 			<th scope="row"><label for="followup_body"><?php esc_html_e( 'Follow-up text', 'rosette-reviews' ); ?></label></th>

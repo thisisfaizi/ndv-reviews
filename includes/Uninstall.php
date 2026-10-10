@@ -40,6 +40,8 @@ final class Uninstall {
 		return array(
 			'options'            => array(
 				'ndv_reviews_settings',
+				'ndv_reviews_consent_enabled_at',
+				'ndv_reviews_ml_strings_hash',
 				'ndv_reviews_db_version',
 				'ndv_reviews_unsubscribed',
 				'ndv_reviews_upgrade_lock',
@@ -77,11 +79,18 @@ final class Uninstall {
 				'_ndvr_review_count',
 				'_ndvr_rating_count',
 			),
-			'order_meta'         => array(),
+			'order_meta'         => array(
+				'_ndvr_review_consent',
+				'_ndvr_review_consent_at',
+				'_ndvr_review_consent_text',
+				'_ndvr_review_consent_via',
+				'_wc_other/ndv-reviews/review-email-consent',
+			),
 			'user_meta'          => array(
 				'ndvr_setup_dismissed',
 				'ndvr_health_notice_dismissed',
 				'ndvr_transparency_notice_dismissed',
+				'_wc_other/ndv-reviews/review-email-consent',
 			),
 			'scheduler_hooks'    => array(
 				'ndvr_send_request',

@@ -373,6 +373,7 @@ class RequestsPage implements Registerable {
 						// RR-06 follow-up rows (card `followup`), then RR-05 exclusions
 						// (card `exclusions`); their save markers follow the table.
 						SettingsFields::render_card_fields( 'reminders', 'followup', $s->all(), false );
+						SettingsFields::render_card_fields( 'reminders', 'consent', $s->all(), false );
 						\NdvReviews\Requests\Exclusions::render_heading();
 						SettingsFields::render_card_fields( 'reminders', 'exclusions', $s->all(), false );
 						?>
@@ -393,6 +394,7 @@ class RequestsPage implements Registerable {
 						</tr>
 					</table>
 					<?php SettingsFields::markers( 'reminders', 'followup' ); ?>
+					<?php SettingsFields::markers( 'reminders', 'consent' ); ?>
 					<?php SettingsFields::markers( 'reminders', 'exclusions' ); ?>
 					<?php \NdvReviews\Requests\Tracking::render_section( $s->all() ); ?>
 					<p>
@@ -401,6 +403,12 @@ class RequestsPage implements Registerable {
 						<button type="submit" class="button" formaction="<?php echo esc_url( admin_url( 'admin-post.php?action=' . self::PREVIEW_ACTION . '&variant=followup' ) ); ?>" formtarget="_blank"><?php esc_html_e( 'Preview follow-up', 'rosette-reviews' ); ?></button>
 					</p>
 				</form>
+				<?php
+				/**
+				 * Fires under the Reminder settings card (the multilingual note, RR-08).
+				 */
+				do_action( 'ndv-reviews/reminders_settings_after' );
+				?>
 			</div>
 
 			<div class="ndvr-card">

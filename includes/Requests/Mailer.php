@@ -163,6 +163,11 @@ class Mailer {
 			return new \WP_Error( 'ndvr_unsubscribed', __( 'Recipient has unsubscribed.', 'rosette-reviews' ) );
 		}
 
+		// RR-07: checkout consent (a recorded refusal blocks in every mode).
+		if ( ! $is_list && $order && ! \NdvReviews\Plugin::instance()->container()->get( 'consent' )->allows( $order ) ) {
+			return new \WP_Error( 'ndvr_no_consent', __( 'Customer didn\'t agree to review emails.', 'rosette-reviews' ) );
+		}
+
 		// RR-05: the customer account has a role the store excludes.
 		if ( ! $is_list && $this->reviewable->is_excluded_customer( $order ) ) {
 			return new \WP_Error( 'ndvr_customer_excluded', __( 'Customer role is excluded from review requests.', 'rosette-reviews' ) );
@@ -266,16 +271,33 @@ class Mailer {
 		if ( $request_id && $this->requests ) {
 			$this->requests->set_token( $request_id, $token['id'] );
 		}
-		$link = $this->tracked_link( $this->build_link( $token['raw'] ), $variant );
+		// RR-08: the email is built in the order's language (the site's default
+		// language when unknown, never the current request's, so an admin retry
+		// never uses the admin's own); wp_mail() runs after the locale is restored.
+		$multilingual = \NdvReviews\Plugin::instance()->container()->get( 'multilingual' );
+		$lang         = $multilingual->send_language( $order );
+		$target       = $lang['locale'];
+		$link         = $this->tracked_link( $this->build_link( $token['raw'], $lang['code'] ), $variant );
 
-		$texts = $this->request_texts(
-			array(
-				'subject' => $this->subject( $order, $link, array(), $variant ),
-				'body'    => $this->body( $order, $products, $link, $email, array(), 'order', $variant ),
-			),
-			$request_id,
-			$order
-		);
+		$this->lang_code = $lang['code'];
+		try {
+			$texts = $multilingual->with_locale(
+				$target,
+				function () use ( $order, $link, $variant, $products, $email, $request_id ) {
+					return $this->request_texts(
+						array(
+							'subject' => $this->subject( $order, $link, array(), $variant ),
+							'body'    => $this->body( $order, $products, $link, $email, array(), 'order', $variant ),
+						),
+						$request_id,
+						$order
+					);
+				},
+				$lang['code']
+			);
+		} finally {
+			$this->lang_code = '';
+		}
 
 		$sent = wp_mail( $email, $texts['subject'], $this->with_pixel( $texts['body'], $request_id ), $this->headers( $email ) );
 
@@ -321,16 +343,30 @@ class Mailer {
 
 		// A list recipient has no order: {order_number} must stay empty, not
 		// show the preview's sample number.
+		// It has no order language either: built in the site's default (RR-08).
+		$multilingual       = \NdvReviews\Plugin::instance()->container()->get( 'multilingual' );
+		$lang               = $multilingual->default_language();
 		$this->list_context = true;
-		$texts              = $this->request_texts(
-			array(
-				'subject' => $this->subject( $order, $link ),
-				'body'    => $this->body( $order, $products, $link, $email, array(), 'list' ),
-			),
-			absint( $request_id ),
-			null
-		);
-		$this->list_context = false;
+		$this->lang_code    = $lang['code'];
+		try {
+			$texts = $multilingual->with_locale(
+				$lang['locale'],
+				function () use ( $order, $link, $products, $email, $request_id ) {
+					return $this->request_texts(
+						array(
+							'subject' => $this->subject( $order, $link ),
+							'body'    => $this->body( $order, $products, $link, $email, array(), 'list' ),
+						),
+						absint( $request_id ),
+						null
+					);
+				},
+				$lang['code']
+			);
+		} finally {
+			$this->list_context = false;
+			$this->lang_code    = '';
+		}
 
 		$sent = wp_mail( $email, $texts['subject'], $this->with_pixel( $texts['body'], absint( $request_id ) ), $this->headers( $email ) );
 
@@ -600,10 +636,13 @@ class Mailer {
 	 * Build the public review-collection URL for a token.
 	 *
 	 * @param string $token Raw token.
+	 * @param string $lang  Language code for a language-aware home URL (RR-08).
 	 * @return string
 	 */
-	public function build_link( $token ) {
-		return add_query_arg( 'ndvr_k', rawurlencode( $token ), home_url( '/' ) );
+	public function build_link( $token, $lang = '' ) {
+		$base = '' !== (string) $lang ? \NdvReviews\Plugin::instance()->container()->get( 'multilingual' )->home_url( (string) $lang ) : home_url( '/' );
+
+		return add_query_arg( 'ndvr_k', rawurlencode( $token ), $base );
 	}
 
 	/**
@@ -633,17 +672,17 @@ class Mailer {
 	 * @return string
 	 */
 	private function subject( $order, $link = '', array $overrides = array(), $variant = 'first' ) {
-		$key    = 'followup' === $variant ? 'followup_subject' : 'subject';
-		$custom = isset( $overrides[ $key ] ) ? $overrides[ $key ] : (string) $this->settings->get( 'followup' === $variant ? 'followup_subject' : 'reminder_subject' );
-		$custom = trim( $custom );
+		$key     = 'followup' === $variant ? 'followup_subject' : 'subject';
+		$setting = 'followup' === $variant ? 'followup_subject' : 'reminder_subject';
+		$custom  = isset( $overrides[ $key ] ) ? $overrides[ $key ] : sanitize_text_field( $this->translated( $setting ) );
+		$custom  = trim( $custom );
 		if ( '' !== $custom ) {
 			// Subjects are plain text: keep merge-tag values off new lines.
 			return trim( preg_replace( '/[\r\n]+/', ' ', $this->replace_tokens( $custom, $order, $link, false ) ) );
 		}
 
 		if ( 'followup' === $variant ) {
-			/* translators: %s: store name. */
-			return sprintf( __( 'A quick reminder: how was your order from %s?', 'rosette-reviews' ), $this->store_name() );
+			return sprintf( \NdvReviews\Plugin::instance()->container()->get( 'followups' )->default_texts()['subject'], $this->store_name() );
 		}
 
 		/* translators: %s: store name. */
@@ -667,7 +706,7 @@ class Mailer {
 	private function body( $order, $products, $link, $email, array $overrides = array(), $context = 'order', $variant = 'first' ) {
 		$followup = 'followup' === $variant;
 		$key      = $followup ? 'followup_body' : 'body';
-		$custom   = isset( $overrides[ $key ] ) ? $overrides[ $key ] : (string) $this->settings->get( $followup ? 'followup_body' : 'reminder_body' );
+		$custom   = isset( $overrides[ $key ] ) ? $overrides[ $key ] : $this->translated( $followup ? 'followup_body' : 'reminder_body' );
 		$custom   = trim( $custom );
 		$intro    = '' !== $custom
 			? wpautop( wp_kses_post( $this->replace_tokens( $custom, $order, $link, true ) ) )
@@ -718,6 +757,36 @@ class Mailer {
 	}
 
 	/**
+	 * Language code of the send being built ('' outside a send).
+	 *
+	 * @var string
+	 */
+	private $lang_code = '';
+
+	/**
+	 * A stored merchant text through `ndv-reviews/translate_setting` (RR-08),
+	 * before merge tags and sanitising, so a translation is cleaned the same
+	 * way as the original.
+	 *
+	 * @param string $key Setting key.
+	 * @return string
+	 */
+	private function translated( $key ) {
+		$value = (string) $this->settings->get( $key, '' );
+
+		/**
+		 * Filter a translatable setting's value (multilingual add-ons).
+		 *
+		 * @param string $value   Stored value.
+		 * @param string $key     Setting key.
+		 * @param string $lang    Language code ('' = current).
+		 */
+		$filtered = apply_filters( 'ndv-reviews/translate_setting', $value, $key, $this->lang_code );
+
+		return is_string( $filtered ) ? $filtered : $value;
+	}
+
+	/**
 	 * The built-in follow-up intro: the first email's greeting rule ("Hi
 	 * {first name}," or "Hello,") and the default follow-up text.
 	 *
@@ -728,8 +797,7 @@ class Mailer {
 		$name     = trim( (string) $order->get_billing_first_name() );
 		/* translators: %s: customer first name. */
 		$greeting = '' !== $name ? sprintf( __( 'Hi %s,', 'rosette-reviews' ), $name ) : __( 'Hello,', 'rosette-reviews' );
-		/* translators: %s: store name. */
-		$text = sprintf( __( 'A few days ago we asked how your order from %s went. If you have a minute, your review helps other shoppers choose.', 'rosette-reviews' ), $this->store_name() );
+		$text = sprintf( \NdvReviews\Plugin::instance()->container()->get( 'followups' )->default_texts()['body'], $this->store_name() );
 
 		return '<h1 style="margin:0 0 8px;font-size:22px;color:#111;">' . esc_html( $greeting ) . '</h1><p style="margin:0 0 16px;">' . esc_html( $text ) . '</p>';
 	}

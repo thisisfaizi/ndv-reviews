@@ -51,6 +51,7 @@ Rosette Reviews replaces the default WooCommerce reviews tab with a review secti
 * GDPR: consent checkbox, and WordPress personal data export and erasure.
 * Q&A (with an add-on that shows questions): the name a shopper gives, their account id, and, if they ask to be emailed when their question is answered, their email address. Exported and erased with the WordPress privacy tools.
 * Reminder results: the request log records when a customer opened the review link and when they left a review, so the dashboard can show how many orders that got a request led to a review. Two optional extras are off by default: UTM tags on the review link, and a 1×1 image that counts email opens. The image is a form of tracking that some privacy laws require consent for; mention it in your privacy policy if you turn it on. Erasing a customer's personal data cancels any review request still waiting to be sent to them.
+* Checkout consent: if you turn it on, Rosette Reviews saves the customer's answer, the time and the checkbox wording on the order. They are included in WordPress personal data exports and erasures.
 
 = Shortcodes =
 
@@ -110,6 +111,14 @@ Rosette Reviews adds its rating and review data to WooCommerce's product schema 
 
 Use Rosette Reviews → Design for colors and layout, or copy a file from the plugin's `templates/` folder into `yourtheme/ndv-reviews/` and edit it. Keep the `do_action()` lines listed at the top of each template (for example `ndv-reviews/review_author_badges` and `ndv-reviews/marquee_author_badges`): labels such as the incentive disclosure are printed there.
 
+= The consent checkbox doesn't show on my classic checkout =
+
+It is printed after the order notes (WooCommerce's `woocommerce_after_order_notes` action). A theme that overrides `checkout/form-shipping.php` without that action hides it; add the action back to the override. On the Checkout block it needs WooCommerce 8.9 or later.
+
+= Which language are review emails sent in? =
+
+The language of the order with WPML (and WooCommerce Multilingual), or Polylang when it records a language on the order; otherwise your site language. A developer can set it with the `ndv-reviews/order_language` filter. Built-in texts come from the WordPress.org translations for your language. The review link points to your main home page, and the review page switches to the order's language by itself.
+
 = Is my data removed if I delete the plugin? =
 
 Only if you turn on "Remove all data on uninstall" in Settings. Reviews created by Rosette Reviews are deleted then; native WooCommerce reviews are always kept.
@@ -149,6 +158,8 @@ Only if you turn on "Remove all data on uninstall" in Settings. Reviews created 
 * Send a review request by hand: "Send review request" in an order's Order actions, or as a bulk action on the orders list (up to 200 at a time). It works with automatic reminders off, uses your saved email, and never emails a customer twice within 20 hours.
 * Leave products out of review requests by category (child categories included) or one by one, and skip customers with chosen roles such as wholesale. Excluded items also leave review links sent earlier.
 * New, off by default: one follow-up reminder a set number of days after the first email, only to customers who still have something to review. It has its own subject and text, and a preview.
+* New, off by default: a consent checkbox for review emails at checkout (classic checkout and the Checkout block), in opt-in or opt-out mode. The answer is saved on the order with the time and the wording shown, and every review email respects it.
+* Multilingual stores (WPML with WooCommerce Multilingual, or Polylang): review emails and the review page use the language of the order, and your own subject and text can be translated in the plugin's string translation.
 
 = 1.0.0 =
 * Initial public release.
